@@ -99,6 +99,7 @@ export default function LocationGallery({
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           className="w-full"
+          title={`Map showing location of ${locationName}`}
         />
       </motion.div>
 

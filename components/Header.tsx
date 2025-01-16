@@ -10,7 +10,7 @@ import { Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const springTransition = {
   type: 'spring',
@@ -70,17 +70,22 @@ export default function Header() {
     const currentTab = tabs.find((tab) => tab.href === pathname);
     if (currentTab) {
       setActiveTab(currentTab.id);
+    } else if (pathname === '/') {
+      setActiveTab('home');
     } else {
       setActiveTab('');
     }
   }, [pathname]);
 
-  const locations = [
-    { name: 'Bella Vista', phone: '+1-479-855-2324' },
-    { name: 'Highfill', phone: '+1-479-525-6034.' },
-    { name: 'Prairie Creek', phone: '+1-479-372-6275' },
-    { name: 'Centerton', phone: '+1-479-224-4820' },
-  ];
+  const locations = useMemo(
+    () => [
+      { name: 'Bella Vista', phone: '+1-479-855-2324' },
+      { name: 'Highfill', phone: '+1-479-525-6034' },
+      { name: 'Prairie Creek', phone: '+1-479-372-6275' },
+      { name: 'Centerton', phone: '+1-479-224-4820' },
+    ],
+    []
+  );
 
   const tabs = [
     { id: 'menu', label: 'Menu', href: '/menu' },
@@ -91,7 +96,9 @@ export default function Header() {
       label: (
         <div className="flex items-center gap-1 font-black">
           <span className="md:hidden">Order</span>
-          <span className="hidden md:inline">Order Pick Up</span>
+          <span className="hidden whitespace-nowrap md:inline">
+            Order Pick Up
+          </span>
           <Phone className="h-4 w-4 fill-[#CE1226] stroke-0 group-hover:stroke-1 group-hover:stroke-[white]" />
         </div>
       ),
@@ -112,17 +119,48 @@ export default function Header() {
           {...fadeInUp}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="shrink-0 md:ml-4"
+          className="relative shrink-0 md:ml-4 md:pr-8"
         >
-          <Link href="/">
+          <Link
+            href="/"
+            onClick={() => setActiveTab('home')}
+            className="relative block"
+            aria-label="El Pueblito - Home"
+            role="tab"
+            aria-selected={activeTab === 'home'}
+          >
             <Image
               src="/logo.png"
               alt="El Pueblito Logo"
               width="731"
               height="337"
               priority
-              className="w-[13rem] max-w-[16rem] md:w-[16rem]"
+              className="relative z-20 w-[13rem] max-w-[16rem] md:w-[12rem]"
             />
+            {activeTab === 'home' && (
+              <motion.svg
+                layoutId="bubble"
+                className="absolute inset-[-1px] z-10 h-[calc(100%+2px)] w-[calc(100%+4px)]"
+                style={{ borderRadius: 9999 }}
+                viewBox="0 0 200 45"
+                preserveAspectRatio="none"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <motion.path
+                  d="M 200 22.5 C 200 34.93 155.228 45 100 45 C 44.772 45 0 34.93 0 22.5 C 0 10.07 44.772 0 100 0 C 155.228 0 200 10.07 200 22.5"
+                  stroke="#FFD9A2"
+                  strokeWidth="2"
+                  initial={{ pathLength: 0, pathOffset: 0.5 }}
+                  animate={{ pathLength: 1, pathOffset: 0 }}
+                  transition={{
+                    pathLength: { duration: 1, ease: 'easeInOut' },
+                    pathOffset: { duration: 1, ease: 'easeInOut' },
+                  }}
+                />
+              </motion.svg>
+            )}
           </Link>
         </motion.div>
         <motion.nav
@@ -151,18 +189,12 @@ export default function Header() {
                 {tab.id === 'pick-up' ? (
                   <DropdownMenu open={open} onOpenChange={setOpen}>
                     <DropdownMenuTrigger
-                      className={`group relative line-clamp-1 rounded-full px-3 py-1.5 font-medium text-black transition-colors hover:bg-[#03502D] hover:text-white focus:outline-none ${
-                        open ? 'bg-[#03502D] text-white' : ''
+                      className={`group relative line-clamp-1 rounded-full px-3 py-1.5 font-medium transition-colors duration-300 ${
+                        open
+                          ? 'bg-[#03502D] text-white'
+                          : 'text-black hover:bg-[#03502D] hover:text-white'
                       }`}
                     >
-                      {open && (
-                        <motion.span
-                          layoutId="dropdown-background"
-                          className="absolute inset-0 z-0 rounded-full bg-[#03502D]"
-                          initial={false}
-                          transition={springTransition}
-                        />
-                      )}
                       <motion.span layout className="relative z-20">
                         {tab.label}
                       </motion.span>

@@ -56,7 +56,7 @@ export default function LocationsPage() {
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
       <motion.h1
-        className="mb-6 text-center font-black text-2xl text-zinc-900 md:mb-8 md:text-4xl"
+        className="mb-6 text-center font-black text-2xl text-stone-900 md:mb-8 md:text-4xl"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
@@ -93,7 +93,7 @@ export default function LocationsPage() {
                 <motion.div
                   layout
                   transition={{ layout: springTransition }}
-                  className="relative flex h-full w-full overflow-hidden rounded-xl bg-zinc-50/70 shadow-lg shadow-zinc-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl group-hover:bg-zinc-950/90"
+                  className="relative flex h-full w-full overflow-hidden rounded-xl bg-stone-50/70 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl group-hover:bg-stone-950/90"
                 >
                   <motion.div
                     layout
@@ -119,14 +119,14 @@ export default function LocationsPage() {
                       <motion.h2
                         layout
                         transition={{ layout: springTransition }}
-                        className="mb-1 font-black text-xl text-zinc-900 transition-colors duration-300 group-hover:text-orange-50 md:mb-2 md:text-2xl"
+                        className="mb-1 font-black text-stone-900 text-xl transition-colors duration-300 group-hover:text-orange-50 md:mb-2 md:text-2xl"
                       >
                         {location.name}
                       </motion.h2>
                       <motion.div
                         layout
                         transition={{ layout: springTransition }}
-                        className="flex items-start gap-1 text-zinc-600 transition-colors duration-300 group-hover:text-zinc-300 md:gap-2"
+                        className="flex items-start gap-1 text-stone-600 transition-colors duration-300 group-hover:text-stone-300 md:gap-2"
                       >
                         <MapPin className="mt-1 h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
                         <p className="text-xs md:text-sm">{location.address}</p>
@@ -134,7 +134,7 @@ export default function LocationsPage() {
                       <motion.p
                         layout
                         transition={{ layout: springTransition }}
-                        className="mt-1 font-bold text-xs text-zinc-900 transition-colors duration-300 group-hover:text-orange-50 md:text-sm"
+                        className="mt-1 font-bold text-stone-900 text-xs transition-colors duration-300 group-hover:text-orange-50 md:text-sm"
                       >
                         {location.phone}
                       </motion.p>
@@ -144,7 +144,7 @@ export default function LocationsPage() {
                       transition={{ layout: springTransition }}
                       className="mt-2 md:mt-4"
                     >
-                      <span className="font-medium text-xs text-zinc-900 transition-colors duration-300 group-hover:text-orange-50 md:text-sm">
+                      <span className="font-medium text-stone-900 text-xs transition-colors duration-300 group-hover:text-orange-50 md:text-sm">
                         View Details →
                       </span>
                     </motion.div>

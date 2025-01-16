@@ -41,7 +41,7 @@ const articles: Article[] = [
 
 export function Press() {
   return (
-    <nav
+    <section
       aria-labelledby="press-highlights"
       className="mb-1 w-64 rounded-xl bg-zinc-50/70 px-2 pb-2 shadow-md"
     >
@@ -49,7 +49,7 @@ export function Press() {
         id="press-highlights"
         className="my-1 select-none text-center font-bold text-black"
       >
-        Press
+        Press Highlights
       </h2>
       <ul className="m-0 list-none p-0">
         {articles.map((article) => (
@@ -58,8 +58,8 @@ export function Press() {
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center justify-between space-x-1 rounded-md border-black/10 border-b px-2 py-1 transition-colors hover:bg-black focus:outline-none focus:ring-none"
-              aria-label={`${article.title} - ${article.publication}`}
+              className="group flex items-center justify-between space-x-1 rounded-md border-black/10 border-b px-2 py-1 transition-colors duration-300 hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-pueb focus-visible:ring-offset-2"
+              aria-label={`Read "${article.title}" on ${article.publication}`}
             >
               {/* <Image
                 src={article.logo}
@@ -72,8 +72,16 @@ export function Press() {
                 {article.title}
               </span>
               <span
-                className="flex-shrink-0 text-base transition-transform group-hover:scale-125"
-                aria-hidden="true"
+                className="flex-shrink-0 text-base transition-transform duration-300 group-hover:scale-125"
+                role="img"
+                aria-label={
+                  {
+                    '🏆': 'award',
+                    '🎉': 'celebration',
+                    '🏡': 'new location',
+                    '🇲🇽': 'Mexican flag',
+                  }[article.emoji] || ''
+                }
               >
                 {article.emoji}
               </span>
@@ -81,6 +89,6 @@ export function Press() {
           </li>
         ))}
       </ul>
-    </nav>
+    </section>
   );
 }
