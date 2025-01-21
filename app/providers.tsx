@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 
 // Check if the environment is not development
 if (process.env.NODE_ENV !== 'development') {
-  posthog.init('YOUR_API_KEY', {
+  posthog.init(`${process.env.NEXT_PUBLIC_POSTHOG_API_KEY}`, {
     autocapture: true,
     capture_pageview: true,
   });

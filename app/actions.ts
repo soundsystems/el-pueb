@@ -63,7 +63,8 @@ export async function submitContact(
   }
 }
 
-const PHONE_VALIDATION_REGEX = /\D/g;
+const PHONE_VALIDATION_REGEX =
+  /^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/;
 
 const subscribeFormSchema = z.object({
   email: z
