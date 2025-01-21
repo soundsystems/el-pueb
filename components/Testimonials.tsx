@@ -1,7 +1,7 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 
@@ -48,34 +48,64 @@ const testimonials = [
   },
 ];
 
+function splitIntoSentences(text: string) {
+  // Split on period, exclamation mark, or question mark, followed by a space or end of string
+  return text.split(/(?<=[.!?])\s+/);
+}
+
 export default function TestimonialCarousel() {
   const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isUserNavigated, setIsUserNavigated] = useState(false);
 
   useEffect(() => {
+    if (isPaused) {
+      const resumeTimer = setTimeout(() => {
+        setIsPaused(false);
+        setIsUserNavigated(false);
+      }, 4000);
+      return () => clearTimeout(resumeTimer);
+    }
+
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % testimonials.length);
     }, 3333);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [isPaused]);
+
+  const handleDotClick = (index: number) => {
+    setIsUserNavigated(true);
+    // Small delay to ensure exit animation starts first
+    setTimeout(() => {
+      setCurrent(index);
+      setIsPaused(true);
+    }, 10);
+  };
 
   return (
-    <section className="rounded-xl bg-stone-50/80 py-8 shadow-lg backdrop-blur-sm">
-      <div className="mx-auto max-w-3xl px-4">
-        <h2 className="mb-8 text-center font-bold text-[#0f8540] text-xl">
+    <section className="w-full rounded-xl bg-stone-50/80 py-8 shadow-lg backdrop-blur-sm">
+      <div className="mx-auto w-full max-w-screen-lg px-2 md:px-8 lg:px-12">
+        <h2 className="mb-6 text-center font-bold text-[#0f8540] text-xl">
           Our Commitment to Excellence
         </h2>
         <div className="relative min-h-[200px]">
-          <AnimatePresence mode="wait">
+          <AnimatePresence initial={false} mode="wait">
             <motion.div
               key={current}
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -40 }}
               transition={{
-                duration: 0.9,
+                duration: isUserNavigated ? 0.33 : 0.9,
                 ease: 'easeOut',
               }}
-              className="absolute inset-0 flex flex-col items-center justify-center px-4"
+              onAnimationComplete={() => {
+                if (isUserNavigated) {
+                  setIsUserNavigated(false);
+                }
+              }}
+              className="absolute inset-0 flex flex-col items-center justify-center"
             >
               <div
                 className="mb-4 flex justify-center"
@@ -84,28 +114,41 @@ export default function TestimonialCarousel() {
                 {[...new Array(testimonials[current].rating)].map((_, i) => (
                   <Star
                     key={i}
-                    className="h-8 w-8 fill-[#CE1226] text-[#CE1226]"
+                    className="h-6 w-6 fill-[#CE1226] text-[#CE1226]"
                   />
                 ))}
               </div>
-              <blockquote className="mb-4 max-w-xl text-pretty text-center text-base text-gray-800">
-                "{testimonials[current].text}"
-              </blockquote>
-              <cite className="font-semibold text-[#0f8540] text-lg not-italic">
-                {testimonials[current].name}
-              </cite>
+              <div className="w-full max-w-xl px-1 lg:max-w-4xl">
+                <blockquote className="mb-4 text-pretty text-center text-base text-gray-800">
+                  <span className="block lg:hidden">
+                    {splitIntoSentences(testimonials[current].text).map(
+                      (sentence, i) => (
+                        <p key={i} className="mb-2 last:mb-0">
+                          {sentence.trim()}
+                        </p>
+                      )
+                    )}
+                  </span>
+                  <span className="hidden lg:block">
+                    "{testimonials[current].text}"
+                  </span>
+                </blockquote>
+                <cite className="block text-center font-semibold text-[#0f8540] text-lg not-italic">
+                  {testimonials[current].name}
+                </cite>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        <div className="mt-6 flex justify-center gap-2">
+        <div className="mt-6 flex justify-center gap-1.5 md:gap-2">
           {testimonials.map((_, index) => (
             <Button
               type="button"
               key={index}
-              onClick={() => setCurrent(index)}
-              className={`h-2 w-2 rounded-full transition-all ${
-                current === index ? 'w-6 bg-[#CE1226]' : 'bg-gray-300'
+              onClick={() => handleDotClick(index)}
+              className={`h-1.5 w-1.5 rounded-full transition-all md:h-2 md:w-2 ${
+                current === index ? 'w-4 bg-[#CE1226] md:w-6' : 'bg-gray-300'
               }`}
               aria-label={`Go to testimonial ${index + 1}`}
               aria-selected={current === index}

@@ -2,7 +2,7 @@
 
 import { EnvelopeIcon } from '@heroicons/react/20/solid';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { startTransition, useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';

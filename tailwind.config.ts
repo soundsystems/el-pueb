@@ -8,6 +8,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        tablet: '640px', // For our specific tablet use case
+      },
       colors: {
         // Mexican restaurant-themed colors
         primary: '#D62828', // Deep red

@@ -5,8 +5,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Phone } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -135,7 +135,7 @@ export default function Header() {
               width="731"
               height="337"
               priority
-              className="relative z-20 w-[13rem] max-w-[16rem] md:w-[12rem]"
+              className="relative z-20 w-[14rem] max-w-[22rem]"
             />
             {activeTab === 'home' && (
               <motion.svg
@@ -173,7 +173,7 @@ export default function Header() {
           }}
           className="w-full flex-1 md:flex md:min-w-[400px] md:justify-center"
         >
-          <nav className="flex items-center justify-center space-x-1 text-xs sm:text-sm lg:text-base">
+          <nav className="flex items-center justify-center space-x-1 text-base lg:text-lg">
             {tabs.map((tab, index) => (
               <motion.div
                 key={tab.id}

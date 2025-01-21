@@ -41,7 +41,7 @@ export async function submitContact(
     }
 
     await resend.emails.send({
-      from: 'El Pueblito Contact Form <onboarding@resend.dev>',
+      from: 'El Pueblito Contact Form <hola@familia.elpueblitonwa.com>',
       to: 'elpueblitonwa@gmail.com',
       subject: 'New Contact Form Submission',
       html: `
@@ -56,12 +56,14 @@ export async function submitContact(
       success: true,
       firstName: prevState.firstName || formData.firstName,
     };
-  } catch (error) {
+  } catch (_) {
     return {
       error: 'Something went wrong. Please try again later.',
     };
   }
 }
+
+const PHONE_VALIDATION_REGEX = /\D/g;
 
 const subscribeFormSchema = z.object({
   email: z
@@ -74,7 +76,7 @@ const subscribeFormSchema = z.object({
     .string()
     .min(1, 'Please enter your phone number')
     .regex(
-      /^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
+      PHONE_VALIDATION_REGEX,
       'Please enter a valid phone number like (123) 456-7890'
     )
     .optional(),
@@ -95,6 +97,89 @@ type SubscribeFormState = {
   email?: string;
 };
 
+const subscriberCache = new Set<string>();
+
+// Add this type definition
+type SubscribeFormData = {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+};
+
+// Update helper functions with proper typing
+function validateDetailsStep(formData: SubscribeFormData) {
+  const schema = subscribeFormSchema.extend({
+    firstName: z.string().min(1, 'Please enter your first name'),
+    lastName: z.string().min(1, 'Please enter your last name'),
+    phone: z
+      .string()
+      .min(1, 'Please enter your phone number')
+      .regex(
+        PHONE_VALIDATION_REGEX,
+        'Please enter a valid phone number like (123) 456-7890'
+      ),
+  });
+  return schema.safeParse(formData);
+}
+
+async function sendWelcomeEmails(formData: SubscribeFormData) {
+  await resend.emails.send({
+    from: 'El Pueblito <hola@familia.elpueblitonwa.com>',
+    to: formData.email,
+    subject: 'Welcome to La Familia Pueblito! 🌮',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #03502D;">¡Bienvenidos a La Familia Pueblito!</h1>
+        <p>¡Muchas gracias! You've succesfully signed up for our newsletter${formData.firstName ? `, ${formData.firstName}` : ''}! We're excited to have you join our family.</p>
+        <p>You'll be the first to know about:</p>
+        <ul style="list-style: none; padding-left: 0;">
+          <li style="margin-bottom: 8px; list-style-type: none;">
+            <span style="color: #F8C839; font-size: 24px;">•</span>
+            <span style="margin-left: 8px;">Exclusive promotions and deals</span>
+          </li>
+          <li style="margin-bottom: 8px; list-style-type: none;">
+            <span style="color: #016945; font-size: 24px;">•</span>
+            <span style="margin-left: 8px;">New menu items</span>
+          </li>
+          <li style="margin-bottom: 8px; list-style-type: none;">
+            <span style="color: #CF0822; font-size: 24px;">•</span>
+            <span style="margin-left: 8px;">Events and celebrations</span>
+          </li>
+          <li style="margin-bottom: 8px; list-style-type: none;">
+            <span style="color: #088589; font-size: 24px;">•</span>
+            <span style="margin-left: 8px;">Restaurant news and updates</span>
+          </li>
+          <li style="margin-bottom: 8px; list-style-type: none;">
+            <span style="color: #EF6A4B; font-size: 24px;">•</span>
+            <span style="margin-left: 8px;">Our upcoming rewards program</span>
+          </li>
+          <li style="margin-bottom: 8px; list-style-type: none;">
+            <span style="color: #9DA26A; font-size: 24px;">•</span>
+            <span style="margin-left: 8px;">And more!</span>
+          </li>
+        </ul>
+        <p>Stay tuned for our next update!</p>
+        <p style="color: #666;">Mucho Amor,<br>El Pueblito Management</p>
+      </div>
+    `,
+  });
+
+  await resend.emails.send({
+    from: 'El Pueblito Notifications <notifications@familia.elpueblitonwa.com>',
+    to: 'elpueblitonwa@gmail.com',
+    subject: 'New Newsletter Subscriber',
+    html: `
+      <h2>New Newsletter Subscriber</h2>
+      <p><strong>Email:</strong> ${formData.email}</p>
+      ${formData.firstName ? `<p><strong>First Name:</strong> ${formData.firstName}</p>` : ''}
+      ${formData.lastName ? `<p><strong>Last Name:</strong> ${formData.lastName}</p>` : ''}
+      ${formData.phone ? `<p><strong>Phone:</strong> ${formData.phone}</p>` : ''}
+      <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+    `,
+  });
+}
+
 export async function subscribe(
   prevState: SubscribeFormState,
   formData: {
@@ -106,20 +191,16 @@ export async function subscribe(
 ): Promise<SubscribeFormState> {
   try {
     if (prevState.step === 'details') {
-      const schema = subscribeFormSchema.extend({
-        firstName: z.string().min(1, 'Please enter your first name'),
-        lastName: z.string().min(1, 'Please enter your last name'),
-        phone: z
-          .string()
-          .min(1, 'Please enter your phone number')
-          .regex(
-            /^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/,
-            'Please enter a valid phone number like (123) 456-7890'
-          ),
-      });
+      if (subscriberCache.has(formData.email)) {
+        return {
+          success: true,
+          message: 'Already subscribed!',
+          error: false,
+          step: 'details',
+        };
+      }
 
-      const validatedFields = schema.safeParse(formData);
-
+      const validatedFields = validateDetailsStep(formData);
       if (!validatedFields.success) {
         return {
           error: true,
@@ -131,78 +212,42 @@ export async function subscribe(
       }
 
       try {
-        await resend.emails.send({
-          from: 'El Pueblito <onboarding@resend.dev>',
-          to: formData.email,
-          subject: 'Welcome to La Familia Pueblito! 🌮',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #03502D;">¡Bienvenidos a La Familia Pueblito!</h1>
-              <p>Thank you for subscribing to our newsletter${formData.firstName ? `, ${formData.firstName}` : ''}! We're excited to have you join our family.</p>
-              <p>You'll be the first to know about:</p>
-              <ul>
-                <li>Special promotions and deals</li>
-                <li>New menu items</li>
-                <li>Events and celebrations</li>
-                <li>Restaurant news and updates</li>
-                <li>Our upcoming rewards program</li>
-                <li>And more!</li>
-              </ul>
-              <p>Stay tuned for our next update!</p>
-              <p style="color: #666;">With love,<br>La Familia Pueblito</p>
-            </div>
-          `,
-        });
-
-        await resend.emails.send({
-          from: 'El Pueblito Notifications <onboarding@resend.dev>',
-          to: 'elpueblitonwa@gmail.com',
-          subject: 'New Newsletter Subscriber',
-          html: `
-            <h2>New Newsletter Subscriber</h2>
-            <p><strong>Email:</strong> ${formData.email}</p>
-            ${formData.firstName ? `<p><strong>First Name:</strong> ${formData.firstName}</p>` : ''}
-            ${formData.lastName ? `<p><strong>Last Name:</strong> ${formData.lastName}</p>` : ''}
-            ${formData.phone ? `<p><strong>Phone:</strong> ${formData.phone}</p>` : ''}
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-          `,
-        });
-
+        subscriberCache.add(formData.email);
+        await sendWelcomeEmails(formData);
         return {
           success: true,
           message: 'Successfully subscribed!',
           error: false,
           step: 'details',
         };
-      } catch (error) {
+      } catch (_) {
+        subscriberCache.delete(formData.email);
         return {
           error: true,
           message: 'Error sending welcome email. Please try again.',
           step: prevState.step,
         };
       }
-    } else {
-      const validatedEmail = emailSchema.safeParse({ email: formData.email });
+    }
 
-      if (!validatedEmail.success) {
-        return {
-          error: true,
-          message:
-            validatedEmail.error.errors[0]?.message ||
-            'Please check your email',
-          step: 'email',
-        };
-      }
-
+    const validatedEmail = emailSchema.safeParse({ email: formData.email });
+    if (!validatedEmail.success) {
       return {
-        success: true,
-        message: 'Email validated',
-        step: 'details',
-        email: formData.email,
-        error: false,
+        error: true,
+        message:
+          validatedEmail.error.errors[0]?.message || 'Please check your email',
+        step: 'email',
       };
     }
-  } catch (error) {
+
+    return {
+      success: true,
+      message: 'Email validated',
+      step: 'details',
+      email: formData.email,
+      error: false,
+    };
+  } catch (_) {
     return {
       error: true,
       message: 'Something went wrong. Please try again.',
