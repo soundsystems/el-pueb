@@ -10,6 +10,8 @@ const formSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   message: z.string().min(1, 'Message is required'),
+  inquiryType: z.string(),
+  reason: z.string().min(1, 'Please select a reason for contact'),
 });
 
 type ContactFormState = {
@@ -23,6 +25,8 @@ interface ContactFormData {
   lastName: string;
   email: string;
   message: string;
+  inquiryType: string;
+  reason: string;
 }
 
 export async function submitContact(
@@ -43,11 +47,12 @@ export async function submitContact(
     await resend.emails.send({
       from: 'El Pueblito Contact Form <hola@familia.elpueblitonwa.com>',
       to: 'elpueblitonwa@gmail.com',
-      subject: 'New Contact Form Submission',
+      subject: `New ${formData.reason} (${formData.inquiryType})`,
       html: `
-        <h2>New Contact Form Submission</h2>
+        <h2>New ${formData.inquiryType}</h2>
         <p><strong>Name:</strong> ${formData.firstName} ${formData.lastName}</p>
         <p><strong>Email:</strong> ${formData.email}</p>
+        <p><strong>Reason:</strong> ${formData.reason}</p>
         <p><strong>Message:</strong> ${formData.message}</p>
       `,
     });
@@ -135,29 +140,29 @@ async function sendWelcomeEmails(formData: SubscribeFormData) {
         <p>¡Muchas gracias! You've succesfully signed up for our newsletter${formData.firstName ? `, ${formData.firstName}` : ''}! We're excited to have you join our family.</p>
         <p>You'll be the first to know about:</p>
         <ul style="list-style: none; padding-left: 0;">
-          <li style="margin-bottom: 8px; list-style-type: none;">
-            <span style="color: #F8C839; font-size: 24px;">•</span>
-            <span style="margin-left: 8px;">Exclusive promotions and deals</span>
+          <li style="margin-bottom: 12px; display: flex; align-items: center;">
+            <span style="color: #F8C839; font-size: 32px; margin-right: 8px;">•</span>
+            Exclusive promotions and deals
           </li>
-          <li style="margin-bottom: 8px; list-style-type: none;">
-            <span style="color: #016945; font-size: 24px;">•</span>
-            <span style="margin-left: 8px;">New menu items</span>
+          <li style="margin-bottom: 12px; display: flex; align-items: center;">
+            <span style="color: #016945; font-size: 32px; margin-right: 8px;">•</span>
+            New menu items
           </li>
-          <li style="margin-bottom: 8px; list-style-type: none;">
-            <span style="color: #CF0822; font-size: 24px;">•</span>
-            <span style="margin-left: 8px;">Events and celebrations</span>
+          <li style="margin-bottom: 12px; display: flex; align-items: center;">
+            <span style="color: #CF0822; font-size: 32px; margin-right: 8px;">•</span>
+            Events and celebrations
           </li>
-          <li style="margin-bottom: 8px; list-style-type: none;">
-            <span style="color: #088589; font-size: 24px;">•</span>
-            <span style="margin-left: 8px;">Restaurant news and updates</span>
+          <li style="margin-bottom: 12px; display: flex; align-items: center;">
+            <span style="color: #088589; font-size: 32px; margin-right: 8px;">•</span>
+            Restaurant news and updates
           </li>
-          <li style="margin-bottom: 8px; list-style-type: none;">
-            <span style="color: #EF6A4B; font-size: 24px;">•</span>
-            <span style="margin-left: 8px;">Our upcoming rewards program</span>
+          <li style="margin-bottom: 12px; display: flex; align-items: center;">
+            <span style="color: #EF6A4B; font-size: 32px; margin-right: 8px;">•</span>
+            Our upcoming rewards program
           </li>
-          <li style="margin-bottom: 8px; list-style-type: none;">
-            <span style="color: #9DA26A; font-size: 24px;">•</span>
-            <span style="margin-left: 8px;">And more!</span>
+          <li style="margin-bottom: 12px; display: flex; align-items: center;">
+            <span style="color: #9DA26A; font-size: 32px; margin-right: 8px;">•</span>
+            And more!
           </li>
         </ul>
         <p>Stay tuned for our next update!</p>

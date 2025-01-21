@@ -33,11 +33,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  message: string;
+interface FormData extends z.infer<typeof formSchema> {
+  inquiryType: string;
 }
 
 const MotionInput = motion.create(Input);
@@ -110,13 +107,10 @@ const ContactForm = () => {
 
   const { pending } = useFormStatus();
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const inquiryType =
-      selectedTab === 'customer' ? 'Customer Inquiry' : 'Business Opportunity';
-
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
     const submissionData = {
       ...data,
-      inquiryType,
+      inquiryType: selectedTab === 'customer' ? 'Customer' : 'Business',
     };
 
     startTransition(() => {
