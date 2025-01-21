@@ -48,9 +48,10 @@ const testimonials = [
   },
 ];
 
+const SENTENCE_SPLITTER = /(?<=[.!?])\s+/;
+
 function splitIntoSentences(text: string) {
-  // Split on period, exclamation mark, or question mark, followed by a space or end of string
-  return text.split(/(?<=[.!?])\s+/);
+  return text.split(SENTENCE_SPLITTER);
 }
 
 export default function TestimonialCarousel() {
