@@ -257,6 +257,15 @@ export default function Component() {
       6: 3, // Image 7 -> Desserts
     };
 
+    // Get the current visible pair of images
+    const allImages = menuItems.flatMap((item) => item.images);
+    const lastPairStart = allImages.length - 2;
+
+    // If we're showing the last image, always highlight desserts
+    if (currentPage >= lastPairStart) {
+      return 3; // Desserts index
+    }
+
     // Round down to nearest even number to get the first image of the current pair
     const pairStartIndex = Math.floor(currentPage / 2) * 2;
     return imageToNavIndex[pairStartIndex] || 0;
@@ -267,13 +276,18 @@ export default function Component() {
     if (isMobile) {
       return currentPage;
     }
-    const totalImages = menuItems
-      .filter((item) => !item.mobileOnly)
-      .flatMap((item) => item.images);
-    // Check if the last image is visible
-    if (currentPage >= totalImages.length - 2) {
-      return Math.ceil(totalImages.length / 2) - 1;
+
+    // For desktop view, we want to show the last dot when desserts are visible
+    const allImages = menuItems.flatMap((item) => item.images);
+    const totalImages = allImages.length;
+    const lastPairStart = totalImages - 2;
+
+    // When showing the last pair (which includes the last image), highlight the last dot
+    if (currentPage >= lastPairStart) {
+      return Math.ceil(totalImages / 2) - 1;
     }
+
+    // Otherwise, show the current pair's dot
     return Math.floor(currentPage / 2);
   };
 
