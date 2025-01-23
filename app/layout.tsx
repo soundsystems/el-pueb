@@ -2,6 +2,7 @@ import '../styles/globals.css';
 import Banner from '@/components/Banner';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import SelectionColorInitializer from '@/components/SelectionColorInitializer';
 import { cn } from '@/lib/utils';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GeistSans } from 'geist/font/sans';
@@ -59,6 +60,7 @@ export default function RootLayout({
             GeistSans.variable
           )}
         >
+          <SelectionColorInitializer />
           <Banner />
           <Header />
           <main>

@@ -20,6 +20,10 @@ type Location = {
   slug: string;
   position: { lat: number; lng: number };
   placeId: string;
+  hours: {
+    weekdays: string;
+    weekend: string;
+  };
 };
 
 const springTransition = {
@@ -37,6 +41,10 @@ const locations: Location[] = [
     slug: 'bella-vista',
     position: { lat: 36.4659829, lng: -94.2997737 },
     placeId: 'ChIJ6UYv8unz0IcRDeDm1icSF4g',
+    hours: {
+      weekdays: 'Mon-Thu & Sun 11am-9pm',
+      weekend: 'Fri-Sat 11am-10pm',
+    },
   },
   {
     name: 'Highfill',
@@ -45,6 +53,10 @@ const locations: Location[] = [
     slug: 'highfill',
     position: { lat: 36.2619322, lng: -94.3498537 },
     placeId: 'ChIJN48WaACL0IcRgQJ8z9j_XE8',
+    hours: {
+      weekdays: 'Mon-Thu & Sun 11am-9pm',
+      weekend: 'Fri-Sat 11am-10pm',
+    },
   },
   {
     name: 'Prairie Creek',
@@ -53,6 +65,10 @@ const locations: Location[] = [
     slug: 'prairie-creek',
     position: { lat: 36.3404949, lng: -94.0650799 },
     placeId: 'ChIJj4N21mE92IcRiswN1sLGnCE',
+    hours: {
+      weekdays: 'Mon-Thu & Sun 11am-9pm',
+      weekend: 'Fri-Sat 11am-10pm',
+    },
   },
   {
     name: 'Centerton',
@@ -61,6 +77,10 @@ const locations: Location[] = [
     slug: 'centerton',
     position: { lat: 36.3592987, lng: -94.2822265 },
     placeId: 'ChIJ87Jm17AP0IcRybiTHtVWpUQ',
+    hours: {
+      weekdays: 'Mon-Thu & Sun 11am-9pm',
+      weekend: 'Fri-Sat 11am-10pm',
+    },
   },
 ];
 
@@ -337,12 +357,16 @@ const LocationCard = ({
       layout
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.95 }}
-      transition={{ 
+      transition={{
         layout: springTransition,
-        scale: { type: "spring", stiffness: 300, damping: 25 }
+        scale: { type: 'spring', stiffness: 300, damping: 25 },
       }}
       className={`relative flex h-full w-full cursor-pointer overflow-hidden rounded-xl bg-stone-50/70 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${selectedLocation === location.slug ? 'bg-stone-950/90' : ''}`}
-      onClick={() => setSelectedLocation(selectedLocation === location.slug ? null : location.slug)}
+      onClick={() =>
+        setSelectedLocation(
+          selectedLocation === location.slug ? null : location.slug
+        )
+      }
       style={{ '--marker-color': markerColor } as React.CSSProperties}
     >
       <motion.div
@@ -382,6 +406,19 @@ const LocationCard = ({
             >
               {location.address}
             </Link>
+          </motion.div>
+          <motion.div
+            layout
+            transition={{ layout: springTransition }}
+            className="mt-2 flex flex-col gap-0.5 text-[11px] md:text-xs"
+            style={{
+              color:
+                selectedLocation === location.slug ? markerColor : '#000000',
+              transition: 'color 0.3s ease',
+            }}
+          >
+            <div>• {location.hours.weekdays}</div>
+            <div>• {location.hours.weekend}</div>
           </motion.div>
         </div>
         <motion.div
@@ -456,7 +493,7 @@ export default function LocationsPage() {
   return (
     <div className="container mx-auto px-4">
       <motion.h1
-        className="mb-2 text-center font-black text-2xl text-stone-900 md:mb-4 md:text-4xl"
+        className="pointer-events-none mb-2 select-none text-center font-black text-2xl text-stone-900 md:mb-4 md:text-4xl"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}

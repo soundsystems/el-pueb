@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useRestaurantHours } from '@/lib/hooks/useRestaurantHours';
 import { useScreenSize } from '@/lib/hooks/useScreenSize';
 import { Phone } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -56,6 +57,7 @@ export default function Header() {
   const isLargeScreen = useScreenSize();
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState('');
+  const { isOpen, hoursToday, closedMessage } = useRestaurantHours();
 
   useEffect(() => {
     const currentTab = tabs.find((tab) => tab.href === pathname);
@@ -101,7 +103,7 @@ export default function Header() {
     <motion.header
       layout="preserve-aspect"
       transition={springTransition}
-      className="top-0 z-50 mt-2 mb-3 flex w-full flex-col items-center gap-y-1 pt-safe-top md:flex-row md:items-center md:justify-between"
+      className="top-0 z-50 mt-2 mb-4 flex w-full flex-col items-center pt-safe-top"
     >
       <AnimatePresence mode="wait" initial={false} key={pathname}>
         <motion.div
@@ -111,14 +113,14 @@ export default function Header() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3 }}
-          className="flex w-full flex-col items-center md:flex-row md:items-center md:justify-between"
+          className="relative flex w-full flex-col items-center md:flex-row md:items-center md:justify-between"
         >
           <motion.div
             layout="position"
             {...fadeInUp}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="relative shrink-0 md:ml-4 md:pr-8"
+            className="relative shrink-0 md:ml-4 md:pr-4"
           >
             <Link
               href="/"
@@ -186,10 +188,10 @@ export default function Header() {
                   {tab.id === 'pick-up' ? (
                     <DropdownMenu open={open} onOpenChange={setOpen}>
                       <DropdownMenuTrigger
-                        className={`group relative line-clamp-1 rounded-full px-3 py-1.5 font-medium transition-colors duration-300 ${
+                        className={`group relative line-clamp-1 rounded-full px-3 py-1.5 transition-colors duration-300 focus:outline-none ${
                           open
-                            ? 'bg-[#03502D] text-white'
-                            : 'text-black hover:bg-[#03502D] hover:text-white'
+                            ? 'bg-[#03502D] text-stone-50'
+                            : 'text-black hover:bg-[#03502D] hover:text-stone-50'
                         }`}
                       >
                         <motion.span layout className="relative z-20">
@@ -200,7 +202,7 @@ export default function Header() {
                         {open && (
                           <DropdownMenuContent
                             asChild
-                            className="bg-[#03502D] text-white"
+                            className="bg-[#03502D] font-semibold text-stone-50"
                             sideOffset={5}
                             align="end"
                             forceMount
@@ -217,7 +219,7 @@ export default function Header() {
                                   }}
                                 >
                                   <DropdownMenuItem
-                                    className="cursor-pointer data-[highlighted]:bg-[#193618] data-[highlighted]:text-white"
+                                    className="cursor-pointer data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#CF0822]"
                                     asChild
                                   >
                                     <motion.a
@@ -243,8 +245,8 @@ export default function Header() {
                       onClick={() => setActiveTab(tab.id)}
                       className={`relative whitespace-nowrap rounded-full px-2 py-1.5 font-semibold transition-colors duration-300 sm:px-3 ${
                         activeTab === tab.id
-                          ? 'text-white'
-                          : 'text-black hover:text-white'
+                          ? 'text-stone-50'
+                          : 'text-black hover:text-stone-50'
                       }`}
                       style={{
                         WebkitTapHighlightColor: 'transparent',
@@ -270,12 +272,42 @@ export default function Header() {
           <motion.div
             layout="position"
             transition={springTransition}
-            className="hidden md:mr-4 md:block md:w-[13rem]"
+            className="hidden md:mr-4 md:block md:w-[10rem] lg:hidden"
           >
             {/* Spacer div to balance the logo width */}
           </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springTransition}
+            className="-translate-y-1/2 absolute top-1/2 right-4 hidden text-sm md:text-md lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
+          >
+            {isOpen ? (
+              <span className="font-semibold text-[#03502D]">
+                Open Today: {hoursToday}
+              </span>
+            ) : (
+              <span className="font-semibold text-[#CE1226]">
+                {closedMessage}
+              </span>
+            )}
+          </motion.div>
         </motion.div>
       </AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springTransition}
+        className="py-1 text-center text-sm md:text-md lg:hidden"
+      >
+        {isOpen ? (
+          <span className="font-semibold text-[#03502D]">
+            Open Today: {hoursToday}
+          </span>
+        ) : (
+          <span className="font-semibold text-[#CE1226]">{closedMessage}</span>
+        )}
+      </motion.div>
     </motion.header>
   );
 }

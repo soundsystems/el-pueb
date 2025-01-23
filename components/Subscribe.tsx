@@ -234,7 +234,7 @@ export default function Subscribe() {
       </span>
       <span>
         <input
-          className="mx-2 w-48 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 ring-1 ring-pueb placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-50 dark:text-stone-50"
+          className="mx-2 w-48 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-stone-50/80 hover:outline hover:outline-1 focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
           name="email"
           required
           type="email"
@@ -269,7 +269,7 @@ export default function Subscribe() {
       <input type="hidden" name="email" value={state.email} />
       <div className="flex space-x-2">
         <input
-          className="w-24 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 ring-1 ring-pueb placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-50 dark:text-stone-50"
+          className="w-24 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline outline-1 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
           name="firstName"
           required
           type="text"
@@ -280,7 +280,7 @@ export default function Subscribe() {
           autoCapitalize="off"
         />
         <input
-          className="w-24 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 ring-1 ring-pueb placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-50 dark:text-stone-50"
+          className="w-24 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline outline-1 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
           name="lastName"
           required
           type="text"
@@ -292,7 +292,7 @@ export default function Subscribe() {
         />
       </div>
       <input
-        className="w-full appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 ring-1 ring-pueb placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-none focus:ring-2 focus:ring-orange-50 dark:text-stone-50"
+        className="w-full appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline outline-1 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
         name="phone"
         required
         type="tel"
@@ -421,7 +421,7 @@ export default function Subscribe() {
                     {state.step === 'details' ? (
                       <CircleCheck className="-ml-10 mt-4 h-8 w-8 text-stone-900 transition-colors duration-300 ease-linear group-hover:text-green-600 md:stroke-2 dark:text-stone-50" />
                     ) : (
-                      <CircleArrowRight className="-ml-1 mt-4 h-6 w-6 text-stone-900 transition-colors duration-300 ease-linear group-hover:text-green-600 md:stroke-2 dark:text-stone-50" />
+                      <CircleArrowRight className="-ml-1 mt-4 h-6 w-6 text-stone-900 transition-colors duration-300 ease-linear group-hover:text-[#30C2DC] md:stroke-2 dark:text-stone-50" />
                     )}
                   </button>
                 </>
