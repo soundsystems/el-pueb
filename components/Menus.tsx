@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import {} from './ui/card';
@@ -147,188 +147,271 @@ export default function Component() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
-      {forceLunch && (
-        <div className="relative text-center">
-          <motion.div
-            className="font-bold text-3xl"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <motion.span
-              initial={{ color: '#03502D' }}
-              animate={{
-                color: ['#03502D', '#FFD700', '#03502D', '#FFD700', '#03502D'],
-              }}
-              transition={{
-                duration: 1.3,
-                ease: 'easeInOut',
-                times: [0, 0.25, 0.5, 0.75, 1],
-              }}
-              className="italic"
-            >
-              ¡Echar Lonche! 🌮
-            </motion.span>
-          </motion.div>
-        </div>
-      )}
-
-      <div className="hidden md:block">
-        <div className="my-4 flex justify-center gap-2">
-          {menuItems.map((item, index) => {
-            const isActive = getActiveNavIndex(currentPage) === index;
-            const isLunchTab =
-              forceLunch && item.name === 'Lunch, Combos & Kids';
-
-            let buttonStyle =
-              'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
-            if (isLunchTab) {
-              buttonStyle =
-                'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
-            } else if (isActive) {
-              buttonStyle =
-                'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
-            }
-
-            return (
-              <Button
-                key={item.name}
-                onClick={() => handleNavClick(index)}
-                variant={isActive ? 'default' : 'ghost'}
-                className={cn('whitespace-nowrap text-sm', buttonStyle)}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={isMobile ? 'mobile' : 'desktop'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {forceLunch && (
+            <div className="relative text-center">
+              <motion.div
+                className="font-bold text-3xl"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                {item.name}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
-
-      <Carousel
-        setApi={setApi}
-        className="w-full"
-        opts={{
-          align: 'start',
-        }}
-      >
-        <CarouselContent className="-ml-2 md:-ml-4">
-          {menuItems.flatMap((item, groupIndex) =>
-            item.images.map((image, imageIndex) => (
-              <CarouselItem
-                key={`${item.name}-${imageIndex}`}
-                className="pl-2 md:basis-1/2 md:pl-4"
-              >
-                <div className="relative h-[75vh] w-full md:h-[85vh]">
-                  <div className="absolute inset-0 rounded-3xl bg-adobe">
-                    <Image
-                      src={image}
-                      alt={`${item.name} Menu ${imageIndex + 1}`}
-                      fill
-                      priority={groupIndex === 0 && imageIndex === 0}
-                      className="rounded-3xl object-contain p-2"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      loading={
-                        groupIndex === 0 && imageIndex === 0 ? 'eager' : 'lazy'
-                      }
-                    />
-                  </div>
-                </div>
-              </CarouselItem>
-            ))
+                <motion.span
+                  initial={{ color: '#03502D' }}
+                  animate={{
+                    color: [
+                      '#03502D',
+                      '#FFD700',
+                      '#03502D',
+                      '#FFD700',
+                      '#03502D',
+                    ],
+                  }}
+                  transition={{
+                    duration: 1.3,
+                    ease: 'easeInOut',
+                    times: [0, 0.25, 0.5, 0.75, 1],
+                  }}
+                  className="italic"
+                >
+                  ¡Echar Lonche! 🌮
+                </motion.span>
+              </motion.div>
+            </div>
           )}
-        </CarouselContent>
-      </Carousel>
 
-      <div className="md:hidden">
-        <div className="my-4 grid grid-cols-2 gap-2">
-          {menuItems.map((item, index) => {
-            const isActive = getActiveNavIndex(currentPage) === index;
-            const isLunchTab =
-              forceLunch && item.name === 'Lunch, Combos & Kids';
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isMobile ? 'mobile-nav' : 'desktop-nav'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {isMobile ? (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="my-4 grid grid-cols-2 gap-2"
+                >
+                  {menuItems.map((item, index) => {
+                    const isActive = getActiveNavIndex(currentPage) === index;
+                    const isLunchTab =
+                      forceLunch && item.name === 'Lunch, Combos & Kids';
 
-            let buttonStyle =
-              'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
-            if (isLunchTab) {
-              buttonStyle =
-                'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
-            } else if (isActive) {
-              buttonStyle =
-                'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
-            }
+                    let buttonStyle =
+                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
+                    if (isLunchTab) {
+                      buttonStyle =
+                        'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
+                    } else if (isActive) {
+                      buttonStyle =
+                        'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
+                    }
 
-            return (
-              <Button
-                key={item.name}
-                onClick={() => handleNavClick(index)}
-                variant={isActive ? 'default' : 'ghost'}
-                className={cn('whitespace-nowrap text-xs', buttonStyle)}
-              >
-                {item.name}
-              </Button>
-            );
-          })}
-        </div>
-      </div>
+                    return (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <Button
+                          onClick={() => handleNavClick(index)}
+                          variant={isActive ? 'default' : 'ghost'}
+                          className={cn(
+                            'whitespace-nowrap text-xs',
+                            buttonStyle
+                          )}
+                        >
+                          {item.name}
+                        </Button>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="my-4 flex justify-center gap-2"
+                >
+                  {menuItems.map((item, index) => {
+                    const isActive = getActiveNavIndex(currentPage) === index;
+                    const isLunchTab =
+                      forceLunch && item.name === 'Lunch, Combos & Kids';
 
-      <div className="mt-4">
-        <Pagination>
-          <PaginationContent className="gap-1">
-            <PaginationItem>
-              <PaginationPrevious
-                className="h-8 w-8 cursor-pointer p-0 hover:bg-[#03502D]/10 hover:text-[#03502D]"
-                onClick={handlePrevClick}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </PaginationPrevious>
-            </PaginationItem>
+                    let buttonStyle =
+                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
+                    if (isLunchTab) {
+                      buttonStyle =
+                        'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
+                    } else if (isActive) {
+                      buttonStyle =
+                        'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
+                    }
 
-            {Array.from({
-              length: isMobile
-                ? menuItems.flatMap((item) => item.images).length
-                : Math.ceil(
-                    menuItems.flatMap((item) => item.images).length / 2
-                  ),
-            }).map((_, i) => {
-              const isLunchPage =
-                forceLunch && (isMobile ? i === 4 || i === 5 : i === 2);
+                    return (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                      >
+                        <Button
+                          onClick={() => handleNavClick(index)}
+                          variant={isActive ? 'default' : 'ghost'}
+                          className={cn(
+                            'whitespace-nowrap text-sm',
+                            buttonStyle
+                          )}
+                        >
+                          {item.name}
+                        </Button>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </motion.div>
+          </AnimatePresence>
 
-              return (
-                <PaginationItem key={i}>
-                  <button
-                    type="button"
-                    className={cn(
-                      'h-2 w-2 rounded-full transition-all hover:opacity-80',
-                      {
-                        'bg-[#03502D]':
-                          getActiveDotIndex(currentPage) === i && !isLunchPage,
-                        'bg-[#03502D]/20':
-                          !isLunchPage && getActiveDotIndex(currentPage) !== i,
-                        'bg-yellow-500':
-                          forceLunch &&
-                          ((isMobile && (i === 4 || i === 5)) ||
-                            (!isMobile && i === 2)),
-                      }
-                    )}
-                    onClick={() => handleDotClick(i)}
-                    aria-label={`Go to page ${i + 1}`}
-                  />
-                </PaginationItem>
-              );
-            })}
+          <motion.div layout>
+            <Carousel
+              setApi={setApi}
+              className="w-full"
+              opts={{
+                align: 'start',
+              }}
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {menuItems.flatMap((item, groupIndex) =>
+                  item.images.map((image, imageIndex) => (
+                    <CarouselItem
+                      key={`${item.name}-${imageIndex}`}
+                      className="pl-2 md:basis-1/2 md:pl-4"
+                    >
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.3 }}
+                        className="relative h-[75vh] w-full md:h-[85vh]"
+                      >
+                        <div className="absolute inset-0 rounded-3xl bg-adobe">
+                          <Image
+                            src={image}
+                            alt={`${item.name} Menu ${imageIndex + 1}`}
+                            fill
+                            priority={groupIndex === 0 && imageIndex === 0}
+                            className="rounded-3xl object-contain p-2"
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            loading={
+                              groupIndex === 0 && imageIndex === 0
+                                ? 'eager'
+                                : 'lazy'
+                            }
+                          />
+                        </div>
+                      </motion.div>
+                    </CarouselItem>
+                  ))
+                )}
+              </CarouselContent>
+            </Carousel>
+          </motion.div>
 
-            <PaginationItem>
-              <PaginationNext
-                className="h-8 w-8 cursor-pointer p-0 hover:bg-[#03502D]/10 hover:text-[#03502D]"
-                onClick={handleNextClick}
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </PaginationNext>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+          <motion.div layout>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <Pagination>
+                <PaginationContent className="gap-1">
+                  <PaginationItem>
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <PaginationPrevious
+                        className="h-8 w-8 cursor-pointer p-0 hover:bg-[#03502D]/10 hover:text-[#03502D]"
+                        onClick={handlePrevClick}
+                        aria-label="Previous page"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </PaginationPrevious>
+                    </motion.div>
+                  </PaginationItem>
+
+                  {Array.from({
+                    length: isMobile
+                      ? menuItems.flatMap((item) => item.images).length
+                      : Math.ceil(
+                          menuItems.flatMap((item) => item.images).length / 2
+                        ),
+                  }).map((_, i) => {
+                    const isLunchPage =
+                      forceLunch && (isMobile ? i === 4 || i === 5 : i === 2);
+
+                    return (
+                      <PaginationItem key={i}>
+                        <button
+                          type="button"
+                          className={cn(
+                            'h-2 w-2 rounded-full transition-all hover:opacity-80',
+                            {
+                              'bg-[#03502D]':
+                                getActiveDotIndex(currentPage) === i &&
+                                !isLunchPage,
+                              'bg-[#03502D]/20':
+                                !isLunchPage &&
+                                getActiveDotIndex(currentPage) !== i,
+                              'bg-yellow-500':
+                                forceLunch &&
+                                ((isMobile && (i === 4 || i === 5)) ||
+                                  (!isMobile && i === 2)),
+                            }
+                          )}
+                          onClick={() => handleDotClick(i)}
+                          aria-label={`Go to page ${i + 1}`}
+                        />
+                      </PaginationItem>
+                    );
+                  })}
+
+                  <PaginationItem>
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      <PaginationNext
+                        className="h-8 w-8 cursor-pointer p-0 hover:bg-[#03502D]/10 hover:text-[#03502D]"
+                        onClick={handleNextClick}
+                        aria-label="Next page"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </PaginationNext>
+                    </motion.div>
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
 
       {isDev && (
         <button
