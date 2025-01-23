@@ -1,10 +1,16 @@
 'use client';
 
+import { CONFETTI_COLORS } from '@/lib/constants/colors';
 import { Facebook, Instagram, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMemo } from 'react';
 import Subscribe from './Subscribe';
 
 const Footer = () => {
+  const socialIconColors = useMemo(() => {
+    return [...CONFETTI_COLORS].sort(() => Math.random() - 0.5).slice(0, 3);
+  }, []);
+
   return (
     <footer className="sticky mt-6 pb-6">
       <div className="mx-auto flex flex-col items-center">
@@ -23,9 +29,16 @@ const Footer = () => {
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
             >
               <Facebook
-                className="h-6 w-6 text-stone-950 transition-colors duration-200 ease-in-out group-hover:fill-[#F4EFE9] group-hover:text-[#F4EFE9]"
+                className="h-6 w-6 stroke-stone-950 text-stone-950 transition-colors duration-200 ease-in-out group-hover:stroke-current"
+                style={{ fill: 'currentColor' }}
                 fill="currentColor"
               />
+              <style>{`
+                .group:hover .group-hover\\:stroke-current:first-child {
+                  fill: ${socialIconColors[0]} !important;
+                  stroke: ${socialIconColors[0]} !important;
+                }
+              `}</style>
             </a>
           </motion.div>
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -35,7 +48,13 @@ const Footer = () => {
               rel="noopener noreferrer"
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
             >
-              <Instagram className="h-6 w-6 text-stone-950 transition-colors duration-200 ease-in-out group-hover:text-[#F4EFE9]" />
+              <Instagram className="h-6 w-6 stroke-stone-950 text-stone-950 transition-colors duration-200 ease-in-out group-hover:fill-stone-950-ig" />
+              <style>{`
+                .group:hover .group-hover\\:fill-stone-950-ig {
+                  fill: #0c0a09 !important;
+                  stroke: ${socialIconColors[1]} !important;
+                }
+              `}</style>
             </a>
           </motion.div>
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
@@ -43,7 +62,13 @@ const Footer = () => {
               href="mailto:hola@elpueblitonwa.com"
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
             >
-              <Mail className="h-6 w-6 text-stone-950 transition-colors duration-200 ease-in-out group-hover:text-[#F4EFE9]" />
+              <Mail className="h-6 w-6 stroke-stone-950 text-stone-950 transition-colors duration-200 ease-in-out group-hover:fill-stone-950-mail" />
+              <style>{`
+                .group:hover .group-hover\\:fill-stone-950-mail {
+                  fill: #0c0a09 !important;
+                  stroke: ${socialIconColors[2]} !important;
+                }
+              `}</style>
             </a>
           </motion.div>
         </motion.div>
