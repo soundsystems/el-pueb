@@ -7,10 +7,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/components/ui/carousel';
+import type { CarouselApi } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'motion/react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const carouselImages = [
   'DSC00811.jpg',
@@ -38,6 +39,32 @@ const carouselImages = [
 
 const Hero = () => {
   const [shuffledImages, setShuffledImages] = useState(carouselImages);
+  const [api, setApi] = useState<CarouselApi>();
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Preload the next few images when the current slide changes
+  const preloadImages = useCallback(
+    (currentIdx: number) => {
+      const numToPreload = 2; // Preload next 2 images
+      for (let i = 1; i <= numToPreload; i++) {
+        const nextIdx = (currentIdx + i) % shuffledImages.length;
+        const img = new window.Image();
+        img.src = shuffledImages[nextIdx].src;
+      }
+    },
+    [shuffledImages]
+  );
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    api.on('select', () => {
+      setCurrentIndex(api.selectedScrollSnap());
+      preloadImages(api.selectedScrollSnap());
+    });
+  }, [api, preloadImages]);
 
   useEffect(() => {
     const shuffleArray = (array: typeof carouselImages) => {
@@ -52,16 +79,24 @@ const Hero = () => {
       return [firstImage, ...shuffledRest];
     };
 
-    setShuffledImages(shuffleArray(carouselImages));
+    const shuffled = shuffleArray(carouselImages);
+    setShuffledImages(shuffled);
+
+    // Preload first few images immediately
+    for (const image of shuffled.slice(0, 3)) {
+      const img = new window.Image();
+      img.src = image.src;
+    }
   }, []);
 
   return (
     <motion.div className="w-full space-y-2">
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2">
           <h2 className="text-pretty text-center font-semibold text-sm text-stone-800 xl:text-base">
-            A cherished part of the Northwest Arkansas community,{' '}
-            <br className="lg:hidden" />
+            A cherished part of the <span className="tablet:hidden">NWA</span>{' '}
+            <span className="tablet:inline hidden">Northwest Arkansas</span>{' '}
+            community, <br className="lg:hidden" />
             we proudly serve authentic family recipes{' '}
             <br className="tablet:hidden" /> passed down through generations.
           </h2>
@@ -71,6 +106,7 @@ const Hero = () => {
       <div className="flex w-full justify-center px-4">
         <div className="w-full max-w-[1600px]">
           <Carousel
+            setApi={setApi}
             opts={{
               loop: true,
               align: 'center',
@@ -97,13 +133,13 @@ const Hero = () => {
                       src={image.src}
                       alt={image.alt}
                       fill
-                      priority={index === 0 || index === 1}
-                      loading={index <= 2 ? 'eager' : 'lazy'}
+                      priority={
+                        index === currentIndex ||
+                        index === (currentIndex + 1) % shuffledImages.length
+                      }
                       className="object-cover"
                       sizes="(max-width: 768px) 95vw, (max-width: 1600px) 85vw, 75vw"
-                      placeholder="blur"
                       quality={100}
-                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQdHx0fHRsdHSIeHx8dIigjJCUmJSQkIiYoLC0sJiEoLSwvLzExLy8yMjIyMjIyMjIyMjL/2wBDARUXFyAeIB4gHiAeIiIgIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
                     />
                   </div>
                 </CarouselItem>

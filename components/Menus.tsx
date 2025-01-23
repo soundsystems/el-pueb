@@ -419,14 +419,17 @@ export default function Component() {
                             src={image}
                             alt={`${item.name} Menu ${imageIndex + 1}`}
                             fill
-                            priority={groupIndex === 0 && imageIndex === 0}
+                            priority={
+                              (groupIndex === 0 && imageIndex === 0) || // First image
+                              (isMobile
+                                ? currentPage + 1 ===
+                                  groupIndex * item.images.length + imageIndex
+                                : // Next image on mobile
+                                  Math.floor((currentPage + 1) / 2) ===
+                                  groupIndex) // Next pair on desktop
+                            }
                             className="rounded-3xl object-contain p-2"
                             sizes="(max-width: 768px) 100vw, 50vw"
-                            loading={
-                              groupIndex === 0 && imageIndex === 0
-                                ? 'eager'
-                                : 'lazy'
-                            }
                           />
                         </div>
                       </motion.div>
