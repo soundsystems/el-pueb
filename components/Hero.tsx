@@ -18,7 +18,7 @@ const carouselImages = [
   'DSC01260.jpg',
   'DSC01261.jpg',
   'DSC01270.jpg',
-  'DSC01312.jpg',
+  'DSC01298.jpg',
   'DSC01810.jpg',
   'DSC01814.jpg',
   'DSC01824.jpg',
@@ -59,12 +59,12 @@ const Hero = () => {
   return (
     <motion.div className="w-full space-y-2">
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
-        <div className="container mx-auto px-2">
+        <div className="container mx-auto px-4">
           <h2 className="text-pretty text-center font-semibold text-sm text-stone-800 xl:text-base">
             A cherished part of the Northwest Arkansas community,{' '}
-            <br className="tablet:block hidden lg:hidden" />
-            we proudly serve authentic family recipes passed down through
-            generations.
+            <br className="lg:hidden" />
+            we proudly serve authentic family recipes{' '}
+            <br className="tablet:hidden" /> passed down through generations.
           </h2>
         </div>
       </div>
@@ -82,9 +82,9 @@ const Hero = () => {
             }}
             plugins={[
               Autoplay({
-                delay: 3000,
+                delay: 4400,
                 rootNode: (emblaRoot) => emblaRoot.parentElement,
-                playOnInit: false,
+                playOnInit: true,
               }),
             ]}
             className="w-full"

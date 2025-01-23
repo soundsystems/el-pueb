@@ -10,7 +10,7 @@ import {
 } from 'motion/react';
 import React, { useActionState } from 'react';
 import ReactConfetti from 'react-confetti';
-import { SpinnerInfinity } from 'spinners-react';
+import { LoadingSpinner } from './ui/loading';
 
 const PHONE_NUMBER_REGEX = /\D/g;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -311,13 +311,7 @@ export default function Subscribe() {
     if (isPending) {
       return (
         <div className="flex h-[88px] w-full items-center justify-center">
-          <SpinnerInfinity
-            size={50}
-            thickness={148}
-            speed={140}
-            color="pueb"
-            secondaryColor="#03502D"
-          />
+          <LoadingSpinner size={50} />
         </div>
       );
     }

@@ -173,29 +173,35 @@ export default function Component() {
         </div>
       )}
 
-      <div className="my-4 hidden justify-center gap-2 md:flex">
-        {menuItems.map((item, index) => {
-          const isActive = getActiveNavIndex(currentPage) === index;
-          const isLunchTab = forceLunch && item.name === 'Lunch, Combos & Kids';
+      <div className="hidden md:block">
+        <div className="my-4 flex justify-center gap-2">
+          {menuItems.map((item, index) => {
+            const isActive = getActiveNavIndex(currentPage) === index;
+            const isLunchTab =
+              forceLunch && item.name === 'Lunch, Combos & Kids';
 
-          let buttonStyle = 'hover:bg-[#03502D]/10 hover:text-[#03502D]';
-          if (isLunchTab) {
-            buttonStyle = 'bg-yellow-500 text-black hover:bg-yellow-500/90';
-          } else if (isActive) {
-            buttonStyle = 'bg-[#03502D] text-white hover:bg-[#03502D]/90';
-          }
+            let buttonStyle =
+              'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
+            if (isLunchTab) {
+              buttonStyle =
+                'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
+            } else if (isActive) {
+              buttonStyle =
+                'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
+            }
 
-          return (
-            <Button
-              key={item.name}
-              onClick={() => handleNavClick(index)}
-              variant={isActive ? 'default' : 'ghost'}
-              className={cn('whitespace-nowrap text-sm', buttonStyle)}
-            >
-              {item.name}
-            </Button>
-          );
-        })}
+            return (
+              <Button
+                key={item.name}
+                onClick={() => handleNavClick(index)}
+                variant={isActive ? 'default' : 'ghost'}
+                className={cn('whitespace-nowrap text-sm', buttonStyle)}
+              >
+                {item.name}
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
       <Carousel
@@ -232,6 +238,37 @@ export default function Component() {
           )}
         </CarouselContent>
       </Carousel>
+
+      <div className="md:hidden">
+        <div className="my-4 grid grid-cols-2 gap-2">
+          {menuItems.map((item, index) => {
+            const isActive = getActiveNavIndex(currentPage) === index;
+            const isLunchTab =
+              forceLunch && item.name === 'Lunch, Combos & Kids';
+
+            let buttonStyle =
+              'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
+            if (isLunchTab) {
+              buttonStyle =
+                'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
+            } else if (isActive) {
+              buttonStyle =
+                'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
+            }
+
+            return (
+              <Button
+                key={item.name}
+                onClick={() => handleNavClick(index)}
+                variant={isActive ? 'default' : 'ghost'}
+                className={cn('whitespace-nowrap text-xs', buttonStyle)}
+              >
+                {item.name}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="mt-4">
         <Pagination>

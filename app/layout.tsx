@@ -2,12 +2,11 @@ import '../styles/globals.css';
 import Banner from '@/components/Banner';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
+import { cn } from '@/lib/utils';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import { Suspense } from 'react';
-import { SpinnerInfinity } from 'spinners-react';
 import { CSPostHogProvider } from './providers';
 
 export const metadata: Metadata = {
@@ -52,26 +51,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={GeistSans.className}>
+      <head />
       <CSPostHogProvider>
         <body
-          className={
-            'min-h-screen w-full bg-[#E4D5C3] pr-safe-right pl-safe-left'
-          }
+          className={cn(
+            'min-h-screen w-full bg-[#E4D5C3] pr-safe-right pl-safe-left font-sans antialiased',
+            GeistSans.variable
+          )}
         >
-          <Suspense
-            fallback={
-              <div className="flex h-screen w-full items-center justify-center">
-                <SpinnerInfinity />
-              </div>
-            }
-          >
-            <Banner />
-            <Header />
-            <main>
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </main>
-            <Footer />
-          </Suspense>
+          <Banner />
+          <Header />
+          <main>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </main>
+          <Footer />
           <SpeedInsights />
         </body>
       </CSPostHogProvider>

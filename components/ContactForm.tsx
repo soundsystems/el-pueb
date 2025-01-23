@@ -20,6 +20,7 @@ import {
   FormLabel,
   FormMessage as ShadcnFormMessage,
 } from '@/components/ui/form';
+import { LoadingSpinner } from '@/components/ui/loading';
 import {
   Select,
   SelectContent,
@@ -374,21 +375,20 @@ const ContactForm = () => {
                   <div className="flex w-full justify-center">
                     <Button
                       type="submit"
-                      variant="ghost"
-                      size="icon"
-                      disabled={pending}
                       className={cn(
-                        'text-pueb dark:text-stone-50',
-                        'w-1/2',
-                        'hover:bg-stone-950/90 hover:text-orange-50',
-                        'dark:hover:text-pueb',
+                        'mt-4 w-full bg-stone-800/90 text-stone-100 hover:bg-stone-700/90 dark:bg-stone-800 dark:hover:bg-stone-700',
                         pending && 'cursor-not-allowed opacity-50'
                       )}
+                      disabled={pending}
                     >
-                      <div className="flex items-center">
-                        Send&nbsp;
-                        <EnvelopeIcon className="h-8 w-8" />
-                      </div>
+                      {pending ? (
+                        <LoadingSpinner size={24} />
+                      ) : (
+                        <>
+                          <EnvelopeIcon className="mr-2 h-4 w-4" />
+                          Send Message
+                        </>
+                      )}
                     </Button>
                   </div>
                 </form>
