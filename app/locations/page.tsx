@@ -5,12 +5,13 @@ import {
   Map as GoogleMap,
   useMap,
 } from '@vis.gl/react-google-maps';
-/// <reference types="@vis.gl/react-google-maps" />
+
+import { getRandomMarkerColors } from '@/lib/constants/colors';
 import { MapPin } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Location = {
   name: string;
@@ -30,7 +31,7 @@ const springTransition = {
 
 const locations: Location[] = [
   {
-    name: 'El Pueblito Bella Vista',
+    name: 'Bella Vista',
     address: '1707 Forest Hills Blvd, Bella Vista, AR 72715',
     phone: '+1-479-855-2324',
     slug: 'bella-vista',
@@ -38,7 +39,7 @@ const locations: Location[] = [
     placeId: 'ChIJ6UYv8unz0IcRDeDm1icSF4g',
   },
   {
-    name: 'El Pueblito Highfill',
+    name: 'Highfill',
     address: '708 NW Highfill St, Gentry, AR 72734',
     phone: '+1-479-525-6034',
     slug: 'highfill',
@@ -46,7 +47,7 @@ const locations: Location[] = [
     placeId: 'ChIJN48WaACL0IcRgQJ8z9j_XE8',
   },
   {
-    name: 'El Pueblito Prairie Creek',
+    name: 'Prairie Creek',
     address: '14340 AR-12, Rogers, AR 72756',
     phone: '+1-479-372-6275',
     slug: 'prairie-creek',
@@ -54,7 +55,7 @@ const locations: Location[] = [
     placeId: 'ChIJj4N21mE92IcRiswN1sLGnCE',
   },
   {
-    name: 'El Pueblito Centerton',
+    name: 'Centerton',
     address: '300 E Centerton Blvd, Centerton, AR 72719',
     phone: '+1-479-224-4820',
     slug: 'centerton',
@@ -63,35 +64,95 @@ const locations: Location[] = [
   },
 ];
 
-const CONFETTI_COLORS = [
-  '#F8C839', // yellow
-  '#016945', // green
-  '#CF0822', // red
-  '#FFFFFF', // white
-  '#EF6A4B', // orange
-  '#9DA26A', // olive
-  '#088589', // teal
-  '#91441A', // brown
-  '#717732', // moss
-  '#F690A1', // pink
-  '#30C2DC', // blue
-  '#0972A7', // navy
-  '#202020', // black
-  '#CD202B', // bright red
-  '#006847', // forest
-  '#FCF3D8', // cream
-];
+const createMarker = (
+  location: Location,
+  index: number,
+  map: google.maps.Map,
+  isDarkMode: boolean,
+  markerColors: string[],
+  infoWindowRef: React.MutableRefObject<google.maps.InfoWindow | null>,
+  selectedLocation: string | null,
+  setSelectedLocation: (slug: string | null) => void
+) => {
+  const markerColor = markerColors[index];
+  const marker = new google.maps.marker.AdvancedMarkerElement({
+    map,
+    position: location.position,
+    title: `El Pueblito ${location.name}`,
+    content: document.createElement('div'),
+  });
+
+  if (marker.content instanceof HTMLElement) {
+    marker.content.style.width = '24px';
+    marker.content.style.height = '24px';
+    marker.content.style.borderRadius = '50%';
+    marker.content.style.backgroundColor = markerColor;
+    marker.content.style.cursor = 'pointer';
+    marker.content.style.transform = 'scale(1.25)';
+  }
+
+  const infoWindow = new google.maps.InfoWindow({
+    content: `
+      <div style="padding: 8px; color: ${isDarkMode ? '#ffffff' : '#000000'}; background-color: ${isDarkMode ? '#1f1f1f' : '#ffffff'};">
+        <style>
+          .gm-ui-hover-effect {
+            outline: none !important;
+          }
+          .maps-link {
+            color: ${markerColor};
+            text-decoration: none;
+            transition: filter 0.2s ease;
+          }
+          .maps-link:hover {
+            filter: brightness(0.7);
+          }
+        </style>
+        <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: bold;">El Pueblito ${location.name}</h3>
+        <p style="margin: 0 0 8px;">${location.address}</p>
+        <a 
+          href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            `El Pueblito ${location.name} ${location.address}`
+          )}" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="maps-link"
+          tabindex="-1"
+        >View on Google Maps</a>
+      </div>
+    `,
+  });
+
+  marker.addListener('click', () => {
+    if (!map) return;
+    if (infoWindowRef.current) {
+      infoWindowRef.current.close();
+    }
+    infoWindow.open({ map, anchor: marker });
+    infoWindowRef.current = infoWindow;
+    setSelectedLocation(
+      location.slug === selectedLocation ? null : location.slug
+    );
+  });
+
+  if (location.slug === selectedLocation) {
+    infoWindow.open({ map, anchor: marker });
+    infoWindowRef.current = infoWindow;
+  }
+
+  return marker;
+};
 
 const MapComponent = ({
-  position,
   locations,
   selectedLocation,
   setSelectedLocation,
+  onMarkersInit,
 }: {
   position: { lat: number; lng: number };
   locations: Location[];
   selectedLocation: string | null;
   setSelectedLocation: (slug: string | null) => void;
+  onMarkersInit: (colors: string[]) => void;
 }) => {
   const map = useMap();
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
@@ -111,13 +172,9 @@ const MapComponent = ({
 
   // Initialize random colors on mount
   useEffect(() => {
-    // Shuffle and pick first 4 colors, excluding white and cream
-    markerColorsRef.current = CONFETTI_COLORS.filter(
-      (color) => color !== '#FFFFFF' && color !== '#FCF3D8'
-    )
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 4);
-  }, []);
+    markerColorsRef.current = getRandomMarkerColors();
+    onMarkersInit(markerColorsRef.current);
+  }, [onMarkersInit]);
 
   // Initialize markers
   useEffect(() => {
@@ -125,78 +182,23 @@ const MapComponent = ({
       return;
     }
 
-    // Clear existing markers
     for (const marker of markersRef.current) {
       marker.map = null;
     }
     markersRef.current = [];
 
-    // Create markers for each location
-    for (const location of locations) {
-      const index = locations.indexOf(location);
-      const markerColor = markerColorsRef.current[index];
-
-      const marker = new google.maps.marker.AdvancedMarkerElement({
+    markersRef.current = locations.map((location, index) =>
+      createMarker(
+        location,
+        index,
         map,
-        position: location.position,
-        title: location.name,
-        content: document.createElement('div'),
-      });
-
-      // Style the marker element
-      if (marker.content instanceof HTMLElement) {
-        marker.content.style.width = '24px';
-        marker.content.style.height = '24px';
-        marker.content.style.borderRadius = '50%';
-        marker.content.style.backgroundColor = markerColor;
-        marker.content.style.cursor = 'pointer';
-        marker.content.style.transform = 'scale(1.25)';
-      }
-
-      // Create info window for this marker
-      const infoWindow = new google.maps.InfoWindow({
-        content: `
-          <div style="padding: 8px; color: ${isDarkMode ? '#ffffff' : '#000000'}; background-color: ${isDarkMode ? '#1f1f1f' : '#ffffff'};">
-            <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: bold;">${location.name}</h3>
-            <p style="margin: 0 0 8px;">${location.address}</p>
-            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-              `${location.name} ${location.address}`
-            )}" target="_blank" rel="noopener noreferrer" style="color: #1a73e8; text-decoration: none;">View on Google Maps</a>
-          </div>
-        `,
-      });
-
-      marker.addListener('click', () => {
-        if (!map) return;
-
-        // Close existing info window
-        if (infoWindowRef.current) {
-          infoWindowRef.current.close();
-        }
-
-        // Open this marker's info window
-        infoWindow.open({
-          map,
-          anchor: marker,
-        });
-
-        infoWindowRef.current = infoWindow;
-        setSelectedLocation(
-          location.slug === selectedLocation ? null : location.slug
-        );
-      });
-
-      // Show info window by default if this is the selected location
-      if (location.slug === selectedLocation) {
-        infoWindow.open({
-          map,
-          anchor: marker,
-        });
-        infoWindowRef.current = infoWindow;
-      }
-
-      markersRef.current.push(marker);
-    }
+        isDarkMode,
+        markerColorsRef.current,
+        infoWindowRef,
+        selectedLocation,
+        setSelectedLocation
+      )
+    );
 
     return () => {
       if (infoWindowRef.current) {
@@ -211,7 +213,9 @@ const MapComponent = ({
 
   // Handle selection changes
   useEffect(() => {
-    if (!map || !markersRef.current.length) return;
+    if (!map || !markersRef.current.length) {
+      return;
+    }
 
     // Close any existing info window
     if (infoWindowRef.current) {
@@ -236,11 +240,32 @@ const MapComponent = ({
         const infoWindow = new google.maps.InfoWindow({
           content: `
             <div style="padding: 8px; color: ${isDarkMode ? '#ffffff' : '#000000'}; background-color: ${isDarkMode ? '#1f1f1f' : '#ffffff'};">
-              <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: bold;">${location.name}</h3>
+              <style>
+                .gm-ui-hover-effect {
+                  outline: none !important;
+                }
+                .maps-link {
+                  color: ${markerColor};
+                  filter: brightness(0.85);
+                  font-weight: 600;
+                  text-decoration: none;
+                  transition: filter 0.2s ease;
+                }
+                .maps-link:hover {
+                  filter: brightness(0.65);
+                }
+              </style>
+              <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: bold;">El Pueblito ${location.name}</h3>
               <p style="margin: 0 0 8px;">${location.address}</p>
-              <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                `${location.name} ${location.address}`
-              )}" target="_blank" rel="noopener noreferrer" style="color: #1a73e8; text-decoration: none;">View on Google Maps</a>
+              <a 
+                href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  `El Pueblito ${location.name} ${location.address}`
+                )}" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="maps-link"
+                tabindex="-1"
+              >View on Google Maps</a>
             </div>
           `,
         });
@@ -289,10 +314,12 @@ const LocationCard = ({
   location,
   selectedLocation,
   setSelectedLocation,
+  markerColor,
 }: {
   location: Location;
   selectedLocation: string | null;
   setSelectedLocation: (slug: string | null) => void;
+  markerColor: string;
 }) => (
   <motion.div
     layout
@@ -308,29 +335,16 @@ const LocationCard = ({
   >
     <motion.div
       layout
-      transition={{ layout: springTransition }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ 
+        layout: springTransition,
+        scale: { type: "spring", stiffness: 300, damping: 25 }
+      }}
       className={`relative flex h-full w-full cursor-pointer overflow-hidden rounded-xl bg-stone-50/70 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${selectedLocation === location.slug ? 'bg-stone-950/90' : ''}`}
-      onClick={() =>
-        setSelectedLocation(
-          selectedLocation === location.slug ? null : location.slug
-        )
-      }
+      onClick={() => setSelectedLocation(selectedLocation === location.slug ? null : location.slug)}
+      style={{ '--marker-color': markerColor } as React.CSSProperties}
     >
-      <motion.div
-        layout
-        transition={{ layout: springTransition }}
-        className="relative flex h-full w-[140px] flex-shrink-0 items-center justify-center p-4 md:w-[200px]"
-      >
-        <div className="relative h-[120px] w-full overflow-hidden rounded-xl md:h-[180px]">
-          <Image
-            src={`/images/locations/${location.slug}.jpg`}
-            alt={`${location.name} location`}
-            width={1600}
-            height={900}
-            className="h-full w-full object-cover object-center"
-          />
-        </div>
-      </motion.div>
       <motion.div
         layout
         transition={{ layout: springTransition }}
@@ -340,17 +354,34 @@ const LocationCard = ({
           <motion.h2
             layout
             transition={{ layout: springTransition }}
-            className={`mb-1 font-black text-xl md:mb-2 md:text-2xl ${selectedLocation === location.slug ? 'text-orange-50' : 'text-stone-900'}`}
+            className={`mb-1 font-black text-xl md:mb-2 md:text-2xl ${selectedLocation === location.slug ? 'text-stone-50' : 'text-stone-900'}`}
           >
             {location.name}
           </motion.h2>
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className={`flex items-start gap-1 md:gap-2 ${selectedLocation === location.slug ? 'text-stone-300' : 'text-stone-600'}`}
+            className={`flex items-start gap-1 md:gap-2 ${
+              selectedLocation === location.slug
+                ? 'text-stone-300'
+                : 'text-stone-600'
+            }`}
           >
-            <MapPin className="mt-1 h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
-            <p className="text-xs md:text-sm">{location.address}</p>
+            <MapPin className="h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
+            <Link
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                `El Pueblito ${location.name} ${location.address}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`font-semibold text-xs transition-all duration-300 md:text-sm xl:text-md ${
+                selectedLocation === location.slug
+                  ? 'text-[color:var(--marker-color)] hover:brightness-75 md:text-stone-50 md:hover:text-[color:var(--marker-color)] md:hover:brightness-100'
+                  : 'text-stone-600 hover:text-[color:var(--marker-color)]'
+              }`}
+            >
+              {location.address}
+            </Link>
           </motion.div>
         </div>
         <motion.div
@@ -362,12 +393,32 @@ const LocationCard = ({
             <motion.p
               layout
               transition={{ layout: springTransition }}
-              className={`mt-1 font-bold text-xs md:text-sm ${selectedLocation === location.slug ? 'text-orange-50' : 'text-stone-900'}`}
+              className={`mt-1 font-bold text-xs decoration-[2px] transition-all duration-300 md:text-sm ${
+                selectedLocation === location.slug
+                  ? 'text-stone-50 underline'
+                  : 'text-stone-900 no-underline hover:underline'
+              } hover:text-[color:var(--marker-color)]`}
+              style={{ textDecorationColor: markerColor }}
             >
               {location.phone}
             </motion.p>
           </Link>
         </motion.div>
+      </motion.div>
+      <motion.div
+        layout
+        transition={{ layout: springTransition }}
+        className="relative flex h-full w-[140px] flex-shrink-0 items-center justify-center p-4 md:w-[280px]"
+      >
+        <div className="relative h-[120px] w-full overflow-hidden rounded-xl md:h-[180px]">
+          <Image
+            src={`/images/locations/${location.slug}.jpg`}
+            alt={`${location.name} location`}
+            width={1600}
+            height={900}
+            className="h-full w-full object-cover object-center"
+          />
+        </div>
       </motion.div>
     </motion.div>
   </motion.div>
@@ -376,6 +427,11 @@ const LocationCard = ({
 export default function LocationsPage() {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [markerColors, setMarkerColors] = useState<string[]>([]);
+
+  const handleMarkersInit = useCallback((colors: string[]) => {
+    setMarkerColors(colors);
+  }, []);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -393,7 +449,9 @@ export default function LocationsPage() {
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  if (!apiKey) return null;
+  if (!apiKey) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4">
@@ -421,6 +479,7 @@ export default function LocationsPage() {
               location={location}
               selectedLocation={selectedLocation}
               setSelectedLocation={setSelectedLocation}
+              markerColor={markerColors[index] || '#000000'}
             />
           ))}
         </motion.div>
@@ -442,6 +501,7 @@ export default function LocationsPage() {
                 locations={locations}
                 selectedLocation={selectedLocation}
                 setSelectedLocation={setSelectedLocation}
+                onMarkersInit={handleMarkersInit}
               />
             </APIProvider>
           </motion.div>

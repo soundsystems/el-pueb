@@ -137,31 +137,31 @@ async function sendWelcomeEmails(formData: SubscribeFormData) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #03502D;">¡Bienvenidos a La Familia Pueblito!</h1>
-        <p>¡Muchas gracias! You've succesfully signed up for our newsletter${formData.firstName ? `, ${formData.firstName}` : ''}! We're excited to have you join our family.</p>
+        <p>¡Muchas gracias! You've succesfully signed up for our newsletter${formData.firstName ? `, <strong>${formData.firstName}</strong>` : ''}! We're excited to have you join our family.</p>
         <p>You'll be the first to know about:</p>
-        <ul style="list-style: none; padding-left: 0;">
-          <li style="margin-bottom: 12px; display: flex; align-items: center;">
-            <span style="color: #F8C839; font-size: 32px; margin-right: 8px;">•</span>
+        <ul style="list-style-type: none; padding-left: 0;">
+          <li style="margin-bottom: 12px;">
+            <span style="color: #F8C839; font-size: 24px; margin-right: 8px;">●</span>
             Exclusive promotions and deals
           </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center;">
-            <span style="color: #016945; font-size: 32px; margin-right: 8px;">•</span>
+          <li style="margin-bottom: 12px;">
+            <span style="color: #016945; font-size: 24px; margin-right: 8px;">●</span>
             New menu items
           </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center;">
-            <span style="color: #CF0822; font-size: 32px; margin-right: 8px;">•</span>
+          <li style="margin-bottom: 12px;">
+            <span style="color: #CF0822; font-size: 24px; margin-right: 8px;">●</span>
             Events and celebrations
           </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center;">
-            <span style="color: #088589; font-size: 32px; margin-right: 8px;">•</span>
+          <li style="margin-bottom: 12px;">
+            <span style="color: #088589; font-size: 24px; margin-right: 8px;">●</span>
             Restaurant news and updates
           </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center;">
-            <span style="color: #EF6A4B; font-size: 32px; margin-right: 8px;">•</span>
+          <li style="margin-bottom: 12px;">
+            <span style="color: #EF6A4B; font-size: 24px; margin-right: 8px;">●</span>
             Our upcoming rewards program
           </li>
-          <li style="margin-bottom: 12px; display: flex; align-items: center;">
-            <span style="color: #9DA26A; font-size: 32px; margin-right: 8px;">•</span>
+          <li style="margin-bottom: 12px;">
+            <span style="color: #9DA26A; font-size: 24px; margin-right: 8px;">●</span>
             And more!
           </li>
         </ul>

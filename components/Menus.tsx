@@ -24,18 +24,45 @@ import {
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const menuItems = [
+type MenuItem = {
+  name: string;
+  mobileName?: string;
+  images: string[];
+  mobileOnly?: boolean;
+};
+
+const menuItems: MenuItem[] = [
   {
     name: 'Starters, Sides & Especialdades',
-    images: ['/images/menu/1.png', '/images/menu/4.png'],
+    mobileName: 'Starters & Sides',
+    images: ['/images/menu/1.png'],
   },
-  { name: 'Plates', images: ['/images/menu/2.png', '/images/menu/3.png'] },
+  {
+    name: 'Especialdades',
+    mobileName: 'Especialdades',
+    images: ['/images/menu/4.png'],
+    mobileOnly: true,
+  },
+  {
+    name: 'Plates',
+    mobileName: 'Tacos, Burritos & Fajitas',
+    images: ['/images/menu/2.png'],
+  },
+  {
+    name: 'A La Parilla',
+    mobileName: 'A La Parilla',
+    images: ['/images/menu/3.png'],
+    mobileOnly: true,
+  },
   {
     name: 'Lunch, Combos & Kids',
     images: ['/images/menu/5.png', '/images/menu/6.png'],
   },
-  { name: 'Deserts & Drinks', images: ['/images/menu/7.png'] },
-] as const;
+  {
+    name: 'Deserts & Drinks',
+    images: ['/images/menu/7.png'],
+  },
+];
 
 export default function Component() {
   const [api, setApi] = useState<CarouselApi>();
@@ -77,8 +104,14 @@ export default function Component() {
     if (!api) {
       return;
     }
-    const targetSlide = index * 2;
-    api.scrollTo(targetSlide);
+
+    // Get the actual image index by counting images up to this menu item
+    let imageIndex = 0;
+    for (let i = 0; i < index; i++) {
+      imageIndex += menuItems[i].images.length;
+    }
+
+    api.scrollTo(imageIndex);
   };
 
   const handlePrevClick = () => {
@@ -203,42 +236,77 @@ export default function Component() {
                   transition={{ duration: 0.3 }}
                   className="my-4 grid grid-cols-2 gap-2"
                 >
-                  {menuItems.map((item, index) => {
-                    const isActive = getActiveNavIndex(currentPage) === index;
-                    const isLunchTab =
-                      forceLunch && item.name === 'Lunch, Combos & Kids';
+                  {menuItems
+                    .filter((item) => !item.mobileOnly || isMobile)
+                    .map((item, index) => {
+                      const isActive = getActiveNavIndex(currentPage) === index;
+                      const isLunchTab =
+                        forceLunch && item.name === 'Lunch, Combos & Kids';
 
-                    let buttonStyle =
-                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
-                    if (isLunchTab) {
-                      buttonStyle =
-                        'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
-                    } else if (isActive) {
-                      buttonStyle =
-                        'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
-                    }
+                      let buttonStyle =
+                        'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
+                      if (isLunchTab) {
+                        buttonStyle = isActive
+                          ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
+                          : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
+                      } else if (isActive) {
+                        buttonStyle =
+                          'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
+                      }
 
-                    return (
-                      <motion.div
-                        key={item.name}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="w-full"
-                      >
-                        <Button
-                          onClick={() => handleNavClick(index)}
-                          variant={isActive ? 'default' : 'ghost'}
-                          className={cn(
-                            'w-full whitespace-nowrap text-center text-xs',
-                            buttonStyle
-                          )}
+                      return (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="w-full"
+                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02 }}
+                          onClick={() => {
+                            if (getActiveNavIndex(currentPage) === index) {
+                              // Shake animation if already selected
+                              const element = document.getElementById(
+                                `menu-btn-${index}`
+                              );
+                              if (element) {
+                                element.animate(
+                                  [
+                                    { transform: 'translateX(-2px)' },
+                                    { transform: 'translateX(2px)' },
+                                    { transform: 'translateX(-2px)' },
+                                    { transform: 'translateX(0)' },
+                                  ],
+                                  {
+                                    duration: 200,
+                                    easing: 'ease-in-out',
+                                  }
+                                );
+                              }
+                            } else {
+                              handleNavClick(index);
+                            }
+                          }}
                         >
-                          {item.name}
-                        </Button>
-                      </motion.div>
-                    );
-                  })}
+                          <Button
+                            id={`menu-btn-${index}`}
+                            variant={
+                              isLunchTab
+                                ? undefined
+                                : isActive
+                                  ? 'default'
+                                  : 'ghost'
+                            }
+                            className={cn(
+                              'w-full whitespace-nowrap px-2 text-center text-xs',
+                              buttonStyle
+                            )}
+                          >
+                            {item.mobileName || item.name}
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
                 </motion.div>
               ) : (
                 <motion.div
@@ -248,41 +316,76 @@ export default function Component() {
                   transition={{ duration: 0.3 }}
                   className="my-4 flex justify-center gap-2"
                 >
-                  {menuItems.map((item, index) => {
-                    const isActive = getActiveNavIndex(currentPage) === index;
-                    const isLunchTab =
-                      forceLunch && item.name === 'Lunch, Combos & Kids';
+                  {menuItems
+                    .filter((item) => !item.mobileOnly)
+                    .map((item, index) => {
+                      const isActive = getActiveNavIndex(currentPage) === index;
+                      const isLunchTab =
+                        forceLunch && item.name === 'Lunch, Combos & Kids';
 
-                    let buttonStyle =
-                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors';
-                    if (isLunchTab) {
-                      buttonStyle =
-                        'bg-yellow-500 text-black hover:bg-yellow-500/90 transition-colors';
-                    } else if (isActive) {
-                      buttonStyle =
-                        'bg-[#03502D] text-white hover:bg-[#03502D]/90 transition-colors';
-                    }
+                      let buttonStyle =
+                        'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
+                      if (isLunchTab) {
+                        buttonStyle = isActive
+                          ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
+                          : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
+                      } else if (isActive) {
+                        buttonStyle =
+                          'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
+                      }
 
-                    return (
-                      <motion.div
-                        key={item.name}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                      >
-                        <Button
-                          onClick={() => handleNavClick(index)}
-                          variant={isActive ? 'default' : 'ghost'}
-                          className={cn(
-                            'whitespace-nowrap text-sm',
-                            buttonStyle
-                          )}
+                      return (
+                        <motion.div
+                          key={item.name}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          whileHover={{ scale: 1.02 }}
+                          onClick={() => {
+                            if (getActiveNavIndex(currentPage) === index) {
+                              // Shake animation if already selected
+                              const element = document.getElementById(
+                                `menu-btn-desktop-${index}`
+                              );
+                              if (element) {
+                                element.animate(
+                                  [
+                                    { transform: 'translateX(-2px)' },
+                                    { transform: 'translateX(2px)' },
+                                    { transform: 'translateX(-2px)' },
+                                    { transform: 'translateX(0)' },
+                                  ],
+                                  {
+                                    duration: 200,
+                                    easing: 'ease-in-out',
+                                  }
+                                );
+                              }
+                            } else {
+                              handleNavClick(index);
+                            }
+                          }}
                         >
-                          {item.name}
-                        </Button>
-                      </motion.div>
-                    );
-                  })}
+                          <Button
+                            id={`menu-btn-desktop-${index}`}
+                            variant={
+                              isLunchTab
+                                ? undefined
+                                : isActive
+                                  ? 'default'
+                                  : 'ghost'
+                            }
+                            className={cn(
+                              'whitespace-nowrap text-sm',
+                              buttonStyle
+                            )}
+                          >
+                            {item.name}
+                          </Button>
+                        </motion.div>
+                      );
+                    })}
                 </motion.div>
               )}
             </motion.div>
@@ -417,7 +520,7 @@ export default function Component() {
       {isDev && (
         <button
           type="button"
-          className="fixed right-4 bottom-4 z-50 rounded-full bg-[#03502D] px-4 py-2 text-sm text-white shadow-lg hover:opacity-90"
+          className="fixed right-4 bottom-4 z-50 rounded-full bg-[#03502D] px-4 py-2 text-sm text-stone-50 shadow-lg hover:opacity-90"
           onClick={() => setForceLunch(!forceLunch)}
         >
           {forceLunch ? 'Disable' : 'Enable'} Lunch Hours

@@ -15,7 +15,6 @@ import { useEffect, useState } from 'react';
 const carouselImages = [
   'DSC00811.jpg',
   'DSC01058.jpg',
-  'DSC01260.jpg',
   'DSC01261.jpg',
   'DSC01270.jpg',
   'DSC01298.jpg',
