@@ -73,4 +73,24 @@
   body {
     @apply bg-background text-foreground;
   }
+  *:focus-visible {
+    outline: none !important;
+  }
+  *:not([data-force-focus]):focus {
+    outline: none !important;
+  }
+  input[type="text"]:not([data-force-focus]),
+  input[type="email"]:not([data-force-focus]),
+  input[type="password"]:not([data-force-focus]),
+  input[type="search"]:not([data-force-focus]),
+  input[type="tel"]:not([data-force-focus]),
+  input[type="url"]:not([data-force-focus]),
+  input[type="number"]:not([data-force-focus]),
+  textarea:not([data-force-focus]) {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    -webkit-tap-highlight-color: transparent;
+  }
 }

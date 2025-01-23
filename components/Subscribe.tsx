@@ -234,7 +234,7 @@ export default function Subscribe() {
       </span>
       <span>
         <input
-          className="mx-2 w-48 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-stone-50/80 hover:outline hover:outline-1 focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
+          className="mx-2 w-48 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 placeholder-stone-900 outline-[#FBCAD3] placeholder:text-center placeholder:font-light hover:outline hover:outline-1 focus:border-transparent focus:outline-2 dark:text-stone-50 dark:placeholder-stone-50/80 dark:outline-[#F15670]"
           name="email"
           required
           type="email"
