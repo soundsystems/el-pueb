@@ -224,12 +224,13 @@ export default function Component() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
+                        className="w-full"
                       >
                         <Button
                           onClick={() => handleNavClick(index)}
                           variant={isActive ? 'default' : 'ghost'}
                           className={cn(
-                            'whitespace-nowrap text-xs',
+                            'w-full whitespace-nowrap text-center text-xs',
                             buttonStyle
                           )}
                         >
