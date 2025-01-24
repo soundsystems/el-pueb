@@ -1,29 +1,29 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import {} from '@/components/ui/pagination';
+import { Button } from "@/components/ui/button";
+import {} from "@/components/ui/pagination";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
-import { useRestaurantHours } from '@/lib/hooks/useRestaurantHours';
-import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import {} from './ui/card';
+} from "@/components/ui/pagination";
+import { useRestaurantHours } from "@/lib/hooks/useRestaurantHours";
+import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import Image from "next/image";
+import { useEffect, useState, useCallback } from "react";
+import {} from "./ui/card";
 import {
   Carousel,
   type CarouselApi,
   CarouselContent,
   CarouselItem,
-} from './ui/carousel';
+} from "./ui/carousel";
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === "development";
 
 type MenuItem = {
   name: string;
@@ -34,34 +34,34 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   {
-    name: 'Starters, Sides & Especialdades',
-    mobileName: 'Starters & Sides',
-    images: ['/images/menu/1.png'],
+    name: "Starters, Sides & Especialdades",
+    mobileName: "Starters & Sides",
+    images: ["/images/menu/1.png"],
   },
   {
-    name: 'Especialdades',
-    mobileName: 'Especialdades',
-    images: ['/images/menu/4.png'],
+    name: "Especialdades",
+    mobileName: "Especialdades",
+    images: ["/images/menu/4.png"],
     mobileOnly: true,
   },
   {
-    name: 'Plates',
-    mobileName: 'Tacos, Burritos & Fajitas',
-    images: ['/images/menu/2.png'],
+    name: "Platos",
+    mobileName: "Tacos, Burritos & Fajitas",
+    images: ["/images/menu/2.png"],
   },
   {
-    name: 'A La Parilla',
-    mobileName: 'A La Parilla',
-    images: ['/images/menu/3.png'],
+    name: "A La Parilla",
+    mobileName: "A La Parilla",
+    images: ["/images/menu/3.png"],
     mobileOnly: true,
   },
   {
-    name: 'Lunch, Combos & Kids',
-    images: ['/images/menu/5.png', '/images/menu/6.png'],
+    name: "Lunch, Combos & Kids",
+    images: ["/images/menu/5.png", "/images/menu/6.png"],
   },
   {
-    name: 'Deserts & Drinks',
-    images: ['/images/menu/7.png'],
+    name: "Deserts & Drinks",
+    images: ["/images/menu/7.png"],
   },
 ];
 
@@ -90,7 +90,7 @@ export default function Component() {
   useEffect(() => {
     if (forceLunch && api) {
       const lunchIndex = menuItems.findIndex(
-        (item) => item.name === 'Lunch, Combos & Kids'
+        (item) => item.name === "Lunch, Combos & Kids"
       );
       let imageIndex = 0;
       for (let i = 0; i < lunchIndex; i++) {
@@ -101,12 +101,10 @@ export default function Component() {
   }, [forceLunch, api]);
 
   useEffect(() => {
-    if (!api) {
-      return;
-    }
+    if (!api) return;
     if (forceLunch) {
       const lunchIndex = menuItems.findIndex(
-        (item) => item.name === 'Lunch, Combos & Kids'
+        (item) => item.name === "Lunch, Combos & Kids"
       );
       let imageIndex = 0;
       for (let i = 0; i < lunchIndex; i++) {
@@ -119,40 +117,124 @@ export default function Component() {
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   useEffect(() => {
-    if (!api) {
-      return;
-    }
+    if (!api) return;
     const handleSelect = () => {
       const current = api.selectedScrollSnap();
       setCurrentPage(current);
     };
-    api.on('select', handleSelect);
+    api.on("select", handleSelect);
     return () => {
-      api.off('select', handleSelect);
+      api.off("select", handleSelect);
     };
   }, [api]);
 
+  /**
+   * Wrap your prev/next click handlers in useCallback
+   * to keep them stable across re-renders.
+   */
+  const handlePrevClick = useCallback(() => {
+    if (!api) return;
+
+    if (isMobile) {
+      api.scrollTo(Math.max(0, currentPage - 1));
+    } else {
+      // Always move 2 at a time in desktop view
+      const allImages = menuItems.flatMap((item) => item.images);
+      let newPage = currentPage - 2;
+      // Ensure we land on even numbered pages
+      if (newPage > 0 && newPage % 2 !== 0) {
+        newPage--;
+      }
+      api.scrollTo(Math.max(0, newPage));
+    }
+  }, [api, isMobile, currentPage]);
+
+  const handleNextClick = useCallback(() => {
+    if (!api) return;
+
+    if (isMobile) {
+      const maxPage = menuItems.flatMap((item) => item.images).length - 1;
+      api.scrollTo(Math.min(maxPage, currentPage + 1));
+    } else {
+      // Always move 2 at a time in desktop view
+      const allImages = menuItems.flatMap((item) => item.images);
+      let newPage = currentPage + 2;
+      // Ensure we land on even numbered pages
+      if (newPage < allImages.length && newPage % 2 !== 0) {
+        newPage--;
+      }
+      api.scrollTo(Math.min(allImages.length - 2, newPage));
+    }
+  }, [api, isMobile, currentPage]);
+
+  /**
+   * Because handlePrevClick and handleNextClick are wrapped in useCallback,
+   * this effect will always have the latest references to them.
+   */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!api || isMobile) return;
+      if (!api) return;
 
-      if (e.key === 'ArrowLeft') {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
-        handlePrevClick();
-      } else if (e.key === 'ArrowRight') {
+        if (isMobile) {
+          api.scrollTo(Math.max(0, currentPage - 1));
+        } else {
+          // Desktop view - fixed pairs for navigation
+          const pairs: Record<number, number[]> = {
+            0: [0], // Starters
+            1: [2, 3], // Platos
+            2: [4, 5], // Lunch
+            3: [6], // Desserts
+          };
+          // Find current section
+          let currentSection = 0;
+          for (const [section, pages] of Object.entries(pairs)) {
+            if (pages.includes(currentPage)) {
+              currentSection = Number(section);
+              break;
+            }
+          }
+          // Go to previous section's first page
+          const prevSection = Math.max(0, currentSection - 1);
+          api.scrollTo(pairs[prevSection][0]);
+        }
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        handleNextClick();
+        if (isMobile) {
+          const maxPage = menuItems.flatMap((item) => item.images).length - 1;
+          api.scrollTo(Math.min(maxPage, currentPage + 1));
+        } else {
+          // Desktop view - fixed pairs for navigation
+          const pairs: Record<number, number[]> = {
+            0: [0], // Starters
+            1: [2, 3], // Platos
+            2: [4, 5], // Lunch
+            3: [6], // Desserts
+          };
+          // Find current section
+          let currentSection = 0;
+          for (const [section, pages] of Object.entries(pairs)) {
+            if (pages.includes(currentPage)) {
+              currentSection = Number(section);
+              break;
+            }
+          }
+          // Go to next section's first page
+          const nextSection = Math.min(3, currentSection + 1);
+          api.scrollTo(pairs[nextSection][0]);
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [api, isMobile]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [api, isMobile, currentPage]);
 
   const handleNavClick = (index: number) => {
     if (!api) {
@@ -170,48 +252,11 @@ export default function Component() {
       // On desktop, we need to map the non-mobile indices to the correct image pairs
       const desktopIndices: Record<number, number> = {
         0: 0, // Starters -> image 1
-        1: 2, // Plates -> images 3,4
+        1: 2, // Platos -> images 3,4
         2: 4, // Lunch -> images 5,6
         3: 6, // Desserts -> image 7
       };
       api.scrollTo(desktopIndices[index] || 0);
-    }
-  };
-
-  const handlePrevClick = () => {
-    if (!api) {
-      return;
-    }
-    if (isMobile) {
-      api.scrollTo(Math.max(0, currentPage - 1));
-    } else {
-      // Always move 2 at a time in desktop view
-      const allImages = menuItems.flatMap((item) => item.images);
-      let newPage = currentPage - 2;
-      // Ensure we land on even numbered pages
-      if (newPage > 0 && newPage % 2 !== 0) {
-        newPage--;
-      }
-      api.scrollTo(Math.max(0, newPage));
-    }
-  };
-
-  const handleNextClick = () => {
-    if (!api) {
-      return;
-    }
-    if (isMobile) {
-      const maxPage = menuItems.flatMap((item) => item.images).length - 1;
-      api.scrollTo(Math.min(maxPage, currentPage + 1));
-    } else {
-      // Always move 2 at a time in desktop view
-      const allImages = menuItems.flatMap((item) => item.images);
-      let newPage = currentPage + 2;
-      // Ensure we land on even numbered pages
-      if (newPage < allImages.length && newPage % 2 !== 0) {
-        newPage--;
-      }
-      api.scrollTo(Math.min(allImages.length - 2, newPage));
     }
   };
 
@@ -252,42 +297,36 @@ export default function Component() {
     // Desktop view - map image pairs back to nav indices
     const imageToNavIndex: Record<number, number> = {
       0: 0, // Image 1 -> Starters
-      2: 1, // Images 3,4 -> Plates
+      2: 1, // Images 3,4 -> Platos
       4: 2, // Images 5,6 -> Lunch
       6: 3, // Image 7 -> Desserts
     };
 
-    // Get the current visible pair of images
     const allImages = menuItems.flatMap((item) => item.images);
     const lastPairStart = allImages.length - 2;
 
-    // If we're showing the last image, always highlight desserts
     if (currentPage >= lastPairStart) {
-      return 3; // Desserts index
+      return 3; // Always highlight "Desserts & Drinks" for the last pair
     }
 
-    // Round down to nearest even number to get the first image of the current pair
     const pairStartIndex = Math.floor(currentPage / 2) * 2;
     return imageToNavIndex[pairStartIndex] || 0;
   };
 
-  // Helper to determine which pagination dot should be active
+  // Which pagination dot should be active
   const getActiveDotIndex = (currentPage: number) => {
     if (isMobile) {
       return currentPage;
     }
 
-    // For desktop view, we want to show the last dot when desserts are visible
     const allImages = menuItems.flatMap((item) => item.images);
     const totalImages = allImages.length;
     const lastPairStart = totalImages - 2;
 
-    // When showing the last pair (which includes the last image), highlight the last dot
     if (currentPage >= lastPairStart) {
       return Math.ceil(totalImages / 2) - 1;
     }
 
-    // Otherwise, show the current pair's dot
     return Math.floor(currentPage / 2);
   };
 
@@ -295,7 +334,7 @@ export default function Component() {
     <div className="mx-auto w-full max-w-6xl px-4">
       <AnimatePresence mode="wait">
         <motion.div
-          key={isMobile ? 'mobile' : 'desktop'}
+          key={isMobile ? "mobile" : "desktop"}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -310,19 +349,19 @@ export default function Component() {
                 transition={{ duration: 0.5 }}
               >
                 <motion.span
-                  initial={{ color: '#03502D' }}
+                  initial={{ color: "#03502D" }}
                   animate={{
                     color: [
-                      '#03502D',
-                      '#FFD700',
-                      '#03502D',
-                      '#FFD700',
-                      '#03502D',
+                      "#03502D",
+                      "#FFD700",
+                      "#03502D",
+                      "#FFD700",
+                      "#03502D",
                     ],
                   }}
                   transition={{
                     duration: 1.3,
-                    ease: 'easeInOut',
+                    ease: "easeInOut",
                     times: [0, 0.25, 0.5, 0.75, 1],
                   }}
                   className="italic"
@@ -335,7 +374,7 @@ export default function Component() {
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={isMobile ? 'mobile' : 'desktop'}
+              key={isMobile ? "mobile" : "desktop"}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -352,17 +391,17 @@ export default function Component() {
                   {menuItems.map((item, index) => {
                     const isActive = getActiveNavIndex(currentPage) === index;
                     const isLunchTab =
-                      forceLunch && item.name === 'Lunch, Combos & Kids';
+                      forceLunch && item.name === "Lunch, Combos & Kids";
 
                     let buttonStyle =
-                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
+                      "hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2";
                     if (isLunchTab) {
                       buttonStyle = isActive
-                        ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
-                        : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
+                        ? "bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2"
+                        : "bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md";
                     } else if (isActive) {
                       buttonStyle =
-                        'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
+                        "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2";
                     }
 
                     return (
@@ -383,14 +422,14 @@ export default function Component() {
                             if (element) {
                               element.animate(
                                 [
-                                  { transform: 'translateX(-2px)' },
-                                  { transform: 'translateX(2px)' },
-                                  { transform: 'translateX(-2px)' },
-                                  { transform: 'translateX(0)' },
+                                  { transform: "translateX(-2px)" },
+                                  { transform: "translateX(2px)" },
+                                  { transform: "translateX(-2px)" },
+                                  { transform: "translateX(0)" },
                                 ],
                                 {
                                   duration: 200,
-                                  easing: 'ease-in-out',
+                                  easing: "ease-in-out",
                                 }
                               );
                             }
@@ -405,11 +444,11 @@ export default function Component() {
                             isLunchTab
                               ? undefined
                               : isActive
-                                ? 'default'
-                                : 'ghost'
+                              ? "default"
+                              : "ghost"
                           }
                           className={cn(
-                            'w-full whitespace-nowrap px-2 text-center text-xs md:text-sm',
+                            "w-full whitespace-nowrap px-2 text-center text-xs md:text-sm",
                             buttonStyle
                           )}
                         >
@@ -432,17 +471,17 @@ export default function Component() {
                     .map((item, index) => {
                       const isActive = getActiveNavIndex(currentPage) === index;
                       const isLunchTab =
-                        forceLunch && item.name === 'Lunch, Combos & Kids';
+                        forceLunch && item.name === "Lunch, Combos & Kids";
 
                       let buttonStyle =
-                        'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
+                        "hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2";
                       if (isLunchTab) {
                         buttonStyle = isActive
-                          ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
-                          : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
+                          ? "bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2"
+                          : "bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md";
                       } else if (isActive) {
                         buttonStyle =
-                          'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
+                          "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2";
                       }
 
                       return (
@@ -462,14 +501,14 @@ export default function Component() {
                               if (element) {
                                 element.animate(
                                   [
-                                    { transform: 'translateX(-2px)' },
-                                    { transform: 'translateX(2px)' },
-                                    { transform: 'translateX(-2px)' },
-                                    { transform: 'translateX(0)' },
+                                    { transform: "translateX(-2px)" },
+                                    { transform: "translateX(2px)" },
+                                    { transform: "translateX(-2px)" },
+                                    { transform: "translateX(0)" },
                                   ],
                                   {
                                     duration: 200,
-                                    easing: 'ease-in-out',
+                                    easing: "ease-in-out",
                                   }
                                 );
                               }
@@ -484,11 +523,11 @@ export default function Component() {
                               isLunchTab
                                 ? undefined
                                 : isActive
-                                  ? 'default'
-                                  : 'ghost'
+                                ? "default"
+                                : "ghost"
                             }
                             className={cn(
-                              'whitespace-nowrap text-sm',
+                              "whitespace-nowrap text-sm",
                               buttonStyle
                             )}
                           >
@@ -507,7 +546,7 @@ export default function Component() {
               setApi={setApi}
               className="w-full"
               opts={{
-                align: 'start',
+                align: "start",
                 ...(isMobile
                   ? {}
                   : {
@@ -537,13 +576,12 @@ export default function Component() {
                             alt={`${item.name} Menu ${imageIndex + 1}`}
                             fill
                             priority={
-                              (groupIndex === 0 && imageIndex === 0) || // First image
+                              (groupIndex === 0 && imageIndex === 0) ||
                               (isMobile
                                 ? currentPage + 1 ===
                                   groupIndex * item.images.length + imageIndex
-                                : // Next image on mobile
-                                  Math.floor((currentPage + 1) / 2) ===
-                                  groupIndex) // Next pair on desktop
+                                : Math.floor((currentPage + 1) / 2) ===
+                                  groupIndex)
                             }
                             className="rounded-3xl object-contain p-2"
                             sizes="(max-width: 768px) 100vw, 50vw"
@@ -588,22 +626,23 @@ export default function Component() {
                         ),
                   }).map((_, i) => {
                     const isLunchPage =
-                      forceLunch && (isMobile ? i === 4 || i === 5 : i === 2);
+                      forceLunch &&
+                      (isMobile ? i === 4 || i === 5 : i === 2);
 
                     return (
                       <PaginationItem key={i}>
                         <button
                           type="button"
                           className={cn(
-                            'h-2 w-2 rounded-full transition-all hover:opacity-80',
+                            "h-2 w-2 rounded-full transition-all hover:opacity-80",
                             {
-                              'bg-[#03502D]':
+                              "bg-[#03502D]":
                                 getActiveDotIndex(currentPage) === i &&
                                 !isLunchPage,
-                              'bg-[#03502D]/20':
+                              "bg-[#03502D]/20":
                                 !isLunchPage &&
                                 getActiveDotIndex(currentPage) !== i,
-                              'bg-yellow-500':
+                              "bg-yellow-500":
                                 forceLunch &&
                                 ((isMobile && (i === 4 || i === 5)) ||
                                   (!isMobile && i === 2)),
@@ -643,7 +682,7 @@ export default function Component() {
           className="fixed right-4 bottom-4 z-50 rounded-full bg-[#03502D] px-4 py-2 text-sm text-stone-50 shadow-lg hover:opacity-90"
           onClick={() => setForceLunch(!forceLunch)}
         >
-          {forceLunch ? 'Disable' : 'Enable'} Lunch Hours
+          {forceLunch ? "Disable" : "Enable"} Lunch Hours
         </button>
       )}
     </div>

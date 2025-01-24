@@ -7,6 +7,8 @@ import { useMemo } from 'react';
 import Subscribe from './Subscribe';
 
 const Footer = () => {
+  // Get 3 unique random colors from our confetti colors array
+  // Since we shuffle first and then slice, we're guaranteed to get different colors
   const socialIconColors = useMemo(() => {
     return [...CONFETTI_COLORS].sort(() => Math.random() - 0.5).slice(0, 3);
   }, []);
