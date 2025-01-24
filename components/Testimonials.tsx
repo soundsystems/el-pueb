@@ -129,6 +129,11 @@ function splitIntoSentences(text: string) {
   return text.split(SENTENCE_SPLITTER);
 }
 
+function formatName(fullName: string) {
+  const [firstName, lastName] = fullName.split(' ');
+  return `${firstName} ${lastName ? lastName[0] + '.' : ''}`;
+}
+
 export default function TestimonialCarousel() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -259,7 +264,7 @@ export default function TestimonialCarousel() {
                 </blockquote>
                 <cite className="block text-center">
                   <span className="font-semibold text-[#0f8540] text-lg not-italic block">
-                    {testimonials[current].name}
+                    {formatName(testimonials[current].name)}
                   </span>
                   <span className="text-gray-600 text-sm block">
                     {testimonials[current].location}
