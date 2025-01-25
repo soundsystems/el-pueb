@@ -1,38 +1,45 @@
 'use client';
 
+import { CONFETTI_COLORS } from '@/lib/constants/colors';
 import { useMemo } from 'react';
 import { Vortex } from 'react-loader-spinner';
 
-const CONFETTI_COLORS = [
-  '#F8C839', // yellow
-  '#016945', // green
-  '#CF0822', // red
-  '#FFFFFF', // white
-  '#EF6A4B', // orange
-  '#9DA26A', // olive
-  '#088589', // teal
-  '#91441A', // brown
-  '#717732', // moss
-  '#F690A1', // pink
-  '#30C2DC', // blue
-  '#0972A7', // navy
-  '#202020', // black
-  '#CD202B', // bright red
-  '#006847', // forest
-  '#FCF3D8', // cream
-];
-
 function getRandomColors(): [string, string, string, string, string, string] {
-  // Shuffle array and take first 6 elements
-  const shuffled = [...CONFETTI_COLORS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 6) as [
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
+  // Colors we always want to include
+  const blacks = ['#202020', '#231F20', '#1F2121'];
+  const requiredColors = [
+    blacks[Math.floor(Math.random() * blacks.length)], // Random black
+    '#006847', // green
+    '#CF0822', // crimson
   ];
+
+  // Filter out colors we don't want, and also remove our required colors since we'll add them back
+  const filteredColors = CONFETTI_COLORS.filter(
+    (color) =>
+      ![
+        '#FDEAAF', // eagle beak gold hilight
+        '#B07229', // eagle tail feather brown
+        '#8F4620', // eagle feather brown
+        '#953220', // dark brown
+        '#DBAD6C', // eagle hilight tan
+        '#FF0000', // red
+        '#FFFFFF', // white
+        '#FDF2D2', // pale yellow hilight
+        ...requiredColors, // Remove required colors from pool since we'll add them back
+      ].includes(color)
+  );
+
+  // Get 3 random colors from our filtered pool
+  const randomColors = [...filteredColors]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 3);
+
+  // Combine and shuffle required and random colors
+  const allColors = [...requiredColors, ...randomColors].sort(
+    () => Math.random() - 0.5
+  );
+
+  return allColors as [string, string, string, string, string, string];
 }
 
 export function LoadingSpinner({

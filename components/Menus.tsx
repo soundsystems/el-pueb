@@ -1,4 +1,5 @@
 'use client';
+import Loading from '@/app/loading';
 import { Button } from '@/components/ui/button';
 import {} from '@/components/ui/pagination';
 import {
@@ -14,6 +15,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
+import { Suspense } from 'react';
 import {} from './ui/card';
 import {
   Carousel,
@@ -63,6 +65,72 @@ const menuItems: MenuItem[] = [
     images: ['/images/menu/7.png'],
   },
 ];
+
+const MenuCarouselItem = ({
+  item,
+  image,
+  groupIndex,
+  imageIndex,
+  absoluteIndex,
+  currentPage,
+  isMobile,
+  forceLunch,
+}: {
+  item: MenuItem;
+  image: string;
+  groupIndex: number;
+  imageIndex: number;
+  absoluteIndex: number;
+  currentPage: number;
+  isMobile: boolean;
+  forceLunch: boolean;
+}) => {
+  const isFirstImage = groupIndex === 0 && imageIndex === 0;
+  const isLunchSection = item.name === 'Lunch, Combos & Kids';
+  const shouldPrioritize =
+    (isFirstImage && !forceLunch) || // First image when not in lunch mode
+    (forceLunch && isLunchSection) || // Lunch images when in lunch mode
+    (isMobile
+      ? Math.abs(currentPage - absoluteIndex) <= 1 // Adjacent images on mobile
+      : Math.abs(Math.floor(currentPage / 2) - Math.floor(absoluteIndex / 2)) <=
+        1); // Adjacent pairs on desktop
+
+  return (
+    <CarouselItem
+      key={`${item.name}-${imageIndex}`}
+      className="pl-2 md:basis-1/2 md:pl-4"
+    >
+      <motion.div
+        layout
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.3 }}
+        className="relative h-[75vh] w-full md:h-[85vh]"
+      >
+        <div className="absolute inset-0 rounded-3xl bg-adobe">
+          <Suspense
+            fallback={
+              <div className="flex h-full w-full items-center justify-center">
+                <Loading />
+              </div>
+            }
+          >
+            <Image
+              src={image}
+              alt={`${item.name} Menu ${imageIndex + 1}`}
+              fill
+              priority={isFirstImage || (forceLunch && isLunchSection)}
+              className="rounded-3xl object-contain p-2"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              loading={shouldPrioritize ? 'eager' : 'lazy'}
+            />
+          </Suspense>
+        </div>
+      </motion.div>
+    </CarouselItem>
+  );
+};
 
 export default function Component() {
   const [api, setApi] = useState<CarouselApi>();
@@ -612,43 +680,18 @@ export default function Component() {
                         .reduce((acc, curr) => acc + curr.images.length, 0) +
                       imageIndex;
 
-                    const isLunchSection = item.name === 'Lunch, Combos & Kids';
-                    const shouldPrioritize =
-                      (groupIndex === 0 && imageIndex === 0) || // First image
-                      (forceLunch && isLunchSection) || // Lunch images when in lunch mode
-                      (isMobile
-                        ? Math.abs(currentPage - absoluteIndex) <= 1 // Adjacent images on mobile
-                        : Math.abs(
-                            Math.floor(currentPage / 2) -
-                              Math.floor(absoluteIndex / 2)
-                          ) <= 1); // Adjacent pairs on desktop
-
                     return (
-                      <CarouselItem
+                      <MenuCarouselItem
                         key={`${item.name}-${imageIndex}`}
-                        className="pl-2 md:basis-1/2 md:pl-4"
-                      >
-                        <motion.div
-                          layout
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          transition={{ duration: 0.3 }}
-                          className="relative h-[75vh] w-full md:h-[85vh]"
-                        >
-                          <div className="absolute inset-0 rounded-3xl bg-adobe">
-                            <Image
-                              src={image}
-                              alt={`${item.name} Menu ${imageIndex + 1}`}
-                              fill
-                              priority={shouldPrioritize}
-                              className="rounded-3xl object-contain p-2"
-                              sizes="(max-width: 768px) 100vw, 50vw"
-                              loading={shouldPrioritize ? 'eager' : 'lazy'}
-                            />
-                          </div>
-                        </motion.div>
-                      </CarouselItem>
+                        item={item}
+                        image={image}
+                        groupIndex={groupIndex}
+                        imageIndex={imageIndex}
+                        absoluteIndex={absoluteIndex}
+                        currentPage={currentPage}
+                        isMobile={isMobile}
+                        forceLunch={forceLunch}
+                      />
                     );
                   })
                 )}
