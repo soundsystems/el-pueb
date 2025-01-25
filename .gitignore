@@ -37,3 +37,10 @@ next-env.d.ts
 
 #npm rc
 .npmrc
+
+# env
+.local.env
+.env
+
+# reviews
+allTestimonials.ts
