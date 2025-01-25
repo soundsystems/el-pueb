@@ -4,7 +4,7 @@ import { CONFETTI_COLORS } from '@/lib/constants/colors';
 import { reviews } from '@/lib/constants/reviews';
 import { Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 const SENTENCE_SPLITTER = /(?<=[.!?])\s+/;
 
@@ -22,12 +22,21 @@ export default function TestimonialCarousel() {
   const [isPaused, setIsPaused] = useState(false);
   const [isUserNavigated, setIsUserNavigated] = useState(false);
   const [maxHeight, setMaxHeight] = useState(0);
+  const [testimonials, setTestimonials] = useState(() => reviews.slice(0, 8));
+  const [dotColors, setDotColors] = useState(() => CONFETTI_COLORS.slice(0, 8));
   const measureRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Randomly select 8 testimonials on page load
-  const testimonials = useMemo(() => {
-    return [...reviews].sort(() => Math.random() - 0.5).slice(0, 8);
+  // Randomly select testimonials and colors on client-side only
+  useEffect(() => {
+    const randomTestimonials = [...reviews]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 8);
+    const randomColors = [...CONFETTI_COLORS]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 8);
+    setTestimonials(randomTestimonials);
+    setDotColors(randomColors);
   }, []);
 
   // Calculate max height on mount
@@ -37,13 +46,6 @@ export default function TestimonialCarousel() {
     const height = contentRef.current.offsetHeight;
     setMaxHeight(height + 32); // Add some padding
   }, []); // Empty dependency array since we only need to measure once
-
-  // Get random colors for dots, one for each testimonial
-  const dotColors = useMemo(() => {
-    return [...CONFETTI_COLORS]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, testimonials.length);
-  }, [testimonials.length]);
 
   useEffect(() => {
     if (isPaused) {

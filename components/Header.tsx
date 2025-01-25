@@ -284,7 +284,7 @@ export default function Header() {
           >
             {isOpen ? (
               <span className="font-semibold text-[#03502D]">
-                Open Today: {hoursToday}
+                Open Today {hoursToday}
               </span>
             ) : (
               <span className="font-semibold text-[#CE1226]">
@@ -302,7 +302,7 @@ export default function Header() {
       >
         {isOpen ? (
           <span className="font-semibold text-[#03502D]">
-            Open Today: {hoursToday}
+            Open Today {hoursToday}
           </span>
         ) : (
           <span className="font-semibold text-[#CE1226]">{closedMessage}</span>

@@ -428,7 +428,7 @@ export default function Component() {
                   }}
                   className="italic"
                 >
-                  ¡Echar Lonche! 🌮
+                  🌯 ¡Echar Lonche! 🌮
                 </motion.span>
               </motion.div>
             </div>

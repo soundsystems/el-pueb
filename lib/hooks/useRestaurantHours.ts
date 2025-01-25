@@ -45,7 +45,9 @@ export const useRestaurantHours = () => {
       const day = now.getDay();
       const schedule = HOURS[day];
 
-      if (!schedule) return false;
+      if (!schedule) {
+        return false;
+      }
 
       const currentTime = now.getHours() * 100 + now.getMinutes();
       const [openHour, openMinute] = schedule.open.split(':').map(Number);
@@ -56,9 +58,7 @@ export const useRestaurantHours = () => {
       const formattedOpen = new Date().setHours(openHour, openMinute);
       const formattedClose = new Date().setHours(closeHour, closeMinute);
 
-      setHoursToday(
-        `${formatTime(formattedOpen)} - ${formatTime(formattedClose)}`
-      );
+      setHoursToday(`until ${formatTime(formattedClose)}`);
 
       const isCurrentlyOpen =
         currentTime >= openTime && currentTime < closeTime;
