@@ -27,6 +27,7 @@ type CarouselContextProps = {
   scrollNext: () => void;
   canScrollPrev: boolean;
   canScrollNext: boolean;
+  visibleSlides: number[];
 } & CarouselProps;
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
@@ -66,6 +67,7 @@ const Carousel = React.forwardRef<
     );
     const [canScrollPrev, setCanScrollPrev] = React.useState(false);
     const [canScrollNext, setCanScrollNext] = React.useState(false);
+    const [visibleSlides, setVisibleSlides] = React.useState<number[]>([]);
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
@@ -74,6 +76,13 @@ const Carousel = React.forwardRef<
 
       setCanScrollPrev(api.canScrollPrev());
       setCanScrollNext(api.canScrollNext());
+    }, []);
+
+    const updateSlidesInView = React.useCallback((api: CarouselApi) => {
+      if (!api) {
+        return;
+      }
+      setVisibleSlides(api.slidesInView());
     }, []);
 
     const scrollPrev = React.useCallback(() => {
@@ -111,13 +120,17 @@ const Carousel = React.forwardRef<
       }
 
       onSelect(api);
+      updateSlidesInView(api);
+
       api.on('reInit', onSelect);
       api.on('select', onSelect);
+      api.on('slidesInView', updateSlidesInView);
 
       return () => {
-        api?.off('select', onSelect);
+        api.off('select', onSelect);
+        api.off('slidesInView', updateSlidesInView);
       };
-    }, [api, onSelect]);
+    }, [api, onSelect, updateSlidesInView]);
 
     React.useEffect(() => {
       const handleKeyboardModifiers = (e: KeyboardEvent) => {
@@ -147,9 +160,10 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          visibleSlides,
         }}
       >
-        <div
+        <section
           ref={ref}
           onKeyDownCapture={handleKeyDown}
           className={cn('relative', className)}
@@ -157,7 +171,7 @@ const Carousel = React.forwardRef<
           {...props}
         >
           {children}
-        </div>
+        </section>
       </CarouselContext.Provider>
     );
   }
@@ -190,11 +204,32 @@ const CarouselItem = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => {
-  const { orientation } = useCarousel();
+  const { orientation, visibleSlides } = useCarousel();
+  const itemRef = React.useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!itemRef.current) {
+      return;
+    }
+
+    const index = Array.from(
+      itemRef.current.parentElement?.children || []
+    ).indexOf(itemRef.current);
+    setIsVisible(visibleSlides.includes(index));
+  }, [visibleSlides]);
 
   return (
     <div
-      ref={ref}
+      ref={(node) => {
+        // Merge refs
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+        itemRef.current = node;
+      }}
       role="group"
       aria-roledescription="slide"
       className={cn(
@@ -202,6 +237,7 @@ const CarouselItem = React.forwardRef<
         orientation === 'horizontal' ? 'pl-4' : 'pt-4',
         className
       )}
+      data-visible={isVisible}
       {...props}
     />
   );

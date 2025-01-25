@@ -14,8 +14,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
-import { Suspense } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import {} from './ui/card';
 import {
   Carousel,
@@ -89,11 +88,7 @@ const MenuCarouselItem = ({
   const isLunchSection = item.name === 'Lunch, Combos & Kids';
   const shouldPrioritize =
     (isFirstImage && !forceLunch) || // First image when not in lunch mode
-    (forceLunch && isLunchSection) || // Lunch images when in lunch mode
-    (isMobile
-      ? Math.abs(currentPage - absoluteIndex) <= 1 // Adjacent images on mobile
-      : Math.abs(Math.floor(currentPage / 2) - Math.floor(absoluteIndex / 2)) <=
-        1); // Adjacent pairs on desktop
+    (forceLunch && isLunchSection); // Lunch images when in lunch mode
 
   return (
     <CarouselItem
@@ -120,10 +115,9 @@ const MenuCarouselItem = ({
               src={image}
               alt={`${item.name} Menu ${imageIndex + 1}`}
               fill
-              priority={isFirstImage || (forceLunch && isLunchSection)}
+              priority={shouldPrioritize}
               className="rounded-3xl object-contain p-2"
               sizes="(max-width: 768px) 100vw, 50vw"
-              loading={shouldPrioritize ? 'eager' : 'lazy'}
             />
           </Suspense>
         </div>
@@ -426,12 +420,24 @@ export default function Component() {
     const allImages = menuItems.flatMap((item) => item.images);
     const preloadCount = isMobile ? 2 : 4; // Preload more images on desktop
 
-    const indicesToPreload = Array.from(
-      { length: preloadCount },
-      (_, i) => currentPage + i + 1
-    ).filter((i) => i < allImages.length);
+    let indicesToPreload: number[];
+    if (isMobile) {
+      indicesToPreload = Array.from(
+        { length: preloadCount },
+        (_, i) => currentPage + i + 1
+      );
+    } else {
+      // In desktop mode, preload the next two pairs
+      const currentPair = Math.floor(currentPage / 2) * 2;
+      indicesToPreload = [
+        currentPair,
+        currentPair + 1,
+        currentPair + 2,
+        currentPair + 3,
+      ];
+    }
 
-    preloadImages(indicesToPreload);
+    preloadImages(indicesToPreload.filter((i) => i < allImages.length));
   }, [currentPage, isMobile, preloadImages]);
 
   // Preload lunch images when in lunch mode

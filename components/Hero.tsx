@@ -1,17 +1,15 @@
 'use client';
 
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
+import Loading from '@/app/loading';
+import {} from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import Autoplay from 'embla-carousel-autoplay';
+import useEmblaCarousel, {
+  type UseEmblaCarouselType,
+} from 'embla-carousel-react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense } from 'react';
 
 const carouselImages = [
   'DSC00811.jpg',
@@ -36,6 +34,144 @@ const carouselImages = [
   src: `/images/hero/resized/${filename}`,
   alt: 'Pueblito Mexican Restaurant Gallery Image',
 }));
+
+type HeroImage = {
+  src: string;
+  alt: string;
+};
+
+const HeroCarousel = ({ images }: { images: HeroImage[] }) => {
+  const scrollListenerRef = useRef<() => void>(() => undefined);
+  const listenForScrollRef = useRef(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentImages, setCurrentImages] = useState(images);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    watchSlides: (emblaApi) => {
+      const reloadEmbla = (): void => {
+        const oldEngine = emblaApi.internalEngine();
+        emblaApi.reInit();
+        const newEngine = emblaApi.internalEngine();
+
+        // Copy engine state to maintain scroll position
+        const engineModules = [
+          'scrollBody',
+          'location',
+          'offsetLocation',
+          'previousLocation',
+          'target',
+        ] as const;
+
+        for (const engineModule of engineModules) {
+          Object.assign(newEngine[engineModule], oldEngine[engineModule]);
+        }
+
+        newEngine.translate.to(oldEngine.location.get());
+        const { index } = newEngine.scrollTarget.byDistance(0, false);
+        newEngine.index.set(index);
+        newEngine.animation.start();
+
+        setLoadingMore(false);
+        listenForScrollRef.current = true;
+      };
+
+      const reloadAfterPointerUp = (): void => {
+        emblaApi.off('pointerUp', reloadAfterPointerUp);
+        reloadEmbla();
+      };
+
+      const engine = emblaApi.internalEngine();
+      if (engine.dragHandler.pointerDown()) {
+        const boundsActive = engine.limit.reachedMax(engine.target.get());
+        engine.scrollBounds.toggleActive(boundsActive);
+        emblaApi.on('pointerUp', reloadAfterPointerUp);
+      } else {
+        reloadEmbla();
+      }
+    },
+  });
+
+  const onScroll = useCallback(
+    (emblaApi: UseEmblaCarouselType[1]) => {
+      if (!listenForScrollRef.current || !emblaApi) return;
+
+      setLoadingMore((loadingMore) => {
+        const lastSlide = emblaApi.slideNodes().length - 1;
+        const lastSlideInView = emblaApi.slidesInView().includes(lastSlide);
+        const loadMore = !loadingMore && lastSlideInView;
+
+        if (loadMore) {
+          listenForScrollRef.current = false;
+          // In a real app, this would be an API call to load more images
+          setTimeout(() => {
+            setCurrentImages((current) => [...current, ...images]);
+          }, 1000);
+        }
+
+        return loadingMore || lastSlideInView;
+      });
+    },
+    [images]
+  );
+
+  useEffect(() => {
+    if (!emblaApi) return;
+
+    scrollListenerRef.current = () => onScroll(emblaApi);
+    emblaApi.on('scroll', scrollListenerRef.current);
+
+    return () => {
+      emblaApi.off('scroll', scrollListenerRef.current);
+    };
+  }, [emblaApi, onScroll]);
+
+  return (
+    <div className="relative w-full">
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex">
+          {currentImages.map((image, index) => (
+            <div
+              key={`${image.src}-${index}`}
+              className="relative min-w-0 flex-[0_0_100%]"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative aspect-[16/9] w-full"
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex h-full w-full items-center justify-center bg-adobe">
+                      <Loading />
+                    </div>
+                  }
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                    sizes="(max-width: 768px) 95vw, (max-width: 1600px) 85vw, 75vw"
+                  />
+                </Suspense>
+              </motion.div>
+            </div>
+          ))}
+          {loadingMore && (
+            <div className="relative min-w-0 flex-[0_0_100%]">
+              <div className="flex aspect-[16/9] w-full items-center justify-center bg-adobe">
+                <Loading />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Hero = () => {
   const [shuffledImages, setShuffledImages] = useState(carouselImages);
@@ -105,49 +241,7 @@ const Hero = () => {
 
       <div className="flex w-full justify-center px-4">
         <div className="w-full max-w-[1600px]">
-          <Carousel
-            setApi={setApi}
-            opts={{
-              loop: true,
-              align: 'center',
-              skipSnaps: false,
-              duration: 25,
-              dragFree: true,
-              inViewThreshold: 0.7,
-            }}
-            plugins={[
-              Autoplay({
-                delay: 4400,
-                rootNode: (emblaRoot) => emblaRoot.parentElement,
-                playOnInit: true,
-              }),
-            ]}
-            className="w-full"
-          >
-            <CarouselContent>
-              {shuffledImages.map((image, index) => (
-                <CarouselItem key={index}>
-                  <div className="relative h-[500px] w-full overflow-hidden rounded-xl shadow-lg transition-transform duration-300 md:h-[690px]">
-                    <div className="absolute inset-0 z-10 bg-black/10" />
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      fill
-                      priority={
-                        index === currentIndex ||
-                        index === (currentIndex + 1) % shuffledImages.length
-                      }
-                      className="object-cover"
-                      sizes="(max-width: 768px) 95vw, (max-width: 1600px) 85vw, 75vw"
-                      quality={100}
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-4 z-20" />
-            <CarouselNext className="right-4 z-20" />
-          </Carousel>
+          <HeroCarousel images={shuffledImages} />
         </div>
       </div>
 
