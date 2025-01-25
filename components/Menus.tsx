@@ -1,6 +1,4 @@
 'use client';
-
-import Loading from '@/app/loading';
 import { Button } from '@/components/ui/button';
 import {} from '@/components/ui/pagination';
 import {
@@ -15,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {} from './ui/card';
 import {
   Carousel,
@@ -639,17 +637,15 @@ export default function Component() {
                           className="relative h-[75vh] w-full md:h-[85vh]"
                         >
                           <div className="absolute inset-0 rounded-3xl bg-adobe">
-                            <Suspense fallback={<Loading />}>
-                              <Image
-                                src={image}
-                                alt={`${item.name} Menu ${imageIndex + 1}`}
-                                fill
-                                priority={shouldPrioritize}
-                                className="rounded-3xl object-contain p-2"
-                                sizes="(max-width: 768px) 100vw, 50vw"
-                                loading={shouldPrioritize ? 'eager' : 'lazy'}
-                              />
-                            </Suspense>
+                            <Image
+                              src={image}
+                              alt={`${item.name} Menu ${imageIndex + 1}`}
+                              fill
+                              priority={shouldPrioritize}
+                              className="rounded-3xl object-contain p-2"
+                              sizes="(max-width: 768px) 100vw, 50vw"
+                              loading={shouldPrioritize ? 'eager' : 'lazy'}
+                            />
                           </div>
                         </motion.div>
                       </CarouselItem>
