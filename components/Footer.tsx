@@ -3,14 +3,24 @@
 import { CONFETTI_COLORS } from '@/lib/constants/colors';
 import { Facebook, Instagram, Mail } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import Subscribe from './Subscribe';
 
+type ColorArray = [string, string, string];
+
 const Footer = () => {
-  // Get 3 unique random colors from our confetti colors array
-  // Since we shuffle first and then slice, we're guaranteed to get different colors
-  const socialIconColors = useMemo(() => {
-    return [...CONFETTI_COLORS].sort(() => Math.random() - 0.5).slice(0, 3);
+  const [socialIconColors, setSocialIconColors] = useState<ColorArray>([
+    CONFETTI_COLORS[0],
+    CONFETTI_COLORS[1],
+    CONFETTI_COLORS[2],
+  ]);
+
+  useEffect(() => {
+    // Randomly select colors after component mounts
+    const randomColors = [...CONFETTI_COLORS]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3) as ColorArray;
+    setSocialIconColors(randomColors);
   }, []);
 
   return (

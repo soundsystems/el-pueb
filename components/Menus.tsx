@@ -1,29 +1,30 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import {} from "@/components/ui/pagination";
+import Loading from '@/app/loading';
+import { Button } from '@/components/ui/button';
+import {} from '@/components/ui/pagination';
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import { useRestaurantHours } from "@/lib/hooks/useRestaurantHours";
-import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import Image from "next/image";
-import { useEffect, useState, useCallback } from "react";
-import {} from "./ui/card";
+} from '@/components/ui/pagination';
+import { useRestaurantHours } from '@/lib/hooks/useRestaurantHours';
+import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import Image from 'next/image';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import {} from './ui/card';
 import {
   Carousel,
   type CarouselApi,
   CarouselContent,
   CarouselItem,
-} from "./ui/carousel";
+} from './ui/carousel';
 
-const isDev = process.env.NODE_ENV === "development";
+const isDev = process.env.NODE_ENV === 'development';
 
 type MenuItem = {
   name: string;
@@ -34,34 +35,34 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   {
-    name: "Starters, Sides & Especialdades",
-    mobileName: "Starters & Sides",
-    images: ["/images/menu/1.png"],
+    name: 'Starters, Sides & Especialdades',
+    mobileName: 'Starters & Sides',
+    images: ['/images/menu/1.png'],
   },
   {
-    name: "Especialdades",
-    mobileName: "Especialdades",
-    images: ["/images/menu/4.png"],
+    name: 'Especialdades',
+    mobileName: 'Especialdades',
+    images: ['/images/menu/4.png'],
     mobileOnly: true,
   },
   {
-    name: "Platos",
-    mobileName: "Tacos, Burritos & Fajitas",
-    images: ["/images/menu/2.png"],
+    name: 'Platos',
+    mobileName: 'Tacos, Burritos & Fajitas',
+    images: ['/images/menu/2.png'],
   },
   {
-    name: "A La Parilla",
-    mobileName: "A La Parilla",
-    images: ["/images/menu/3.png"],
+    name: 'A La Parilla',
+    mobileName: 'A La Parilla',
+    images: ['/images/menu/3.png'],
     mobileOnly: true,
   },
   {
-    name: "Lunch, Combos & Kids",
-    images: ["/images/menu/5.png", "/images/menu/6.png"],
+    name: 'Lunch, Combos & Kids',
+    images: ['/images/menu/5.png', '/images/menu/6.png'],
   },
   {
-    name: "Deserts & Drinks",
-    images: ["/images/menu/7.png"],
+    name: 'Deserts & Drinks',
+    images: ['/images/menu/7.png'],
   },
 ];
 
@@ -90,7 +91,7 @@ export default function Component() {
   useEffect(() => {
     if (forceLunch && api) {
       const lunchIndex = menuItems.findIndex(
-        (item) => item.name === "Lunch, Combos & Kids"
+        (item) => item.name === 'Lunch, Combos & Kids'
       );
       let imageIndex = 0;
       for (let i = 0; i < lunchIndex; i++) {
@@ -101,10 +102,12 @@ export default function Component() {
   }, [forceLunch, api]);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api) {
+      return;
+    }
     if (forceLunch) {
       const lunchIndex = menuItems.findIndex(
-        (item) => item.name === "Lunch, Combos & Kids"
+        (item) => item.name === 'Lunch, Combos & Kids'
       );
       let imageIndex = 0;
       for (let i = 0; i < lunchIndex; i++) {
@@ -117,19 +120,21 @@ export default function Component() {
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
-    if (!api) return;
+    if (!api) {
+      return;
+    }
     const handleSelect = () => {
       const current = api.selectedScrollSnap();
       setCurrentPage(current);
     };
-    api.on("select", handleSelect);
+    api.on('select', handleSelect);
     return () => {
-      api.off("select", handleSelect);
+      api.off('select', handleSelect);
     };
   }, [api]);
 
@@ -138,13 +143,14 @@ export default function Component() {
    * to keep them stable across re-renders.
    */
   const handlePrevClick = useCallback(() => {
-    if (!api) return;
+    if (!api) {
+      return;
+    }
 
     if (isMobile) {
       api.scrollTo(Math.max(0, currentPage - 1));
     } else {
       // Always move 2 at a time in desktop view
-      const allImages = menuItems.flatMap((item) => item.images);
       let newPage = currentPage - 2;
       // Ensure we land on even numbered pages
       if (newPage > 0 && newPage % 2 !== 0) {
@@ -155,7 +161,9 @@ export default function Component() {
   }, [api, isMobile, currentPage]);
 
   const handleNextClick = useCallback(() => {
-    if (!api) return;
+    if (!api) {
+      return;
+    }
 
     if (isMobile) {
       const maxPage = menuItems.flatMap((item) => item.images).length - 1;
@@ -178,9 +186,11 @@ export default function Component() {
    */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!api) return;
+      if (!api) {
+        return;
+      }
 
-      if (e.key === "ArrowLeft") {
+      if (e.key === 'ArrowLeft') {
         e.preventDefault();
         if (isMobile) {
           api.scrollTo(Math.max(0, currentPage - 1));
@@ -204,7 +214,7 @@ export default function Component() {
           const prevSection = Math.max(0, currentSection - 1);
           api.scrollTo(pairs[prevSection][0]);
         }
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         if (isMobile) {
           const maxPage = menuItems.flatMap((item) => item.images).length - 1;
@@ -232,8 +242,8 @@ export default function Component() {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [api, isMobile, currentPage]);
 
   const handleNavClick = (index: number) => {
@@ -273,28 +283,26 @@ export default function Component() {
   };
 
   // Calculate which nav item should be active
-  const getActiveNavIndex = (currentPage: number) => {
-    if (isMobile) {
-      const totalImages = menuItems.flatMap((item) => item.images);
-      // Check if the last image is visible
-      if (currentPage === totalImages.length - 1) {
-        return menuItems.length - 1;
-      }
-
-      let imageCount = 0;
-      for (let i = 0; i < menuItems.length; i++) {
-        if (
-          currentPage >= imageCount &&
-          currentPage < imageCount + menuItems[i].images.length
-        ) {
-          return i;
-        }
-        imageCount += menuItems[i].images.length;
-      }
-      return 0;
+  const getMobileActiveNavIndex = (currentPage: number) => {
+    const totalImages = menuItems.flatMap((item) => item.images);
+    if (currentPage === totalImages.length - 1) {
+      return menuItems.length - 1;
     }
 
-    // Desktop view - map image pairs back to nav indices
+    let imageCount = 0;
+    for (let i = 0; i < menuItems.length; i++) {
+      if (
+        currentPage >= imageCount &&
+        currentPage < imageCount + menuItems[i].images.length
+      ) {
+        return i;
+      }
+      imageCount += menuItems[i].images.length;
+    }
+    return 0;
+  };
+
+  const getDesktopActiveNavIndex = (currentPage: number) => {
     const imageToNavIndex: Record<number, number> = {
       0: 0, // Image 1 -> Starters
       2: 1, // Images 3,4 -> Platos
@@ -306,11 +314,17 @@ export default function Component() {
     const lastPairStart = allImages.length - 2;
 
     if (currentPage >= lastPairStart) {
-      return 3; // Always highlight "Desserts & Drinks" for the last pair
+      return 3;
     }
 
     const pairStartIndex = Math.floor(currentPage / 2) * 2;
     return imageToNavIndex[pairStartIndex] || 0;
+  };
+
+  const getActiveNavIndex = (currentPage: number) => {
+    return isMobile
+      ? getMobileActiveNavIndex(currentPage)
+      : getDesktopActiveNavIndex(currentPage);
   };
 
   // Which pagination dot should be active
@@ -330,11 +344,59 @@ export default function Component() {
     return Math.floor(currentPage / 2);
   };
 
+  // Function to preload images
+  const preloadImages = useCallback((indices: number[]) => {
+    const allImages = menuItems.flatMap((item) => item.images);
+    for (const index of indices) {
+      if (index >= 0 && index < allImages.length) {
+        const img = document.createElement('img');
+        img.src = allImages[index];
+      }
+    }
+  }, []);
+
+  // Preload adjacent images when current page changes
+  useEffect(() => {
+    const allImages = menuItems.flatMap((item) => item.images);
+    const preloadCount = isMobile ? 2 : 4; // Preload more images on desktop
+
+    const indicesToPreload = Array.from(
+      { length: preloadCount },
+      (_, i) => currentPage + i + 1
+    ).filter((i) => i < allImages.length);
+
+    preloadImages(indicesToPreload);
+  }, [currentPage, isMobile, preloadImages]);
+
+  // Preload lunch images when in lunch mode
+  useEffect(() => {
+    if (forceLunch) {
+      const lunchIndex = menuItems.findIndex(
+        (item) => item.name === 'Lunch, Combos & Kids'
+      );
+      if (lunchIndex !== -1) {
+        let imageIndex = 0;
+        for (let i = 0; i < lunchIndex; i++) {
+          imageIndex += menuItems[i].images.length;
+        }
+        const lunchImages = menuItems[lunchIndex].images;
+        preloadImages(lunchImages.map((_, i) => imageIndex + i));
+      }
+    }
+  }, [forceLunch, preloadImages]);
+
+  const getButtonVariant = (isLunchTab: boolean, isActive: boolean) => {
+    if (isLunchTab) {
+      return undefined;
+    }
+    return isActive ? 'default' : 'ghost';
+  };
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
       <AnimatePresence mode="wait">
         <motion.div
-          key={isMobile ? "mobile" : "desktop"}
+          key={isMobile ? 'mobile' : 'desktop'}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -349,19 +411,19 @@ export default function Component() {
                 transition={{ duration: 0.5 }}
               >
                 <motion.span
-                  initial={{ color: "#03502D" }}
+                  initial={{ color: '#03502D' }}
                   animate={{
                     color: [
-                      "#03502D",
-                      "#FFD700",
-                      "#03502D",
-                      "#FFD700",
-                      "#03502D",
+                      '#03502D',
+                      '#FFD700',
+                      '#03502D',
+                      '#FFD700',
+                      '#03502D',
                     ],
                   }}
                   transition={{
                     duration: 1.3,
-                    ease: "easeInOut",
+                    ease: 'easeInOut',
                     times: [0, 0.25, 0.5, 0.75, 1],
                   }}
                   className="italic"
@@ -374,7 +436,7 @@ export default function Component() {
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={isMobile ? "mobile" : "desktop"}
+              key={isMobile ? 'mobile' : 'desktop'}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -391,17 +453,17 @@ export default function Component() {
                   {menuItems.map((item, index) => {
                     const isActive = getActiveNavIndex(currentPage) === index;
                     const isLunchTab =
-                      forceLunch && item.name === "Lunch, Combos & Kids";
+                      forceLunch && item.name === 'Lunch, Combos & Kids';
 
                     let buttonStyle =
-                      "hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2";
+                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
                     if (isLunchTab) {
                       buttonStyle = isActive
-                        ? "bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2"
-                        : "bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md";
+                        ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
+                        : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
                     } else if (isActive) {
                       buttonStyle =
-                        "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2";
+                        'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
                     }
 
                     return (
@@ -422,14 +484,14 @@ export default function Component() {
                             if (element) {
                               element.animate(
                                 [
-                                  { transform: "translateX(-2px)" },
-                                  { transform: "translateX(2px)" },
-                                  { transform: "translateX(-2px)" },
-                                  { transform: "translateX(0)" },
+                                  { transform: 'translateX(-2px)' },
+                                  { transform: 'translateX(2px)' },
+                                  { transform: 'translateX(-2px)' },
+                                  { transform: 'translateX(0)' },
                                 ],
                                 {
                                   duration: 200,
-                                  easing: "ease-in-out",
+                                  easing: 'ease-in-out',
                                 }
                               );
                             }
@@ -440,15 +502,9 @@ export default function Component() {
                       >
                         <Button
                           id={`menu-btn-${index}`}
-                          variant={
-                            isLunchTab
-                              ? undefined
-                              : isActive
-                              ? "default"
-                              : "ghost"
-                          }
+                          variant={getButtonVariant(isLunchTab, isActive)}
                           className={cn(
-                            "w-full whitespace-nowrap px-2 text-center text-xs md:text-sm",
+                            'w-full whitespace-nowrap px-2 text-center text-xs md:text-sm',
                             buttonStyle
                           )}
                         >
@@ -471,17 +527,17 @@ export default function Component() {
                     .map((item, index) => {
                       const isActive = getActiveNavIndex(currentPage) === index;
                       const isLunchTab =
-                        forceLunch && item.name === "Lunch, Combos & Kids";
+                        forceLunch && item.name === 'Lunch, Combos & Kids';
 
                       let buttonStyle =
-                        "hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2";
+                        'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
                       if (isLunchTab) {
                         buttonStyle = isActive
-                          ? "bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2"
-                          : "bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md";
+                          ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
+                          : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
                       } else if (isActive) {
                         buttonStyle =
-                          "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2";
+                          'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
                       }
 
                       return (
@@ -501,14 +557,14 @@ export default function Component() {
                               if (element) {
                                 element.animate(
                                   [
-                                    { transform: "translateX(-2px)" },
-                                    { transform: "translateX(2px)" },
-                                    { transform: "translateX(-2px)" },
-                                    { transform: "translateX(0)" },
+                                    { transform: 'translateX(-2px)' },
+                                    { transform: 'translateX(2px)' },
+                                    { transform: 'translateX(-2px)' },
+                                    { transform: 'translateX(0)' },
                                   ],
                                   {
                                     duration: 200,
-                                    easing: "ease-in-out",
+                                    easing: 'ease-in-out',
                                   }
                                 );
                               }
@@ -519,15 +575,9 @@ export default function Component() {
                         >
                           <Button
                             id={`menu-btn-desktop-${index}`}
-                            variant={
-                              isLunchTab
-                                ? undefined
-                                : isActive
-                                ? "default"
-                                : "ghost"
-                            }
+                            variant={getButtonVariant(isLunchTab, isActive)}
                             className={cn(
-                              "whitespace-nowrap text-sm",
+                              'whitespace-nowrap text-sm',
                               buttonStyle
                             )}
                           >
@@ -546,7 +596,7 @@ export default function Component() {
               setApi={setApi}
               className="w-full"
               opts={{
-                align: "start",
+                align: 'start',
                 ...(isMobile
                   ? {}
                   : {
@@ -557,39 +607,54 @@ export default function Component() {
             >
               <CarouselContent className="-ml-2 md:-ml-4">
                 {menuItems.flatMap((item, groupIndex) =>
-                  item.images.map((image, imageIndex) => (
-                    <CarouselItem
-                      key={`${item.name}-${imageIndex}`}
-                      className="pl-2 md:basis-1/2 md:pl-4"
-                    >
-                      <motion.div
-                        layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.3 }}
-                        className="relative h-[75vh] w-full md:h-[85vh]"
+                  item.images.map((image, imageIndex) => {
+                    const absoluteIndex =
+                      menuItems
+                        .slice(0, groupIndex)
+                        .reduce((acc, curr) => acc + curr.images.length, 0) +
+                      imageIndex;
+
+                    const isLunchSection = item.name === 'Lunch, Combos & Kids';
+                    const shouldPrioritize =
+                      (groupIndex === 0 && imageIndex === 0) || // First image
+                      (forceLunch && isLunchSection) || // Lunch images when in lunch mode
+                      (isMobile
+                        ? Math.abs(currentPage - absoluteIndex) <= 1 // Adjacent images on mobile
+                        : Math.abs(
+                            Math.floor(currentPage / 2) -
+                              Math.floor(absoluteIndex / 2)
+                          ) <= 1); // Adjacent pairs on desktop
+
+                    return (
+                      <CarouselItem
+                        key={`${item.name}-${imageIndex}`}
+                        className="pl-2 md:basis-1/2 md:pl-4"
                       >
-                        <div className="absolute inset-0 rounded-3xl bg-adobe">
-                          <Image
-                            src={image}
-                            alt={`${item.name} Menu ${imageIndex + 1}`}
-                            fill
-                            priority={
-                              (groupIndex === 0 && imageIndex === 0) ||
-                              (isMobile
-                                ? currentPage + 1 ===
-                                  groupIndex * item.images.length + imageIndex
-                                : Math.floor((currentPage + 1) / 2) ===
-                                  groupIndex)
-                            }
-                            className="rounded-3xl object-contain p-2"
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                          />
-                        </div>
-                      </motion.div>
-                    </CarouselItem>
-                  ))
+                        <motion.div
+                          layout
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3 }}
+                          className="relative h-[75vh] w-full md:h-[85vh]"
+                        >
+                          <div className="absolute inset-0 rounded-3xl bg-adobe">
+                            <Suspense fallback={<Loading />}>
+                              <Image
+                                src={image}
+                                alt={`${item.name} Menu ${imageIndex + 1}`}
+                                fill
+                                priority={shouldPrioritize}
+                                className="rounded-3xl object-contain p-2"
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                                loading={shouldPrioritize ? 'eager' : 'lazy'}
+                              />
+                            </Suspense>
+                          </div>
+                        </motion.div>
+                      </CarouselItem>
+                    );
+                  })
                 )}
               </CarouselContent>
             </Carousel>
@@ -626,23 +691,22 @@ export default function Component() {
                         ),
                   }).map((_, i) => {
                     const isLunchPage =
-                      forceLunch &&
-                      (isMobile ? i === 4 || i === 5 : i === 2);
+                      forceLunch && (isMobile ? i === 4 || i === 5 : i === 2);
 
                     return (
                       <PaginationItem key={i}>
                         <button
                           type="button"
                           className={cn(
-                            "h-2 w-2 rounded-full transition-all hover:opacity-80",
+                            'h-2 w-2 rounded-full transition-all hover:opacity-80',
                             {
-                              "bg-[#03502D]":
+                              'bg-[#03502D]':
                                 getActiveDotIndex(currentPage) === i &&
                                 !isLunchPage,
-                              "bg-[#03502D]/20":
+                              'bg-[#03502D]/20':
                                 !isLunchPage &&
                                 getActiveDotIndex(currentPage) !== i,
-                              "bg-yellow-500":
+                              'bg-yellow-500':
                                 forceLunch &&
                                 ((isMobile && (i === 4 || i === 5)) ||
                                   (!isMobile && i === 2)),
@@ -682,7 +746,7 @@ export default function Component() {
           className="fixed right-4 bottom-4 z-50 rounded-full bg-[#03502D] px-4 py-2 text-sm text-stone-50 shadow-lg hover:opacity-90"
           onClick={() => setForceLunch(!forceLunch)}
         >
-          {forceLunch ? "Disable" : "Enable"} Lunch Hours
+          {forceLunch ? 'Disable' : 'Enable'} Lunch Hours
         </button>
       )}
     </div>
