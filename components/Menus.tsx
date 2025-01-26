@@ -88,7 +88,11 @@ const MenuCarouselItem = ({
   const isLunchSection = item.name === 'Lunch, Combos & Kids';
   const shouldPrioritize =
     (isFirstImage && !forceLunch) || // First image when not in lunch mode
-    (forceLunch && isLunchSection); // Lunch images when in lunch mode
+    (forceLunch && isLunchSection) || // Lunch images when in lunch mode
+    (isMobile
+      ? Math.abs(currentPage - absoluteIndex) <= 1 // Adjacent images on mobile
+      : Math.abs(Math.floor(currentPage / 2) - Math.floor(absoluteIndex / 2)) <=
+        1); // Adjacent pairs on desktop
 
   return (
     <CarouselItem
