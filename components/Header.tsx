@@ -105,7 +105,7 @@ export default function Header() {
     <motion.header
       layout="preserve-aspect"
       transition={springTransition}
-      className="top-0 z-50 mt-2 mb-2 flex w-full flex-col items-center pt-2"
+      className="top-0 z-50 mt-[.75rem] mb-2 flex w-full flex-col items-center"
     >
       <AnimatePresence mode="wait" initial={false} key={pathname}>
         <motion.div
@@ -138,7 +138,7 @@ export default function Header() {
                 width="731"
                 height="337"
                 priority
-                className="relative z-20 w-[14rem] max-w-[22rem]"
+                className="-inset-y-1 relative z-20 w-[14rem] max-w-[22rem]"
               />
               <AnimatePresence mode="wait" key={pathname}>
                 {activeTab === 'home' && (
@@ -174,7 +174,7 @@ export default function Header() {
             transition={springTransition}
             className="w-full flex-1 md:flex md:min-w-[400px] md:justify-center"
           >
-            <nav className="mb-2 flex items-center justify-center space-x-1 pt-2 text-base lg:text-lg">
+            <nav className="flex items-center justify-center space-x-1 pt-2 text-base lg:text-lg">
               {tabs.map((tab, index) => (
                 <motion.div
                   key={tab.id}
@@ -190,7 +190,7 @@ export default function Header() {
                   {tab.id === 'pick-up' ? (
                     <DropdownMenu open={open} onOpenChange={setOpen}>
                       <DropdownMenuTrigger
-                        className={`group relative line-clamp-1 rounded-full px-3 py-1 duration-300 focus:outline-none ${
+                        className={`group relative line-clamp-1 rounded-full px-3 py-1.5 duration-300 focus:outline-none ${
                           open
                             ? 'border-none bg-[#03502D] text-stone-50'
                             : 'text-stone-950 hover:text-stone-50'
@@ -282,7 +282,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springTransition}
-            className="-translate-y-1/2 absolute top-1/2 right-4 hidden text-sm md:text-md lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
+            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden text-sm md:text-md lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
           >
             {isOpen ? (
               <span className="font-semibold text-[#006847]">
@@ -300,7 +300,7 @@ export default function Header() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springTransition}
-        className="py-1 text-center text-sm md:text-md lg:hidden"
+        className="py-2 text-center text-sm md:text-md lg:hidden"
       >
         {isOpen ? (
           <span className="font-semibold text-[#03502D]">
