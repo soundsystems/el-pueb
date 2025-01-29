@@ -16,8 +16,27 @@ const Footer = () => {
   ]);
 
   useEffect(() => {
+    // Filter out black and white colors
+    const filteredColors = CONFETTI_COLORS.filter(
+      (color) =>
+        ![
+          '#202020',
+          '#231F20',
+          '#1F2121',
+          '#FFFFFF', // black and white
+          '#FDEAAF',
+          '#FDF2D2', // cream colors
+          '#02534E',
+          '#065955', // dark teal
+          '#006847', // dark green
+          '#FF0000', // red
+          '#AA8C30', // leaf gold accent
+          '#DBAD6C', // eagle hilight tan
+        ].includes(color)
+    );
+
     // Randomly select colors after component mounts
-    const randomColors = [...CONFETTI_COLORS]
+    const randomColors = [...filteredColors]
       .sort(() => Math.random() - 0.5)
       .slice(0, 3) as ColorArray;
     setSocialIconColors(randomColors);
@@ -41,7 +60,7 @@ const Footer = () => {
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
             >
               <Facebook
-                className="h-6 w-6 stroke-stone-950 text-stone-950 transition-colors duration-200 ease-in-out group-hover:stroke-current"
+                className="h-6 w-6 stroke-stone-950 text-stone-950 transition-transform duration-500 ease-in-out group-hover:scale-105 group-hover:stroke-current"
                 style={{ fill: 'currentColor' }}
                 fill="currentColor"
               />
@@ -60,7 +79,7 @@ const Footer = () => {
               rel="noopener noreferrer"
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
             >
-              <Instagram className="h-6 w-6 stroke-stone-950 text-stone-950 transition-colors duration-200 ease-in-out group-hover:fill-stone-950-ig" />
+              <Instagram className="h-6 w-6 stroke-stone-950 text-stone-950 transition-transform duration-500 ease-in-out group-hover:scale-105 group-hover:fill-stone-950-ig" />
               <style>{`
                 .group:hover .group-hover\\:fill-stone-950-ig {
                   fill: #0c0a09 !important;
@@ -74,7 +93,7 @@ const Footer = () => {
               href="mailto:hola@elpueblitonwa.com"
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
             >
-              <Mail className="h-6 w-6 stroke-stone-950 text-stone-950 transition-colors duration-200 ease-in-out group-hover:fill-stone-950-mail" />
+              <Mail className="h-6 w-6 stroke-stone-950 text-stone-950 transition-transform duration-500 ease-in-out group-hover:scale-105 group-hover:fill-stone-950-mail" />
               <style>{`
                 .group:hover .group-hover\\:fill-stone-950-mail {
                   fill: #0c0a09 !important;

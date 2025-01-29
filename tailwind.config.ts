@@ -16,8 +16,9 @@ const config: Config = {
         primary: '#D62828', // Deep red
         secondary: '#006847', // Mexican green
         accent: '#F4C430', // Warm yellow (pueb)
-        adobe: '#E4D5C3', // Warm tan/adobe
+        adobe: '#DBAD6C', // eagle hilight tan, // Warm tan/adobe
         'adobe-dark': '#C4B5A3', // Darker adobe for contrast
+        'adobe-light': '#E8DCC6', // Light adobe for contrast
       },
       fontFamily: {
         // You might want to update these with fonts that match Mexican restaurant branding

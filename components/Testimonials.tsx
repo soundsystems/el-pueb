@@ -83,7 +83,7 @@ export default function TestimonialCarousel() {
         <div className="-left-[9999px] -top-[9999px] invisible fixed">
           <div
             ref={contentRef}
-            className="flex flex-col items-center justify-center py-16 md:py-8"
+            className="flex flex-col items-center justify-center py-16 md:py-12"
           >
             <div className="mb-4 flex justify-center">
               {[...new Array(5)].map((_, i) => (
@@ -128,7 +128,7 @@ export default function TestimonialCarousel() {
                   setIsUserNavigated(false);
                 }
               }}
-              className="absolute inset-0 flex flex-col items-center justify-center py-14 md:py-8"
+              className="absolute inset-0 flex flex-col items-center justify-center py-16 md:py-12"
             >
               <div
                 className="mb-4 flex justify-center"

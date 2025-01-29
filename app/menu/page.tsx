@@ -1,6 +1,8 @@
 'use client';
 import Menus from '@/components/Menus';
 import { AnimatePresence, motion } from 'motion/react';
+import { Suspense } from 'react';
+import Loading from '../loading';
 
 export default function HomePage() {
   return (
@@ -11,15 +13,23 @@ export default function HomePage() {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <motion.section
-          id="menu"
-          className="flex h-full flex-col items-center pb-2 lg:pb-6"
-          initial={{ y: 20 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+        <Suspense
+          fallback={
+            <div className="flex h-screen w-full items-center justify-center">
+              <Loading />
+            </div>
+          }
         >
-          <Menus />
-        </motion.section>
+          <motion.section
+            id="menu"
+            className="flex h-full flex-col items-center pb-2 lg:pb-6"
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Menus />
+          </motion.section>
+        </Suspense>
       </motion.main>
     </AnimatePresence>
   );

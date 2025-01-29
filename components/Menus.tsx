@@ -1,5 +1,4 @@
 'use client';
-import Loading from '@/app/loading';
 import { Button } from '@/components/ui/button';
 import {} from '@/components/ui/pagination';
 import {
@@ -14,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {} from './ui/card';
 import {
   Carousel,
@@ -90,14 +89,15 @@ const MenuCarouselItem = ({
     (isFirstImage && !forceLunch) || // First image when not in lunch mode
     (forceLunch && isLunchSection) || // Lunch images when in lunch mode
     (isMobile
-      ? Math.abs(currentPage - absoluteIndex) <= 1 // Adjacent images on mobile
-      : Math.abs(Math.floor(currentPage / 2) - Math.floor(absoluteIndex / 2)) <=
-        1); // Adjacent pairs on desktop
+      ? absoluteIndex === 0 // Only first image on mobile
+      : absoluteIndex === 0 || absoluteIndex === 1); // First two images on desktop
 
   return (
     <CarouselItem
       key={`${item.name}-${imageIndex}`}
-      className="pl-2 md:basis-1/2 md:pl-4"
+      className={cn('basis-full', !isMobile && 'md:basis-1/2')}
+      loadingHeight="h-[85vh]"
+      loadingHeightMobile="h-[75vh]"
     >
       <motion.div
         layout
@@ -107,23 +107,15 @@ const MenuCarouselItem = ({
         transition={{ duration: 0.3 }}
         className="relative h-[75vh] w-full md:h-[85vh]"
       >
-        <div className="absolute inset-0 rounded-3xl bg-adobe">
-          <Suspense
-            fallback={
-              <div className="flex h-full w-full items-center justify-center">
-                <Loading />
-              </div>
-            }
-          >
-            <Image
-              src={image}
-              alt={`${item.name} Menu ${imageIndex + 1}`}
-              fill
-              priority={shouldPrioritize}
-              className="rounded-3xl object-contain p-2"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-          </Suspense>
+        <div className="absolute inset-0">
+          <Image
+            src={image}
+            alt={`${item.name} Menu ${imageIndex + 1}`}
+            fill
+            priority={shouldPrioritize}
+            className="object-contain p-2"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         </div>
       </motion.div>
     </CarouselItem>
@@ -674,10 +666,13 @@ export default function Component() {
               opts={{
                 align: 'start',
                 ...(isMobile
-                  ? {}
+                  ? {
+                      dragFree: false,
+                    }
                   : {
-                      skipSnaps: true,
-                      dragFree: true,
+                      dragFree: false,
+                      slidesToScroll: 2,
+                      containScroll: 'trimSnaps',
                     }),
               }}
             >

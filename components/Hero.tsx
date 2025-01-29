@@ -1,13 +1,11 @@
 'use client';
-
-import Loading from '@/app/loading';
 import {} from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
+import { CarouselItem } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
-import { Suspense } from 'react';
 import {
   Carousel,
   CarouselContent,
@@ -17,7 +15,9 @@ import {
 
 const carouselImages = [
   'DSC00811.jpg',
+  'DSC00819.jpg',
   'DSC01058.jpg',
+  'DSC01235.jpg',
   'DSC01261.jpg',
   'DSC01270.jpg',
   'DSC01298.jpg',
@@ -44,10 +44,17 @@ type HeroImage = {
   alt: string;
 };
 
-const HeroCarousel = ({ images }: { images: HeroImage[] }) => {
+const HeroCarousel = ({
+  images,
+  setApi,
+}: {
+  images: HeroImage[];
+  setApi: (api: CarouselApi | undefined) => void;
+}) => {
   return (
     <div className="relative w-full">
       <Carousel
+        setApi={setApi}
         opts={{
           loop: true,
           align: 'center',
@@ -63,12 +70,15 @@ const HeroCarousel = ({ images }: { images: HeroImage[] }) => {
             playOnInit: true,
           }),
         ]}
+        className="relative mx-auto max-w-5xl"
       >
         <CarouselContent>
           {images.map((image, index) => (
-            <div
-              key={`${image.src}-${index}`}
-              className="relative min-w-0 flex-[0_0_100%]"
+            <CarouselItem
+              key={index}
+              className="basis-full"
+              loadingHeight="h-[690px]"
+              loadingHeightMobile="h-[500px]"
             >
               <motion.div
                 initial={{ opacity: 0 }}
@@ -76,39 +86,31 @@ const HeroCarousel = ({ images }: { images: HeroImage[] }) => {
                 exit={{ opacity: 0 }}
                 className="relative w-full"
               >
-                <Suspense
-                  fallback={
-                    <div className="flex h-[500px] w-full items-center justify-center bg-adobe md:h-[690px]">
-                      <Loading />
-                    </div>
-                  }
-                >
-                  <div className="relative h-[500px] w-full overflow-hidden rounded-xl shadow-lg transition-transform duration-300 md:h-[690px]">
-                    <div className="absolute inset-0 z-10 bg-black/10" />
-                    <Image
-                      src={image.src}
-                      alt={image.alt}
-                      fill
-                      priority={index === 0}
-                      className="object-cover"
-                      sizes="(max-width: 768px) 95vw, (max-width: 1600px) 85vw, 75vw"
-                      quality={100}
-                    />
-                  </div>
-                </Suspense>
+                <div className="relative aspect-video w-full overflow-hidden rounded-xl shadow-lg">
+                  <div className="absolute inset-0 z-10 bg-black/10" />
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    priority={index === 0}
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, 85vw"
+                    quality={100}
+                  />
+                </div>
               </motion.div>
-            </div>
+            </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="left-4 z-20" />
-        <CarouselNext className="right-4 z-20" />
+        <CarouselPrevious className="left-4 z-20 text-stone-50 hover:scale-110" />
+        <CarouselNext className="right-4 z-20 text-stone-50 hover:scale-110" />
       </Carousel>
     </div>
   );
 };
 
 const Hero = () => {
-  const [shuffledImages, setShuffledImages] = useState(carouselImages);
+  const [shuffledImages, setShuffledImages] = useState<HeroImage[]>([]);
   const [api, setApi] = useState<CarouselApi>();
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -136,6 +138,7 @@ const Hero = () => {
     });
   }, [api, preloadImages]);
 
+  // Initialize with unshuffled images and shuffle on mount
   useEffect(() => {
     const shuffleArray = (array: typeof carouselImages) => {
       const [firstImage, ...restImages] = [...array];
@@ -149,18 +152,21 @@ const Hero = () => {
       return [firstImage, ...shuffledRest];
     };
 
-    const shuffled = shuffleArray(carouselImages);
-    setShuffledImages(shuffled);
+    setShuffledImages(shuffleArray(carouselImages));
 
     // Preload first few images immediately
-    for (const image of shuffled.slice(0, 3)) {
+    for (const image of carouselImages.slice(0, 3)) {
       const img = new window.Image();
       img.src = image.src;
     }
   }, []);
 
+  if (shuffledImages.length === 0) {
+    return null;
+  }
+
   return (
-    <motion.div className="w-full space-y-2">
+    <motion.div className="w-full space-y-6">
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
         <div className="container mx-auto px-2">
           <h2 className="text-pretty text-center font-semibold text-sm text-stone-800 xl:text-base">
@@ -174,8 +180,8 @@ const Hero = () => {
       </div>
 
       <div className="flex w-full justify-center px-4">
-        <div className="w-full max-w-[1600px]">
-          <HeroCarousel images={shuffledImages} />
+        <div className="w-full max-w-6xl">
+          <HeroCarousel images={shuffledImages} setApi={setApi} />
         </div>
       </div>
 

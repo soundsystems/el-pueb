@@ -40,7 +40,7 @@ export default function FlowingBanner() {
 
   return (
     <div
-      className="relative overflow-hidden bg-stone-950/90 py-1.5 shadow-lg backdrop-blur-sm"
+      className="relative overflow-hidden bg-stone-950/90 py-1.5 pt-safe-top shadow-lg backdrop-blur-sm"
       role="marquee"
       aria-label="Announcements"
     >

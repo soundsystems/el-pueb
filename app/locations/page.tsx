@@ -6,12 +6,10 @@ import {
   useMap,
 } from '@vis.gl/react-google-maps';
 
+import { LocationCard } from '@/components/LocationCard';
 import { getRandomMarkerColors } from '@/lib/constants/colors';
-import { MapPin } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Location = {
   name: string;
@@ -24,13 +22,6 @@ type Location = {
     weekdays: string;
     weekend: string;
   };
-};
-
-const springTransition = {
-  type: 'spring',
-  stiffness: 300,
-  damping: 30,
-  mass: 0.5,
 };
 
 const locations: Location[] = [
@@ -143,7 +134,9 @@ const createMarker = (
   });
 
   marker.addListener('click', () => {
-    if (!map) return;
+    if (!map) {
+      return;
+    }
     if (infoWindowRef.current) {
       infoWindowRef.current.close();
     }
@@ -166,18 +159,18 @@ const MapComponent = ({
   locations,
   selectedLocation,
   setSelectedLocation,
-  onMarkersInit,
+  markerColors,
 }: {
   position: { lat: number; lng: number };
   locations: Location[];
   selectedLocation: string | null;
   setSelectedLocation: (slug: string | null) => void;
   onMarkersInit: (colors: string[]) => void;
+  markerColors: string[];
 }) => {
   const map = useMap();
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
-  const markerColorsRef = useRef<string[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Check for dark mode preference
@@ -190,18 +183,13 @@ const MapComponent = ({
     return () => darkModeQuery.removeEventListener('change', handler);
   }, []);
 
-  // Initialize random colors on mount
-  useEffect(() => {
-    markerColorsRef.current = getRandomMarkerColors();
-    onMarkersInit(markerColorsRef.current);
-  }, [onMarkersInit]);
-
   // Initialize markers
   useEffect(() => {
     if (!map) {
       return;
     }
 
+    // Clear existing markers
     for (const marker of markersRef.current) {
       marker.map = null;
     }
@@ -213,7 +201,7 @@ const MapComponent = ({
         index,
         map,
         isDarkMode,
-        markerColorsRef.current,
+        markerColors,
         infoWindowRef,
         selectedLocation,
         setSelectedLocation
@@ -229,7 +217,14 @@ const MapComponent = ({
       }
       markersRef.current = [];
     };
-  }, [map, locations, selectedLocation, setSelectedLocation, isDarkMode]);
+  }, [
+    map,
+    locations,
+    selectedLocation,
+    setSelectedLocation,
+    markerColors,
+    isDarkMode,
+  ]);
 
   // Handle selection changes
   useEffect(() => {
@@ -248,7 +243,7 @@ const MapComponent = ({
       );
       const marker = markersRef.current[locationIndex];
       const location = locations[locationIndex];
-      const markerColor = markerColorsRef.current[locationIndex];
+      const markerColor = markerColors[locationIndex];
 
       if (marker) {
         // Update marker appearance
@@ -305,11 +300,11 @@ const MapComponent = ({
       // Reset marker appearances
       markersRef.current.forEach((marker, index) => {
         if (marker.content instanceof HTMLElement) {
-          marker.content.style.backgroundColor = markerColorsRef.current[index];
+          marker.content.style.backgroundColor = markerColors[index];
         }
       });
     }
-  }, [map, selectedLocation, locations, isDarkMode]);
+  }, [map, selectedLocation, locations, markerColors, isDarkMode]);
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -330,144 +325,13 @@ const MapComponent = ({
   );
 };
 
-const LocationCard = ({
-  location,
-  selectedLocation,
-  setSelectedLocation,
-  markerColor,
-}: {
-  location: Location;
-  selectedLocation: string | null;
-  setSelectedLocation: (slug: string | null) => void;
-  markerColor: string;
-}) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0, scale: 0.9 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.9 }}
-    transition={{
-      layout: springTransition,
-      opacity: { duration: 0.2 },
-      scale: { duration: 0.2 },
-    }}
-    className="mx-auto w-full max-w-[800px]"
-  >
-    <motion.div
-      layout
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.95 }}
-      transition={{
-        layout: springTransition,
-        scale: { type: 'spring', stiffness: 300, damping: 25 },
-      }}
-      className={`relative flex h-full w-full cursor-pointer overflow-hidden rounded-xl bg-stone-50/70 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${selectedLocation === location.slug ? 'bg-stone-950/90' : ''}`}
-      onClick={() =>
-        setSelectedLocation(
-          selectedLocation === location.slug ? null : location.slug
-        )
-      }
-      style={{ '--marker-color': markerColor } as React.CSSProperties}
-    >
-      <motion.div
-        layout
-        transition={{ layout: springTransition }}
-        className="flex flex-1 flex-col justify-between p-4 md:p-6"
-      >
-        <div>
-          <motion.h2
-            layout
-            transition={{ layout: springTransition }}
-            className={`mb-1 font-black text-xl md:mb-2 md:text-2xl ${selectedLocation === location.slug ? 'text-stone-50' : 'text-stone-900'}`}
-          >
-            {location.name}
-          </motion.h2>
-          <motion.div
-            layout
-            transition={{ layout: springTransition }}
-            className={`flex items-start gap-1 md:gap-2 ${
-              selectedLocation === location.slug
-                ? 'text-stone-300'
-                : 'text-stone-600'
-            }`}
-          >
-            <MapPin className="h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
-            <Link
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                `El Pueblito ${location.name} ${location.address}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`font-semibold text-xs transition-all duration-300 md:text-sm xl:text-md ${
-                selectedLocation === location.slug
-                  ? 'text-[color:var(--marker-color)] hover:brightness-75 md:text-stone-50 md:hover:text-[color:var(--marker-color)] md:hover:brightness-100'
-                  : 'text-stone-600 hover:text-[color:var(--marker-color)]'
-              }`}
-            >
-              {location.address}
-            </Link>
-          </motion.div>
-          <motion.div
-            layout
-            transition={{ layout: springTransition }}
-            className="mt-2 flex flex-col gap-0.5 text-[11px] md:text-xs"
-            style={{
-              color:
-                selectedLocation === location.slug ? markerColor : '#000000',
-              transition: 'color 0.3s ease',
-            }}
-          >
-            <div>• {location.hours.weekdays}</div>
-            <div>• {location.hours.weekend}</div>
-          </motion.div>
-        </div>
-        <motion.div
-          layout
-          transition={{ layout: springTransition }}
-          className="mt-auto"
-        >
-          <Link href={`tel:${location.phone}`}>
-            <motion.p
-              layout
-              transition={{ layout: springTransition }}
-              className={`mt-1 font-bold text-xs decoration-[2px] transition-all duration-300 md:text-sm ${
-                selectedLocation === location.slug
-                  ? 'text-stone-50 underline'
-                  : 'text-stone-900 no-underline hover:underline'
-              } hover:text-[color:var(--marker-color)]`}
-              style={{ textDecorationColor: markerColor }}
-            >
-              {location.phone}
-            </motion.p>
-          </Link>
-        </motion.div>
-      </motion.div>
-      <motion.div
-        layout
-        transition={{ layout: springTransition }}
-        className="relative flex h-full w-[140px] flex-shrink-0 items-center justify-center p-4 md:w-[280px]"
-      >
-        <div className="relative h-[120px] w-full overflow-hidden rounded-xl md:h-[180px]">
-          <Image
-            src={`/images/locations/${location.slug}.jpg`}
-            alt={`${location.name} location`}
-            width={1600}
-            height={900}
-            className="h-full w-full object-cover object-center"
-          />
-        </div>
-      </motion.div>
-    </motion.div>
-  </motion.div>
-);
-
 export default function LocationsPage() {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [markerColors, setMarkerColors] = useState<string[]>([]);
 
-  const handleMarkersInit = useCallback((colors: string[]) => {
-    setMarkerColors(colors);
+  useEffect(() => {
+    setMarkerColors(getRandomMarkerColors());
   }, []);
 
   useEffect(() => {
@@ -510,20 +374,21 @@ export default function LocationsPage() {
           transition={{ duration: 0.2 }}
           className={`grid gap-4 md:gap-8 ${isLargeScreen ? 'lg:grid-cols-2' : 'grid-cols-1'}`}
         >
-          {locations.map((location, index) => (
-            <LocationCard
-              key={location.slug}
-              location={location}
-              selectedLocation={selectedLocation}
-              setSelectedLocation={setSelectedLocation}
-              markerColor={markerColors[index] || '#000000'}
-            />
-          ))}
+          {markerColors.length > 0 &&
+            locations.map((location, index) => (
+              <LocationCard
+                key={location.slug}
+                location={location}
+                selectedLocation={selectedLocation}
+                setSelectedLocation={setSelectedLocation}
+                markerColor={markerColors[index] || '#000000'}
+              />
+            ))}
         </motion.div>
       </AnimatePresence>
 
       <AnimatePresence>
-        {selectedLocationData && (
+        {selectedLocationData && markerColors.length > 0 && (
           <motion.div
             layout
             initial={{ opacity: 0, height: 0 }}
@@ -538,7 +403,8 @@ export default function LocationsPage() {
                 locations={locations}
                 selectedLocation={selectedLocation}
                 setSelectedLocation={setSelectedLocation}
-                onMarkersInit={handleMarkersInit}
+                onMarkersInit={() => {}}
+                markerColors={markerColors}
               />
             </APIProvider>
           </motion.div>

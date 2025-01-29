@@ -92,7 +92,9 @@ export default function Header() {
           <span className="hidden whitespace-nowrap md:inline">
             Order Pick Up
           </span>
-          <Phone className="h-4 w-4 fill-[#CE1226] stroke-0 group-hover:stroke-1 group-hover:stroke-[white]" />
+          <Phone
+            className={`pointer-events-auto h-4 w-4 stroke-0 ${open ? 'fill-stone-50 transition-colors transition-duration-400' : 'fill-[#CE1226]'} active:fill-stone-50`}
+          />
         </div>
       ),
       href: '#',
@@ -103,7 +105,7 @@ export default function Header() {
     <motion.header
       layout="preserve-aspect"
       transition={springTransition}
-      className="top-0 z-50 mt-2 mb-4 flex w-full flex-col items-center pt-safe-top"
+      className="top-0 z-50 mt-2 mb-2 flex w-full flex-col items-center pt-2"
     >
       <AnimatePresence mode="wait" initial={false} key={pathname}>
         <motion.div
@@ -120,7 +122,7 @@ export default function Header() {
             {...fadeInUp}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="relative shrink-0 md:ml-4 md:pr-4"
+            className="relative shrink-0 md:ml-8 md:pr-10 lg:mb-2"
           >
             <Link
               href="/"
@@ -172,7 +174,7 @@ export default function Header() {
             transition={springTransition}
             className="w-full flex-1 md:flex md:min-w-[400px] md:justify-center"
           >
-            <nav className="flex items-center justify-center space-x-1 text-base lg:text-lg">
+            <nav className="mb-2 flex items-center justify-center space-x-1 pt-2 text-base lg:text-lg">
               {tabs.map((tab, index) => (
                 <motion.div
                   key={tab.id}
@@ -188,10 +190,10 @@ export default function Header() {
                   {tab.id === 'pick-up' ? (
                     <DropdownMenu open={open} onOpenChange={setOpen}>
                       <DropdownMenuTrigger
-                        className={`group relative line-clamp-1 rounded-full px-3 py-1.5 transition-colors duration-300 focus:outline-none ${
+                        className={`group relative line-clamp-1 rounded-full px-3 py-1 duration-300 focus:outline-none ${
                           open
-                            ? 'bg-[#03502D] text-stone-50'
-                            : 'text-black hover:bg-[#03502D] hover:text-stone-50'
+                            ? 'border-none bg-[#03502D] text-stone-50'
+                            : 'text-black hover:text-stone-50'
                         }`}
                       >
                         <motion.span layout className="relative z-20">
@@ -202,7 +204,7 @@ export default function Header() {
                         {open && (
                           <DropdownMenuContent
                             asChild
-                            className="bg-[#03502D] font-semibold text-stone-50"
+                            className="border-[1px] border-stone-50 bg-[#03502D] font-semibold text-stone-50 "
                             sideOffset={5}
                             align="end"
                             forceMount
@@ -219,7 +221,7 @@ export default function Header() {
                                   }}
                                 >
                                   <DropdownMenuItem
-                                    className="cursor-pointer data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#CF0822]"
+                                    className="cursor-pointer data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#F8C839]"
                                     asChild
                                   >
                                     <motion.a
@@ -255,7 +257,7 @@ export default function Header() {
                       {activeTab === tab.id && (
                         <motion.span
                           layoutId="bubble"
-                          className="absolute inset-0 z-10 bg-[#CE1226]"
+                          className="absolute inset-0 z-10 bg-stone-950/90"
                           style={{ borderRadius: 9999 }}
                           transition={springTransition}
                         />
@@ -283,11 +285,11 @@ export default function Header() {
             className="-translate-y-1/2 absolute top-1/2 right-4 hidden text-sm md:text-md lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
           >
             {isOpen ? (
-              <span className="font-semibold text-[#03502D]">
+              <span className="font-semibold text-[#006847]">
                 Open Today {hoursToday}
               </span>
             ) : (
-              <span className="font-semibold text-[#CE1226]">
+              <span className="font-semibold text-[#CF0822]">
                 {closedMessage}
               </span>
             )}

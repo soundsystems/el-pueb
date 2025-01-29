@@ -1,12 +1,13 @@
 'use client';
+import Loading from '@/app/loading';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from 'embla-carousel-react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { Suspense } from 'react';
 import * as React from 'react';
-
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 type CarouselApi = UseEmblaCarouselType[1];
 type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
@@ -60,6 +61,8 @@ const Carousel = React.forwardRef<
   ) => {
     const [carouselRef, api] = useEmblaCarousel(
       {
+        dragFree: false,
+        containScroll: 'trimSnaps',
         ...opts,
         axis: orientation === 'horizontal' ? 'x' : 'y',
       },
@@ -202,8 +205,11 @@ CarouselContent.displayName = 'CarouselContent';
 
 const CarouselItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & {
+    loadingHeight?: string;
+    loadingHeightMobile?: string;
+  }
+>(({ className, loadingHeight, loadingHeightMobile, ...props }, ref) => {
   const { orientation, visibleSlides } = useCarousel();
   const itemRef = React.useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = React.useState(false);
@@ -219,27 +225,50 @@ const CarouselItem = React.forwardRef<
     setIsVisible(visibleSlides.includes(index));
   }, [visibleSlides]);
 
+  const defaultHeight = loadingHeight || 'h-[690px]';
+  const defaultMobileHeight = loadingHeightMobile || 'h-[500px]';
+
   return (
     <div
-      ref={(node) => {
-        // Merge refs
-        if (typeof ref === 'function') {
-          ref(node);
-        } else if (ref) {
-          ref.current = node;
-        }
-        itemRef.current = node;
-      }}
-      role="group"
-      aria-roledescription="slide"
       className={cn(
-        'min-w-0 shrink-0 grow-0 basis-full',
+        'min-w-0 shrink-0 grow-0',
         orientation === 'horizontal' ? 'pl-4' : 'pt-4',
         className
       )}
-      data-visible={isVisible}
-      {...props}
-    />
+    >
+      <Suspense
+        fallback={
+          <div
+            className={cn(
+              'relative w-full',
+              defaultMobileHeight,
+              `md:${defaultHeight}`
+            )}
+          >
+            <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-adobe">
+              <Loading />
+            </div>
+          </div>
+        }
+      >
+        <div
+          ref={(node) => {
+            // Merge refs
+            if (typeof ref === 'function') {
+              ref(node);
+            } else if (ref) {
+              ref.current = node;
+            }
+            itemRef.current = node;
+          }}
+          role="group"
+          aria-roledescription="slide"
+          className={className}
+          data-visible={isVisible}
+          {...props}
+        />
+      </Suspense>
+    </div>
   );
 });
 CarouselItem.displayName = 'CarouselItem';

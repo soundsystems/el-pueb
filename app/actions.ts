@@ -46,7 +46,7 @@ export async function submitContact(
 
     await resend.emails.send({
       from: 'El Pueblito Contact Form <hola@familia.elpueblitonwa.com>',
-      to: 'elpueblitonwa@gmail.com',
+      to: 'team@elpueblitonwa.com',
       subject: `New ${formData.reason} (${formData.inquiryType})`,
       html: `
         <h2>New ${formData.inquiryType}</h2>

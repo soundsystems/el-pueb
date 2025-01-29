@@ -1,54 +1,30 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: 'https://elpueblito.com',
+  const baseUrl = 'https://elpueblitonwa.com';
+
+  // Define all static routes
+  const staticRoutes = ['', '/menu', '/about', '/contact', '/locations'].map(
+    (route) => ({
+      url: `${baseUrl}${route}`,
       lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 1,
-    },
-    {
-      url: 'https://elpueblito.com/menu',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 1,
-    },
-    {
-      url: 'https://elpueblito.com/locations',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    },
-    {
-      url: 'https://elpueblito.com/contact',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: 'https://elpueblito.com/locations/bella-vista',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: 'https://elpueblito.com/locations/highfill',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: 'https://elpueblito.com/locations/prairie-creek',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-    {
-      url: 'https://elpueblito.com/locations/centerton',
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.7,
-    },
-  ];
+      changeFrequency: 'weekly' as const,
+      priority: route === '' ? 1 : 0.8,
+    })
+  );
+
+  // Define location pages
+  const locationRoutes = [
+    '/locations/bentonville',
+    '/locations/bella-vista',
+    '/locations/highfill',
+    '/locations/prairie-creek',
+  ].map((route) => ({
+    url: `${baseUrl}${route}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.9,
+  }));
+
+  return [...staticRoutes, ...locationRoutes];
 }
