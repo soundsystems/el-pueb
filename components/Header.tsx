@@ -23,8 +23,8 @@ const springTransition = {
 
 const bouncySpring = {
   type: 'spring',
-  stiffness: 400,
-  damping: 25,
+  stiffness: 600,
+  damping: 40,
   mass: 0.8,
 };
 
@@ -193,7 +193,7 @@ export default function Header() {
                         className={`group relative line-clamp-1 rounded-full px-3 py-1 duration-300 focus:outline-none ${
                           open
                             ? 'border-none bg-[#03502D] text-stone-50'
-                            : 'text-black hover:text-stone-50'
+                            : 'text-stone-950 hover:text-stone-50'
                         }`}
                       >
                         <motion.span layout className="relative z-20">
@@ -204,7 +204,7 @@ export default function Header() {
                         {open && (
                           <DropdownMenuContent
                             asChild
-                            className="border-[1px] border-stone-50 bg-[#03502D] font-semibold text-stone-50 "
+                            className="border-none bg-[#03502D] font-semibold text-stone-50"
                             sideOffset={5}
                             align="end"
                             forceMount
@@ -221,7 +221,7 @@ export default function Header() {
                                   }}
                                 >
                                   <DropdownMenuItem
-                                    className="cursor-pointer data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#F8C839]"
+                                    className="flex cursor-pointer justify-center text-center shadow-lg data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#F8C839] data-[highlighted]:transition-colors"
                                     asChild
                                   >
                                     <motion.a
@@ -248,7 +248,7 @@ export default function Header() {
                       className={`relative whitespace-nowrap rounded-full px-2 py-1.5 font-semibold transition-colors duration-300 sm:px-3 ${
                         activeTab === tab.id
                           ? 'text-stone-50'
-                          : 'text-black hover:text-stone-50'
+                          : 'text-stone-950 hover:text-stone-50'
                       }`}
                       style={{
                         WebkitTapHighlightColor: 'transparent',

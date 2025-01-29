@@ -31,7 +31,7 @@ export const useRestaurantHours = () => {
       if (currentTime < openTime) {
         // Before opening
         const openingTime = new Date(now).setHours(openHour, 0);
-        return `Opening Soon at ${formatTime(openingTime)}`;
+        return `Back Open at ${formatTime(openingTime)}`;
       }
       if (currentTime >= closeTime) {
         // After closing

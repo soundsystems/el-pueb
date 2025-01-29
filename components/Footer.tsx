@@ -105,7 +105,7 @@ const Footer = () => {
         </motion.div>
       </div>
       <p className="pt-4 text-center text-xs">
-        © {new Date().getFullYear()} El Pueblito
+        © {new Date().getFullYear()} El Pueblito Mexican Restaurant
       </p>
     </footer>
   );

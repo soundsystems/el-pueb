@@ -1,4 +1,5 @@
 'use client';
+import Loading from '@/app/loading';
 import { Button } from '@/components/ui/button';
 import {} from '@/components/ui/pagination';
 import {
@@ -13,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import {} from './ui/card';
 import {
   Carousel,
@@ -64,13 +65,45 @@ const menuItems: MenuItem[] = [
   },
 ];
 
+// Desktop navigation mapping - single source of truth
+const DESKTOP_NAV_MAPPING = {
+  STARTERS: 0, // Image 1
+  PLATOS: 2, // Images 2,3
+  LUNCH: 4, // Images 4,5
+  DESSERTS: 6, // Image 6
+} as const;
+
+type DesktopNavPosition =
+  (typeof DESKTOP_NAV_MAPPING)[keyof typeof DESKTOP_NAV_MAPPING];
+
+const getValidDesktopPosition = (page: number): DesktopNavPosition => {
+  const positions = Object.values(DESKTOP_NAV_MAPPING);
+  // Find the closest valid position, defaulting to first position if none found
+  return positions.find((pos) => pos >= page) ?? positions[0];
+};
+
+const DESKTOP_SECTIONS: Record<number, number[]> = {
+  0: [0], // Starters
+  1: [2, 3], // Platos
+  2: [4, 5], // Lunch
+  3: [6], // Desserts
+};
+
+const getDesktopSection = (currentPage: number) => {
+  for (const [section, pages] of Object.entries(DESKTOP_SECTIONS)) {
+    if (pages.includes(currentPage)) {
+      return Number(section);
+    }
+  }
+  return 0;
+};
+
 const MenuCarouselItem = ({
   item,
   image,
   groupIndex,
   imageIndex,
   absoluteIndex,
-  currentPage,
   isMobile,
   forceLunch,
 }: {
@@ -83,6 +116,8 @@ const MenuCarouselItem = ({
   isMobile: boolean;
   forceLunch: boolean;
 }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   const isFirstImage = groupIndex === 0 && imageIndex === 0;
   const isLunchSection = item.name === 'Lunch, Combos & Kids';
   const shouldPrioritize =
@@ -92,12 +127,15 @@ const MenuCarouselItem = ({
       ? absoluteIndex === 0 // Only first image on mobile
       : absoluteIndex === 0 || absoluteIndex === 1); // First two images on desktop
 
+  // Use useEffect to update client state after hydration
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <CarouselItem
       key={`${item.name}-${imageIndex}`}
       className={cn('basis-full', !isMobile && 'md:basis-1/2')}
-      loadingHeight="h-[85vh]"
-      loadingHeightMobile="h-[75vh]"
     >
       <motion.div
         layout
@@ -108,13 +146,22 @@ const MenuCarouselItem = ({
         className="relative h-[75vh] w-full md:h-[85vh]"
       >
         <div className="absolute inset-0">
+          {isClient && isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loading />
+            </div>
+          )}
           <Image
             src={image}
             alt={`${item.name} Menu ${imageIndex + 1}`}
             fill
             priority={shouldPrioritize}
-            className="object-contain p-2"
+            className={cn(
+              'object-contain p-2',
+              isLoading ? 'opacity-0' : 'opacity-100'
+            )}
             sizes="(max-width: 768px) 100vw, 50vw"
+            onLoad={() => setIsLoading(false)}
           />
         </div>
       </motion.div>
@@ -138,7 +185,7 @@ export default function Component() {
     };
 
     checkLunchHours();
-    const interval = setInterval(checkLunchHours, 60000); // Check every minute
+    const interval = setInterval(checkLunchHours, 60000); // Check every minute to see if it's lunch time yet
 
     return () => clearInterval(interval);
   }, [isOpen]);
@@ -195,7 +242,7 @@ export default function Component() {
   }, [api]);
 
   /**
-   * Wrap your prev/next click handlers in useCallback
+   * Wrap prev/next click handlers in useCallback
    * to keep them stable across re-renders.
    */
   const handlePrevClick = useCallback(() => {
@@ -207,12 +254,11 @@ export default function Component() {
       api.scrollTo(Math.max(0, currentPage - 1));
     } else {
       // Always move 2 at a time in desktop view
-      let newPage = currentPage - 2;
-      // Ensure we land on even numbered pages
-      if (newPage > 0 && newPage % 2 !== 0) {
-        newPage--;
-      }
-      api.scrollTo(Math.max(0, newPage));
+      const allImages = menuItems.flatMap((item) => item.images);
+      const newPage = currentPage - 2;
+      // Get the closest valid position
+      const validPosition = getValidDesktopPosition(newPage);
+      api.scrollTo(Math.min(Math.max(0, validPosition), allImages.length - 1));
     }
   }, [api, isMobile, currentPage]);
 
@@ -227,80 +273,61 @@ export default function Component() {
     } else {
       // Always move 2 at a time in desktop view
       const allImages = menuItems.flatMap((item) => item.images);
-      let newPage = currentPage + 2;
-      // Ensure we land on even numbered pages
-      if (newPage < allImages.length && newPage % 2 !== 0) {
-        newPage--;
-      }
-      api.scrollTo(Math.min(allImages.length - 2, newPage));
+      const newPage = currentPage + 2;
+      // Get the closest valid position
+      const validPosition = getValidDesktopPosition(newPage);
+      api.scrollTo(Math.min(validPosition, allImages.length - 1));
     }
   }, [api, isMobile, currentPage]);
 
-  /**
-   * Because handlePrevClick and handleNextClick are wrapped in useCallback,
-   * this effect will always have the latest references to them.
-   */
+  // Desktop navigation helpers
+  const handleDesktopArrowNav = useCallback(
+    (direction: 'left' | 'right') => {
+      if (!api) {
+        return;
+      }
+      const currentSection = getDesktopSection(currentPage);
+      const newSection =
+        direction === 'left'
+          ? Math.max(0, currentSection - 1)
+          : Math.min(3, currentSection + 1);
+      api.scrollTo(DESKTOP_SECTIONS[newSection][0]);
+    },
+    [api, currentPage]
+  );
+
+  const handleMobileArrowNav = useCallback(
+    (direction: 'left' | 'right') => {
+      if (!api) {
+        return;
+      }
+      const maxPage = menuItems.flatMap((item) => item.images).length - 1;
+      const newPage =
+        direction === 'left'
+          ? Math.max(0, currentPage - 1)
+          : Math.min(maxPage, currentPage + 1);
+      api.scrollTo(newPage);
+    },
+    [api, currentPage]
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!api) {
         return;
       }
-
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault();
-        if (isMobile) {
-          api.scrollTo(Math.max(0, currentPage - 1));
-        } else {
-          // Desktop view - fixed pairs for navigation
-          const pairs: Record<number, number[]> = {
-            0: [0], // Starters
-            1: [2, 3], // Platos
-            2: [4, 5], // Lunch
-            3: [6], // Desserts
-          };
-          // Find current section
-          let currentSection = 0;
-          for (const [section, pages] of Object.entries(pairs)) {
-            if (pages.includes(currentPage)) {
-              currentSection = Number(section);
-              break;
-            }
-          }
-          // Go to previous section's first page
-          const prevSection = Math.max(0, currentSection - 1);
-          api.scrollTo(pairs[prevSection][0]);
-        }
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (isMobile) {
-          const maxPage = menuItems.flatMap((item) => item.images).length - 1;
-          api.scrollTo(Math.min(maxPage, currentPage + 1));
-        } else {
-          // Desktop view - fixed pairs for navigation
-          const pairs: Record<number, number[]> = {
-            0: [0], // Starters
-            1: [2, 3], // Platos
-            2: [4, 5], // Lunch
-            3: [6], // Desserts
-          };
-          // Find current section
-          let currentSection = 0;
-          for (const [section, pages] of Object.entries(pairs)) {
-            if (pages.includes(currentPage)) {
-              currentSection = Number(section);
-              break;
-            }
-          }
-          // Go to next section's first page
-          const nextSection = Math.min(3, currentSection + 1);
-          api.scrollTo(pairs[nextSection][0]);
-        }
+        const direction = e.key === 'ArrowLeft' ? 'left' : 'right';
+        isMobile
+          ? handleMobileArrowNav(direction)
+          : handleDesktopArrowNav(direction);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [api, isMobile, currentPage]);
+  }, [api, isMobile, handleMobileArrowNav, handleDesktopArrowNav]);
 
   const handleNavClick = (index: number) => {
     if (!api) {
@@ -315,14 +342,11 @@ export default function Component() {
       }
       api.scrollTo(imageIndex);
     } else {
-      // On desktop, we need to map the non-mobile indices to the correct image pairs
-      const desktopIndices: Record<number, number> = {
-        0: 0, // Starters -> image 1
-        1: 2, // Platos -> images 3,4
-        2: 4, // Lunch -> images 5,6
-        3: 6, // Desserts -> image 7
-      };
-      api.scrollTo(desktopIndices[index] || 0);
+      // Map nav index to corresponding desktop position
+      const positions = Object.values(
+        DESKTOP_NAV_MAPPING
+      ) as DesktopNavPosition[];
+      api.scrollTo(positions[index] || positions[0]);
     }
   };
 
@@ -333,14 +357,20 @@ export default function Component() {
     if (isMobile) {
       api.scrollTo(index);
     } else {
-      // Ensure we always land on even numbered pages in desktop
-      api.scrollTo(index * 2);
+      // On desktop, map dots to valid navigation points
+      const positions = Object.values(
+        DESKTOP_NAV_MAPPING
+      ) as DesktopNavPosition[];
+      const targetPage = positions[index] || positions[0];
+      const allImages = menuItems.flatMap((item) => item.images);
+      api.scrollTo(Math.min(targetPage, allImages.length - 1));
     }
   };
 
   // Calculate which nav item should be active
   const getMobileActiveNavIndex = (currentPage: number) => {
     const totalImages = menuItems.flatMap((item) => item.images);
+    // Check if the last image is visible
     if (currentPage === totalImages.length - 1) {
       return menuItems.length - 1;
     }
@@ -359,22 +389,21 @@ export default function Component() {
   };
 
   const getDesktopActiveNavIndex = (currentPage: number) => {
-    const imageToNavIndex: Record<number, number> = {
-      0: 0, // Image 1 -> Starters
-      2: 1, // Images 3,4 -> Platos
-      4: 2, // Images 5,6 -> Lunch
-      6: 3, // Image 7 -> Desserts
-    };
-
+    const positions = Object.values(
+      DESKTOP_NAV_MAPPING
+    ) as DesktopNavPosition[];
     const allImages = menuItems.flatMap((item) => item.images);
     const lastPairStart = allImages.length - 2;
 
+    // Always highlight Desserts & Drinks for the last pair
     if (currentPage >= lastPairStart) {
-      return 3;
+      return positions.length - 1;
     }
 
+    // Find the current section based on page number
     const pairStartIndex = Math.floor(currentPage / 2) * 2;
-    return imageToNavIndex[pairStartIndex] || 0;
+    const index = positions.findIndex((pos) => pos === pairStartIndex);
+    return index === -1 ? 0 : index;
   };
 
   const getActiveNavIndex = (currentPage: number) => {
@@ -671,35 +700,43 @@ export default function Component() {
                     }
                   : {
                       dragFree: false,
-                      slidesToScroll: 2,
+                      skipSnaps: false,
                       containScroll: 'trimSnaps',
                     }),
               }}
             >
               <CarouselContent className="-ml-2 md:-ml-4">
-                {menuItems.flatMap((item, groupIndex) =>
-                  item.images.map((image, imageIndex) => {
-                    const absoluteIndex =
-                      menuItems
-                        .slice(0, groupIndex)
-                        .reduce((acc, curr) => acc + curr.images.length, 0) +
-                      imageIndex;
+                <Suspense
+                  fallback={
+                    <div className="flex h-[85vh] w-full items-center justify-center">
+                      <Loading />
+                    </div>
+                  }
+                >
+                  {menuItems.flatMap((item, groupIndex) =>
+                    item.images.map((image, imageIndex) => {
+                      const absoluteIndex =
+                        menuItems
+                          .slice(0, groupIndex)
+                          .reduce((acc, curr) => acc + curr.images.length, 0) +
+                        imageIndex;
 
-                    return (
-                      <MenuCarouselItem
-                        key={`${item.name}-${imageIndex}`}
-                        item={item}
-                        image={image}
-                        groupIndex={groupIndex}
-                        imageIndex={imageIndex}
-                        absoluteIndex={absoluteIndex}
-                        currentPage={currentPage}
-                        isMobile={isMobile}
-                        forceLunch={forceLunch}
-                      />
-                    );
-                  })
-                )}
+                      return (
+                        <MenuCarouselItem
+                          key={`${item.name}-${imageIndex}`}
+                          item={item}
+                          image={image}
+                          groupIndex={groupIndex}
+                          imageIndex={imageIndex}
+                          absoluteIndex={absoluteIndex}
+                          currentPage={currentPage}
+                          isMobile={isMobile}
+                          forceLunch={forceLunch}
+                        />
+                      );
+                    })
+                  )}
+                </Suspense>
               </CarouselContent>
             </Carousel>
           </motion.div>

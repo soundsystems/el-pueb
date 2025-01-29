@@ -309,12 +309,6 @@ const MapComponent = ({
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <GoogleMap
-        mapId={
-          isDarkMode
-            ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_DARK_ID ||
-              'YOUR_DARK_MAP_ID_HERE'
-            : process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID || 'YOUR_LIGHT_MAP_ID_HERE'
-        }
         defaultCenter={{ lat: 36.36, lng: -94.25 }}
         defaultZoom={11}
         gestureHandling={'greedy'}
