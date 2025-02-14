@@ -3,9 +3,10 @@ import Banner from '@/components/Banner';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import SelectionColorInitializer from '@/components/SelectionColorInitializer';
+import { QRTracker } from '@/components/analytics/QR-Tracker';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { cn } from '@/lib/utils';
-import { GoogleAnalytics } from '@next/third-parties/google';
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
@@ -235,7 +236,11 @@ export default function RootLayout({
           </main>
           <Footer />
           <SpeedInsights />
+          <Suspense>
+            <QRTracker />
+          </Suspense>
           <GoogleAnalytics gaId="G-JKSWQ70B8Z" />
+          <GoogleTagManager gtmId="GTM-WB8P228N" />
         </body>
       </CSPostHogProvider>
     </html>

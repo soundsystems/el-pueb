@@ -5,7 +5,7 @@ Come on by and pay us a visit to experience vibrant flavors, handcrafted beverag
 
 © 2025 El Pueblito Mexican Restaurant
 
-[ a structurally sound system ] made for Pulse Community Agency
+this is website is a (structurally) sound system made for Pulse Community Agency.
 
 ----------------------------------------------------------------
 
