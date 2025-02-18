@@ -107,7 +107,7 @@ export default function Header() {
       transition={springTransition}
       className="top-0 z-50 mt-[.75rem] mb-2 flex w-full flex-col items-center"
     >
-      <AnimatePresence mode="wait" initial={false} key={pathname}>
+      <AnimatePresence initial={false}>
         <motion.div
           key={isLargeScreen ? 'desktop' : 'mobile'}
           layout="position"
@@ -140,7 +140,7 @@ export default function Header() {
                 priority
                 className="-inset-y-1 relative z-20 w-[14rem] max-w-[22rem]"
               />
-              <AnimatePresence mode="wait" key={pathname}>
+              <AnimatePresence mode="wait">
                 {activeTab === 'home' && (
                   <motion.svg
                     layoutId="bubble"
@@ -151,7 +151,6 @@ export default function Header() {
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
-                    key={pathname}
                   >
                     <motion.path
                       d="M 200 22.5 C 200 34.93 155.228 45 100 45 C 44.772 45 0 34.93 0 22.5 C 0 10.07 44.772 0 100 0 C 155.228 0 200 10.07 200 22.5"

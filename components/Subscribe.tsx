@@ -48,13 +48,23 @@ function useWindowDimensions() {
     const handleResize = () => {
       setDimensions({
         width: window.innerWidth,
-        height: window.innerHeight,
+        height: Math.max(
+          document.documentElement.clientHeight,
+          document.documentElement.scrollHeight,
+          window.innerHeight
+        ),
       });
     };
 
     handleResize();
+
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize);
+    };
   }, []);
 
   return dimensions;
@@ -126,6 +136,7 @@ export default function Subscribe() {
 
   const formRef = React.useRef<HTMLFormElement>(null);
   const [showConfetti, setShowConfetti] = React.useState(false);
+  const [confettiSource, setConfettiSource] = React.useState({ x: 0, y: 0 });
 
   // Reset form when step changes
   React.useEffect(() => {
@@ -146,6 +157,28 @@ export default function Subscribe() {
       return () => clearTimeout(timer);
     }
   }, [state]);
+
+  // Update confetti source position when window changes
+  React.useEffect(() => {
+    const updateConfettiSource = () => {
+      setConfettiSource({
+        y: window.innerHeight + window.scrollY,
+        x: window.innerWidth,
+      });
+    };
+
+    // Initial position
+    updateConfettiSource();
+
+    // Update on scroll and resize
+    window.addEventListener('scroll', updateConfettiSource);
+    window.addEventListener('resize', updateConfettiSource);
+
+    return () => {
+      window.removeEventListener('scroll', updateConfettiSource);
+      window.removeEventListener('resize', updateConfettiSource);
+    };
+  }, []);
 
   const startColorAnimation = async () => {
     await controls.start({
@@ -375,7 +408,7 @@ export default function Subscribe() {
     numberOfPieces: 111,
     confettiSource: {
       x: 0,
-      y: window.innerHeight + window.scrollY,
+      y: confettiSource.y,
       w: 10,
       h: 0,
     },
@@ -387,8 +420,8 @@ export default function Subscribe() {
     ...confettiProps,
     numberOfPieces: 111,
     confettiSource: {
-      x: dimensions.width - 10,
-      y: window.innerHeight + window.scrollY,
+      x: confettiSource.x - 10,
+      y: confettiSource.y,
       w: 10,
       h: 0,
     },
@@ -398,25 +431,6 @@ export default function Subscribe() {
 
   return (
     <div className="flex justify-center">
-      {showConfetti && (
-        <div
-          className="fixed top-0 right-0 bottom-0 left-0 z-[9999]"
-          style={{
-            pointerEvents: 'none',
-            position: 'fixed',
-            overflow: 'visible',
-          }}
-        >
-          {dimensions.width < 768 ? (
-            <>
-              <ReactConfetti {...mobileConfettiProps} />
-              <ReactConfetti {...mobileConfettiProps2} />
-            </>
-          ) : (
-            <ReactConfetti {...confettiProps} />
-          )}
-        </div>
-      )}
       {process.env.NODE_ENV === 'development' && (
         <button
           onClick={() => setShowConfetti(true)}
@@ -478,7 +492,8 @@ export default function Subscribe() {
           </motion.div>
         </form>
 
-        <AnimatePresence mode="wait">
+        {/* Separate AnimatePresence for error message */}
+        <AnimatePresence>
           {state.error && state.message && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -497,6 +512,34 @@ export default function Subscribe() {
                   {state.message}
                 </span>
               </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Separate AnimatePresence for confetti */}
+        <AnimatePresence>
+          {showConfetti && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed top-0 right-0 bottom-0 left-0 z-[9999]"
+              style={{
+                pointerEvents: 'none',
+                position: 'fixed',
+                overflow: 'visible',
+                height: '100vh',
+                width: '100vw',
+              }}
+            >
+              {dimensions.width < 768 ? (
+                <>
+                  <ReactConfetti {...mobileConfettiProps} />
+                  <ReactConfetti {...mobileConfettiProps2} />
+                </>
+              ) : (
+                <ReactConfetti {...confettiProps} />
+              )}
             </motion.div>
           )}
         </AnimatePresence>

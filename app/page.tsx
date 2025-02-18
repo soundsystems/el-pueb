@@ -31,7 +31,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <main className="flex flex-col space-y-6">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.section
             key="hero-section"
             id="hero"
