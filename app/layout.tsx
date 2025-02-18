@@ -207,6 +207,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={GeistSans.className}>
       <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
         <script
           type="application/ld+json"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: This is the recommended approach in Next.js docs for JSON-LD

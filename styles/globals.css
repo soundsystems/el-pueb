@@ -69,4 +69,33 @@
     --chart-5: 340 75% 55%;
     --pueb: #f4c430;
   }
+
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    /* Remove default tap highlight only on touch devices */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation; /* Optimize touch actions */
+    }
+
+    /* Smooth momentum scrolling for iOS */
+    .momentum-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent pull-to-refresh on Chrome/Android */
+    /* Note: This won't affect iOS Safari pull-to-refresh */
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
+  }
+
+  /* Keep default behavior for mouse devices */
+  @media (hover: hover) and (pointer: fine) {
+    * {
+      /* Default system highlight for mouse users */
+      -webkit-tap-highlight-color: initial;
+    }
+  }
 }

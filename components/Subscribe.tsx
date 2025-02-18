@@ -33,22 +33,10 @@ const initialState: SubscribeState = {
 // Extract theme and animation logic into a custom hook
 function useThemeAnimation(controls: AnimationControls) {
   React.useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleThemeChange = (e: MediaQueryListEvent) => {
-      controls.start({
-        color: e.matches ? '#fafaf9' : '#0c0a09',
-        transition: { duration: 0.3 },
-      });
-    };
-
     controls.start({
-      color: mediaQuery.matches ? '#fafaf9' : '#0c0a09',
+      color: '#fafaf9',
       transition: { duration: 0.3 },
     });
-
-    mediaQuery.addEventListener('change', handleThemeChange);
-    return () => mediaQuery.removeEventListener('change', handleThemeChange);
   }, [controls]);
 }
 
@@ -64,7 +52,7 @@ function useWindowDimensions() {
       });
     };
 
-    handleResize(); // Set initial dimensions
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -160,27 +148,31 @@ export default function Subscribe() {
   }, [state]);
 
   const startColorAnimation = async () => {
-    const isDarkMode = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
     await controls.start({
-      color: isDarkMode
-        ? ['#fafaf9', '#EAB308', '#fafaf9', '#EAB308']
-        : ['#0c0a09', '#EAB308', '#0c0a09', '#EAB308'],
+      color: ['#fafaf9', '#EAB308', '#30C2DC', '#22c55e', '#fafaf9'],
       transition: {
-        duration: 0.8,
+        duration: 1.2,
         ease: 'easeInOut',
-        times: [0, 0.3, 0.6, 1],
+        times: [0, 0.25, 0.5, 0.75, 1],
       },
     });
   };
 
   const stopColorAnimation = () => {
-    const isDarkMode = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
     controls.start({
-      color: isDarkMode ? '#fafaf9' : '#0c0a09',
+      color: '#fafaf9',
+      transition: { duration: 0.2 },
+    });
+  };
+
+  // Add focus handlers for mobile
+  const handleFocusAnimation = () => {
+    startColorAnimation(); // Reuse the same flicker animation with all colors
+  };
+
+  const handleBlurAnimation = () => {
+    controls.start({
+      color: '#fafaf9',
       transition: { duration: 0.2 },
     });
   };
@@ -211,7 +203,7 @@ export default function Subscribe() {
   const renderEmailStep = () => (
     <div className="pt-4">
       <motion.div
-        className="absolute top-4 right-0 left-0 appearance-none font-semibold text-stone-900 opacity-0 transition-colors duration-300 ease-linear group-hover:text-green-600 dark:text-stone-50 dark:group-hover:text-pueb"
+        className="absolute top-4 right-0 left-0 appearance-none font-semibold text-stone-50 opacity-0 transition-colors duration-300 ease-linear group-focus-within:text-green-600 group-hover:text-green-600"
         animate={{ opacity: 1, y: -10 }}
         transition={{
           ease: 'linear',
@@ -220,21 +212,21 @@ export default function Subscribe() {
         }}
         style={{ pointerEvents: 'none' }}
       >
-        <h3 className="text-center text-sm text-stone-900 transition-colors duration-300 ease-linear dark:text-stone-50">
+        <h3 className="text-center text-sm text-stone-50 transition-colors duration-300 ease-linear">
           La Familia Pueblito
         </h3>
       </motion.div>
       <span className="relative font-semibold text-sm md:text-base">
         <motion.span
           animate={controls}
-          className="relative inline-block text-stone-900 dark:text-stone-50"
+          className="relative inline-block text-stone-50"
         >
           email
         </motion.span>
       </span>
       <span>
         <input
-          className="mx-2 w-48 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 placeholder-stone-900 outline-[#FBCAD3] placeholder:text-center placeholder:font-light hover:outline hover:outline-1 focus:border-transparent focus:outline-2 dark:text-stone-50 dark:placeholder-stone-50/80 dark:outline-[#F15670]"
+          className="mx-2 min-h-[44px] w-48 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 placeholder-stone-50/80 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light hover:outline hover:outline-1 focus:border-transparent focus:outline-2"
           name="email"
           required
           type="email"
@@ -242,9 +234,11 @@ export default function Subscribe() {
           placeholder="your@email.com"
           aria-label="Email address"
           key="email-input"
-          autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
+          inputMode="email"
+          onFocus={handleFocusAnimation}
+          onBlur={handleBlurAnimation}
         />
       </span>
     </div>
@@ -269,7 +263,7 @@ export default function Subscribe() {
       <input type="hidden" name="email" value={state.email} />
       <div className="flex space-x-2">
         <input
-          className="w-24 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline outline-1 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
+          className="min-h-[44px] w-24 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-pueb focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
           name="firstName"
           required
           type="text"
@@ -280,7 +274,7 @@ export default function Subscribe() {
           autoCapitalize="off"
         />
         <input
-          className="w-24 appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline outline-1 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
+          className="min-h-[44px] w-24 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-pueb focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
           name="lastName"
           required
           type="text"
@@ -292,7 +286,7 @@ export default function Subscribe() {
         />
       </div>
       <input
-        className="w-full appearance-none rounded-lg bg-transparent px-2 py-1 text-left font-bold text-[.8rem] text-stone-900 outline outline-1 outline-[#FBCAD3] placeholder:text-center placeholder:font-light placeholder:text-pueb focus:border-transparent focus:outline-2 dark:text-stone-50 dark:outline-[#F15670]"
+        className="min-h-[44px] w-full select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-pueb focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
         name="phone"
         required
         type="tel"
@@ -303,6 +297,7 @@ export default function Subscribe() {
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"
+        inputMode="tel"
       />
     </motion.div>
   );
@@ -365,23 +360,76 @@ export default function Subscribe() {
       '#FCF3D8',
     ],
     recycle: false,
-    numberOfPieces: 444,
-    gravity: 0.07,
-    initialVelocityY: 4,
+    numberOfPieces: dimensions.width < 768 ? 222 : 444,
+    gravity: 0.2,
+    initialVelocityY: 20,
     tweenDuration: 999,
+    onConfettiComplete: () => {
+      setShowConfetti(false);
+    },
+  };
+
+  // Create two confetti sources for mobile
+  const mobileConfettiProps = {
+    ...confettiProps,
+    numberOfPieces: 111,
+    confettiSource: {
+      x: 0,
+      y: window.innerHeight + window.scrollY,
+      w: 10,
+      h: 0,
+    },
+    angle: 60,
+    spread: 50,
+  };
+
+  const mobileConfettiProps2 = {
+    ...confettiProps,
+    numberOfPieces: 111,
+    confettiSource: {
+      x: dimensions.width - 10,
+      y: window.innerHeight + window.scrollY,
+      w: 10,
+      h: 0,
+    },
+    angle: 120,
+    spread: 50,
   };
 
   return (
     <div className="flex justify-center">
       {showConfetti && (
-        <div className="fixed inset-0 z-50" style={{ pointerEvents: 'none' }}>
-          <ReactConfetti {...confettiProps} />
+        <div
+          className="fixed top-0 right-0 bottom-0 left-0 z-[9999]"
+          style={{
+            pointerEvents: 'none',
+            position: 'fixed',
+            overflow: 'visible',
+          }}
+        >
+          {dimensions.width < 768 ? (
+            <>
+              <ReactConfetti {...mobileConfettiProps} />
+              <ReactConfetti {...mobileConfettiProps2} />
+            </>
+          ) : (
+            <ReactConfetti {...confettiProps} />
+          )}
         </div>
+      )}
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          onClick={() => setShowConfetti(true)}
+          className="fixed right-4 bottom-20 z-[9999] rounded-full bg-stone-950/90 p-3 text-stone-50 text-xs shadow-lg"
+          type="button"
+        >
+          Test Confetti 🎉
+        </button>
       )}
       <div className="mx-auto my-6">
         <form ref={formRef} action={submitAction} noValidate>
           <motion.div
-            className="group relative mx-auto inline-flex w-auto min-w-[300px] flex-col place-content-center place-items-baseline items-center divide-pueb whitespace-nowrap rounded-xl bg-stone-50/70 p-4 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-colors duration-300 ease-linear focus-within:drop-shadow-xl hover:divide-ora dark:bg-stone-950/90"
+            className="group relative mx-auto inline-flex w-auto min-w-[300px] flex-col place-content-center place-items-baseline items-center divide-pueb whitespace-nowrap rounded-xl bg-stone-950/90 p-4 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-colors duration-300 ease-linear focus-within:drop-shadow-xl hover:divide-ora"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onHoverStart={startColorAnimation}
@@ -419,9 +467,9 @@ export default function Subscribe() {
                     disabled={isPending}
                   >
                     {state.step === 'details' ? (
-                      <CircleCheck className="-ml-10 mt-4 h-8 w-8 text-stone-900 transition-colors duration-300 ease-linear group-hover:text-green-600 md:stroke-2 dark:text-stone-50" />
+                      <CircleCheck className="-ml-10 mt-4 h-8 w-8 text-stone-50 transition-colors duration-300 ease-linear group-hover:text-green-600 md:stroke-2" />
                     ) : (
-                      <CircleArrowRight className="-ml-1 mt-4 h-6 w-6 text-stone-900 transition-colors duration-300 ease-linear group-hover:text-[#30C2DC] md:stroke-2 dark:text-stone-50" />
+                      <CircleArrowRight className="-ml-1 mt-4 h-6 w-6 text-stone-50 transition-colors duration-300 ease-linear group-hover:text-[#30C2DC] md:stroke-2" />
                     )}
                   </button>
                 </>
@@ -444,7 +492,7 @@ export default function Subscribe() {
               role="alert"
               key={state.message}
             >
-              <div className="rounded-lg bg-stone-50/70 px-3 py-1.5 backdrop-blur-sm dark:bg-stone-950/90">
+              <div className="rounded-lg bg-stone-950/90 px-3 py-1.5 backdrop-blur-sm">
                 <span className="font-light text-red-500/80 text-xs">
                   {state.message}
                 </span>

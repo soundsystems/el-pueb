@@ -120,7 +120,7 @@ const ContactForm = () => {
   };
 
   const inputVariants = {
-    focused: { scale: 1.03 },
+    focused: { scale: 1.02 },
     blurred: { scale: 1 },
   };
 
@@ -236,11 +236,11 @@ const ContactForm = () => {
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="mt-2 border-stone-700 bg-stone-800/90 text-stone-100">
+                                    <SelectTrigger className="mt-2 min-h-[44px] border-stone-700 bg-stone-800/90 text-stone-100">
                                       <SelectValue placeholder="Select a reason" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent className="border-stone-700 bg-stone-800 text-stone-100">
+                                  <SelectContent className="momentum-scroll border-stone-700 bg-stone-800 text-stone-100">
                                     {getSelectOptions(selectedTab)}
                                   </SelectContent>
                                 </Select>
@@ -270,11 +270,15 @@ const ContactForm = () => {
                                 initial="blurred"
                                 whileFocus="focused"
                                 className={cn(
-                                  'mt-2 bg-stone-50 font-light text-xs',
+                                  'mt-2 bg-stone-50 font-light text-base',
                                   'focus:border-pueb/80 focus:ring-pueb/80',
-                                  'dark:bg-stone-900 dark:text-stone-100'
+                                  'dark:bg-stone-900 dark:text-stone-100',
+                                  'transition-transform duration-200 active:scale-[1.02]'
                                 )}
                                 placeholder="First Name"
+                                autoComplete="off"
+                                autoCorrect="off"
+                                autoCapitalize="off"
                               />
                             </FormControl>
                             <FormMessage />
@@ -298,11 +302,15 @@ const ContactForm = () => {
                                 initial="blurred"
                                 whileFocus="focused"
                                 className={cn(
-                                  'mt-2 bg-stone-50 font-light text-xs',
+                                  'mt-2 bg-stone-50 font-light text-base',
                                   'focus:border-pueb/80 focus:ring-pueb/80',
-                                  'dark:bg-stone-900 dark:text-stone-100'
+                                  'dark:bg-stone-900 dark:text-stone-100',
+                                  'transition-transform duration-200 active:scale-[1.02]'
                                 )}
                                 placeholder="Last Name"
+                                autoComplete="off"
+                                autoCorrect="off"
+                                autoCapitalize="off"
                               />
                             </FormControl>
                             <FormMessage />
@@ -329,11 +337,16 @@ const ContactForm = () => {
                               whileFocus="focused"
                               type="email"
                               className={cn(
-                                'mt-2 bg-stone-50 font-light text-xs',
+                                'mt-2 bg-stone-50 font-light text-base',
                                 'focus:border-pueb/80 focus:ring-pueb/80',
-                                'dark:bg-stone-900 dark:text-stone-100'
+                                'dark:bg-stone-900 dark:text-stone-100',
+                                'transition-transform duration-200 active:scale-[1.02]'
                               )}
                               placeholder="Email"
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              inputMode="email"
                             />
                           </FormControl>
                           <FormMessage />
@@ -358,12 +371,16 @@ const ContactForm = () => {
                               initial="blurred"
                               whileFocus="focused"
                               className={cn(
-                                'mt-2 bg-stone-50 font-light text-xs',
+                                'momentum-scroll mt-2 bg-stone-50 font-light text-base',
                                 'focus:border-pueb/80 focus:ring-pueb/80',
-                                'dark:bg-stone-900 dark:text-stone-100'
+                                'dark:bg-stone-900 dark:text-stone-100',
+                                'transition-transform duration-200 active:scale-[1.02]'
                               )}
                               placeholder="Message"
                               rows={4}
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
                             />
                           </FormControl>
                           <FormMessage />
@@ -376,7 +393,7 @@ const ContactForm = () => {
                     <Button
                       type="submit"
                       className={cn(
-                        'mt-4 w-full bg-stone-800/90 text-stone-100 hover:bg-stone-700/90 dark:bg-stone-800 dark:hover:bg-stone-700',
+                        'mt-4 min-h-[44px] w-full select-none bg-stone-800/90 text-stone-100 hover:bg-stone-700/90 dark:bg-stone-800 dark:hover:bg-stone-700',
                         pending && 'cursor-not-allowed opacity-50'
                       )}
                       disabled={pending}
