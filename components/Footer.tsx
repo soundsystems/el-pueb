@@ -74,7 +74,7 @@ const Footer = () => {
           </motion.div>
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <a
-              href="https://www.instagram.com/elpueblitomexicanrestaurant"
+              href="https://www.instagram.com/elpueblitonwa"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex h-[50px] w-[50px] items-center justify-center rounded-full bg-stone-50/70 backdrop-blur-sm transition-all duration-200 ease-in-out hover:bg-stone-950/90"
