@@ -18,7 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const sources = ['bar', 'table'];
   const qrRoutes = locations.flatMap((location) =>
     sources.map((source) => ({
-      url: `${baseUrl}/locations/${location}?source=${source}&location=${location}`,
+      url: `${baseUrl}/locations/${location}?source=${source}&amp;location=${location}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
