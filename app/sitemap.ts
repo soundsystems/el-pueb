@@ -13,18 +13,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  // Define location pages
-  const locationRoutes = [
-    '/locations/bentonville',
-    '/locations/bella-vista',
-    '/locations/highfill',
-    '/locations/prairie-creek',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.9,
-  }));
+  // Define QR tracked routes
+  const locations = ['bella-vista', 'highfill', 'prairie-creek', 'centerton'];
+  const sources = ['bar', 'table'];
+  const qrRoutes = locations.flatMap((location) =>
+    sources.map((source) => ({
+      url: `${baseUrl}/locations/${location}?source=${source}&location=${location}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }))
+  );
 
-  return [...staticRoutes, ...locationRoutes];
+  return [...staticRoutes, ...qrRoutes];
 }

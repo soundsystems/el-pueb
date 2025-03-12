@@ -36,6 +36,7 @@ import { Textarea } from './ui/textarea';
 
 interface FormData extends z.infer<typeof formSchema> {
   inquiryType: string;
+  businessName?: string;
 }
 
 const MotionInput = motion.create(Input);
@@ -56,14 +57,25 @@ const BUSINESS_OPTIONS = [
   'Catering Inquiry',
   'Partnership or Collaboration Proposal',
   'Vendor/Supplier Inquiry',
+  'Other',
+] as const;
+
+const LOCATIONS = [
+  'Bella Vista',
+  'Highfill',
+  'Prairie Creek',
+  'Centerton',
+  'All Locations',
 ] as const;
 
 const formSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  businessName: z.string().optional(),
   email: z.string().email('Invalid email address'),
   message: z.string().min(1, 'Message is required'),
   reason: z.string().min(1, 'Please select a reason for contact'),
+  location: z.string().min(1, 'Please select a location'),
 });
 
 type ContactFormState = {
@@ -82,15 +94,39 @@ const ContactForm = () => {
     submitContact,
     {}
   );
+  const [selectedTab, setSelectedTab] = useState<InquiryType>('customer');
+
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+    resolver: async (data, context, options) => {
+      const result = await zodResolver(formSchema)(data, context, options);
+
+      // If we're on the business tab, add custom validation
+      if (selectedTab === 'business' && !result.errors) {
+        if (!data.businessName && (!data.firstName || !data.lastName)) {
+          return {
+            values: {},
+            errors: {
+              businessName: {
+                type: 'custom',
+                message: 'Either Business Name or both First and Last Name are required'
+              }
+            }
+          };
+        }
+      }
+
+      return result;
+    },
     defaultValues: {
       firstName: '',
       lastName: '',
       email: '',
       message: '',
       reason: '',
+      businessName: '',
+      location: '',
     },
+    mode: 'onChange',
   });
 
   useEffect(() => {
@@ -104,14 +140,14 @@ const ContactForm = () => {
   const { handleSubmit } = form;
   const [isOpen, setIsOpen] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<InquiryType>('customer');
-
   const { pending } = useFormStatus();
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     const submissionData = {
       ...data,
       inquiryType: selectedTab === 'customer' ? 'Customer' : 'Business',
+      location: data.location,
+      businessName: data.businessName || undefined,
     };
 
     startTransition(() => {
@@ -127,12 +163,20 @@ const ContactForm = () => {
   const getSelectOptions = (type: InquiryType) => {
     return type === 'customer'
       ? CUSTOMER_OPTIONS.map((option) => (
-          <SelectItem key={option} value={option}>
+          <SelectItem
+            key={option}
+            value={option}
+            className="transition-all hover:bg-black/10 hover:shadow-md dark:hover:bg-white/10"
+          >
             {option}
           </SelectItem>
         ))
       : BUSINESS_OPTIONS.map((option) => (
-          <SelectItem key={option} value={option}>
+          <SelectItem
+            key={option}
+            value={option}
+            className="transition-all hover:bg-black/10 hover:shadow-md dark:hover:bg-white/10"
+          >
             {option}
           </SelectItem>
         ));
@@ -174,37 +218,50 @@ const ContactForm = () => {
                     }
                     className="w-full"
                   >
-                    <TabsList className="relative grid w-full grid-cols-2 gap-2 rounded-xl bg-stone-800/90 p-1 dark:bg-stone-900">
+                    <TabsList
+                      className="relative grid w-full grid-cols-2 gap-2 rounded-xl bg-[#152B20]/95 p-1 dark:bg-[#152B20]"
+                      aria-label="Contact type"
+                    >
                       <TabsTrigger
                         value="customer"
-                        className="relative z-20 rounded-xl text-stone-100 transition-all data-[state=active]:text-stone-50"
+                        className="relative z-20 rounded-xl text-stone-100 transition-all hover:bg-[#2C5C44]/20 focus-visible:ring-2 focus-visible:ring-[#2C5C44] focus-visible:ring-offset-2 data-[state=active]:text-stone-50"
+                        role="tab"
+                        aria-selected={selectedTab === 'customer'}
+                        aria-controls="customer-tab"
                       >
                         <span className="relative z-20">Customer</span>
                         {selectedTab === 'customer' && (
                           <motion.div
-                            className="absolute inset-0 z-10 rounded-xl bg-stone-700/90 dark:bg-stone-800"
+                            className="absolute inset-0 z-10 rounded-xl bg-gradient-to-br from-[#347852] to-[#1C3B2C] opacity-90 dark:from-[#347852] dark:to-[#1C3B2C]"
                             layoutId="contact-bubble"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.9 }}
                             transition={{
                               type: 'spring',
                               bounce: 0.15,
-                              duration: 0.3,
+                              duration: 0.5,
                             }}
                           />
                         )}
                       </TabsTrigger>
                       <TabsTrigger
                         value="business"
-                        className="relative z-20 rounded-xl text-stone-100 transition-all data-[state=active]:text-stone-50"
+                        className="relative z-20 rounded-xl text-stone-100 transition-all hover:bg-[#2C5C44]/20 focus-visible:ring-2 focus-visible:ring-[#2C5C44] focus-visible:ring-offset-2 data-[state=active]:text-stone-50"
+                        role="tab"
+                        aria-selected={selectedTab === 'business'}
+                        aria-controls="business-tab"
                       >
                         <span className="relative z-20">Business</span>
                         {selectedTab === 'business' && (
                           <motion.div
-                            className="absolute inset-0 z-10 rounded-xl bg-stone-700/90 dark:bg-stone-800"
+                            className="absolute inset-0 z-10 rounded-xl bg-gradient-to-br from-[#347852] to-[#1C3B2C] opacity-90 dark:from-[#347852] dark:to-[#1C3B2C]"
                             layoutId="contact-bubble"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.9 }}
                             transition={{
                               type: 'spring',
                               bounce: 0.15,
-                              duration: 0.3,
+                              duration: 0.5,
                             }}
                           />
                         )}
@@ -222,7 +279,13 @@ const ContactForm = () => {
                           duration: 0.2,
                         }}
                       >
-                        <TabsContent value={selectedTab} forceMount>
+                        <TabsContent
+                          value={selectedTab}
+                          forceMount
+                          role="tabpanel"
+                          id={`${selectedTab}-tab`}
+                          aria-labelledby={`${selectedTab}-trigger`}
+                        >
                           <FormField
                             control={form.control}
                             name="reason"
@@ -236,12 +299,31 @@ const ContactForm = () => {
                                   defaultValue={field.value}
                                 >
                                   <FormControl>
-                                    <SelectTrigger className="mt-2 min-h-[44px] border-stone-700 bg-stone-800/90 text-stone-100">
+                                    <SelectTrigger
+                                      className={cn(
+                                        'mt-2 min-h-[44px] border-transparent text-stone-900 transition-all focus:ring-2 focus:ring-offset-2 dark:text-stone-50',
+                                        selectedTab === 'customer'
+                                          ? 'bg-gradient-to-br from-yellow-300/90 to-yellow-500/90 hover:from-yellow-200/90 hover:to-yellow-400/90 focus:from-yellow-400 focus:to-yellow-600 focus:ring-yellow-400'
+                                          : 'bg-gradient-to-br from-sky-300/90 to-sky-500/90 hover:from-sky-200/90 hover:to-sky-400/90 focus:from-sky-400 focus:to-sky-600 focus:ring-sky-400'
+                                      )}
+                                      aria-label="Select reason for contact"
+                                    >
                                       <SelectValue placeholder="Select a reason" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent className="momentum-scroll border-stone-700 bg-stone-800 text-stone-100">
-                                    {getSelectOptions(selectedTab)}
+                                  <SelectContent
+                                    className={cn(
+                                      'border-transparent text-stone-900 dark:text-stone-50',
+                                      selectedTab === 'customer'
+                                        ? 'bg-gradient-to-br from-yellow-300/95 to-yellow-500/95'
+                                        : 'bg-gradient-to-br from-sky-300/95 to-sky-500/95'
+                                    )}
+                                    position="popper"
+                                    sideOffset={4}
+                                  >
+                                    <div className="momentum-scroll max-h-[300px] overflow-y-auto">
+                                      {getSelectOptions(selectedTab)}
+                                    </div>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -252,6 +334,91 @@ const ContactForm = () => {
                       </motion.div>
                     </AnimatePresence>
                   </Tabs>
+                   <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-stone-900 dark:text-stone-50">
+                          Specify Location
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger
+                              className={cn(
+                                'mt-2 min-h-[44px] border-transparent text-stone-900 transition-all focus:ring-2 focus:ring-offset-2 dark:text-stone-50',
+                                selectedTab === 'customer'
+                                  ? 'bg-gradient-to-br from-yellow-300/90 to-yellow-500/90 hover:from-yellow-200/90 hover:to-yellow-400/90 focus:from-yellow-400 focus:to-yellow-600 focus:ring-yellow-400'
+                                  : 'bg-gradient-to-br from-sky-300/90 to-sky-500/90 hover:from-sky-200/90 hover:to-sky-400/90 focus:from-sky-400 focus:to-sky-600 focus:ring-sky-400'
+                              )}
+                              aria-label="Select location"
+                            >
+                              <SelectValue placeholder="Select a location" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent
+                            className={cn(
+                              'border-transparent text-stone-900 dark:text-stone-50',
+                              selectedTab === 'customer'
+                                ? 'bg-gradient-to-br from-yellow-300/95 to-yellow-500/95'
+                                : 'bg-gradient-to-br from-sky-300/95 to-sky-500/95'
+                            )}
+                            position="popper"
+                            sideOffset={4}
+                          >
+                            <div className="momentum-scroll max-h-[300px] overflow-y-auto">
+                              {LOCATIONS.map((location) => (
+                                <SelectItem
+                                  key={location}
+                                  value={location}
+                                  className="transition-all hover:bg-black/10 hover:shadow-md dark:hover:bg-white/10"
+                                >
+                                  {location}
+                                </SelectItem>
+                              ))}
+                            </div>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {selectedTab === 'business' && (
+                    <div>
+                      <FormField
+                        control={form.control}
+                        name="businessName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-stone-900 dark:text-stone-50">
+                              Business Name
+                            </FormLabel>
+                            <FormControl>
+                              <MotionInput
+                                {...field}
+                                variants={inputVariants}
+                                initial="blurred"
+                                whileFocus="focused"
+                                className={cn(
+                                  'mt-2 bg-stone-50 font-light text-base',
+                                  'focus:border-pueb/80 focus:ring-pueb/80',
+                                  'dark:bg-stone-900 dark:text-stone-100',
+                                  'transition-transform duration-200 active:scale-[1.02]'
+                                )}
+                                placeholder="Business Name"
+                                autoComplete="organization"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
 
                   <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0">
                     <div className="flex-1">
@@ -261,7 +428,8 @@ const ContactForm = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-stone-900 dark:text-stone-50">
-                              First Name
+                              First Name{' '}
+                              {!form.getValues('businessName') && '*'}
                             </FormLabel>
                             <FormControl>
                               <MotionInput
@@ -276,9 +444,7 @@ const ContactForm = () => {
                                   'transition-transform duration-200 active:scale-[1.02]'
                                 )}
                                 placeholder="First Name"
-                                autoComplete="off"
-                                autoCorrect="off"
-                                autoCapitalize="off"
+                                autoComplete="given-name"
                               />
                             </FormControl>
                             <FormMessage />
@@ -293,7 +459,7 @@ const ContactForm = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-stone-900 dark:text-stone-50">
-                              Last Name
+                              Last Name {!form.getValues('businessName') && '*'}
                             </FormLabel>
                             <FormControl>
                               <MotionInput
@@ -308,9 +474,7 @@ const ContactForm = () => {
                                   'transition-transform duration-200 active:scale-[1.02]'
                                 )}
                                 placeholder="Last Name"
-                                autoComplete="off"
-                                autoCorrect="off"
-                                autoCapitalize="off"
+                                autoComplete="family-name"
                               />
                             </FormControl>
                             <FormMessage />
@@ -393,7 +557,7 @@ const ContactForm = () => {
                     <Button
                       type="submit"
                       className={cn(
-                        'mt-4 min-h-[44px] w-full select-none bg-stone-800/90 text-stone-100 hover:bg-stone-700/90 dark:bg-stone-800 dark:hover:bg-stone-700',
+                        'mt-4 min-h-[44px] w-full select-none bg-stone-800/90 text-stone-100 transition-all hover:bg-stone-900 hover:text-yellow-400 dark:bg-stone-800 dark:hover:bg-black',
                         pending && 'cursor-not-allowed opacity-50'
                       )}
                       disabled={pending}
@@ -415,12 +579,12 @@ const ContactForm = () => {
         )}
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent className="bg-stone-50">
+          <DialogContent className="bg-stone-950 text-stone-50">
             <DialogHeader>
-              <DialogTitle>Gracias mi amigo</DialogTitle>
+              <DialogTitle>Gracias, mi amigo.</DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-stone-600">
-              We have received your message and will get back to you shortly.
+            <p className="text-sm text-stone-50">
+              We have received your message and will be in touch asap.
             </p>
             <Button
               variant="outline"
@@ -428,9 +592,9 @@ const ContactForm = () => {
                 setIsOpen(false);
                 router.push('/');
               }}
-              className="hover:bg-orange-50 focus-visible:ring-pueb"
+              className="hover:bg-yellow-400 focus-visible:ring-pueb"
             >
-              Close
+              close
             </Button>
           </DialogContent>
         </Dialog>

@@ -26,11 +26,15 @@ export const LocationCard = ({
   selectedLocation,
   setSelectedLocation,
   markerColor,
+  isFocused,
+  index,
 }: {
   location: Location;
   selectedLocation: string | null;
   setSelectedLocation: (slug: string | null) => void;
   markerColor: string;
+  isFocused: boolean;
+  index: number;
 }) => (
   <motion.div
     layout
@@ -44,7 +48,7 @@ export const LocationCard = ({
     }}
     className="mx-auto w-full max-w-[800px]"
   >
-    <motion.div
+    <motion.button
       layout
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.95 }}
@@ -52,13 +56,18 @@ export const LocationCard = ({
         layout: springTransition,
         scale: { type: 'spring', stiffness: 300, damping: 25 },
       }}
-      className={`relative flex h-full w-full cursor-pointer overflow-hidden rounded-xl bg-stone-50/70 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl ${selectedLocation === location.slug ? 'bg-stone-950/90' : ''}`}
+      className={`relative flex h-full w-full overflow-hidden rounded-xl bg-stone-50/70 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-all duration-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-[color:var(--marker-color)] focus:ring-offset-2 ${
+        selectedLocation === location.slug ? 'bg-stone-950/90' : ''
+      } ${isFocused ? 'ring-2 ring-[color:var(--marker-color)] ring-offset-2' : ''}`}
       onClick={() =>
         setSelectedLocation(
           selectedLocation === location.slug ? null : location.slug
         )
       }
       style={{ '--marker-color': markerColor } as React.CSSProperties}
+      tabIndex={0}
+      aria-label={`${location.name} location information. Use up and down arrow keys to navigate between locations.`}
+      data-index={index}
     >
       <motion.div
         layout
@@ -93,7 +102,14 @@ export const LocationCard = ({
                 selectedLocation === location.slug
                   ? 'text-[color:var(--marker-color)] hover:brightness-75 md:text-stone-50 md:hover:text-[color:var(--marker-color)] md:hover:brightness-100'
                   : 'text-stone-600 hover:text-[color:var(--marker-color)]'
-              }`}
+              } focus:outline-none focus:ring-2 focus:ring-[color:var(--marker-color)] focus:ring-offset-2`}
+              tabIndex={0}
+              aria-label={`View ${location.name} on Google Maps`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.click();
+                }
+              }}
             >
               {location.address}
             </Link>
@@ -116,19 +132,17 @@ export const LocationCard = ({
           transition={{ layout: springTransition }}
           className="mt-auto"
         >
-          <Link href={`tel:${location.phone}`}>
-            <motion.p
-              layout
-              transition={{ layout: springTransition }}
-              className={`mt-1 font-bold text-xs decoration-[2px] transition-all duration-300 md:text-sm ${
-                selectedLocation === location.slug
-                  ? 'text-stone-50 underline'
-                  : 'text-stone-900 no-underline hover:underline'
-              } hover:text-[color:var(--marker-color)]`}
-              style={{ textDecorationColor: markerColor }}
-            >
-              {location.phone}
-            </motion.p>
+          <Link
+            href={`tel:${location.phone}`}
+            className={`mt-1 font-bold text-xs decoration-[2px] transition-all duration-300 md:text-sm ${
+              selectedLocation === location.slug
+                ? 'text-stone-50 underline'
+                : 'text-stone-900 no-underline hover:underline'
+            } rounded-sm hover:text-[color:var(--marker-color)] focus:outline-none focus:ring-2 focus:ring-[color:var(--marker-color)] focus:ring-offset-2`}
+            style={{ textDecorationColor: markerColor }}
+            aria-label={`Call ${location.name} at ${location.phone}`}
+          >
+            {location.phone}
           </Link>
         </motion.div>
       </motion.div>
@@ -147,6 +161,6 @@ export const LocationCard = ({
           />
         </div>
       </motion.div>
-    </motion.div>
+    </motion.button>
   </motion.div>
 );

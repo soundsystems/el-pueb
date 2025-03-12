@@ -6,12 +6,14 @@ import { z } from 'zod';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const formSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
   email: z.string().email('Invalid email address'),
   message: z.string().min(1, 'Message is required'),
   inquiryType: z.string(),
   reason: z.string().min(1, 'Please select a reason for contact'),
+  location: z.string().min(1, 'Please select a location'),
+  businessName: z.string().optional(),
 });
 
 type ContactFormState = {
@@ -21,12 +23,14 @@ type ContactFormState = {
 };
 
 interface ContactFormData {
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   message: string;
   inquiryType: string;
   reason: string;
+  location: string;
+  businessName?: string;
 }
 
 export async function submitContact(

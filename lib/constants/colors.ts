@@ -58,7 +58,7 @@ const seededRandom = (seed: number) => {
 // Generate a random seed for this session
 const sessionSeed =
   typeof window !== 'undefined'
-    ? Math.floor(Date.now() / (1000 * 60)) // Changes every minute
+    ? Math.floor(Date.now() / (1000 * 10)) // Changes every 10 seconds
     : 42; // Fallback for SSR
 
 // Helper function to get random marker colors with consistent randomization
@@ -67,9 +67,7 @@ export const getRandomMarkerColors = (count = 4): string[] => {
   const selectedColors: string[] = [];
 
   while (selectedColors.length < count && availableColors.length > 0) {
-    const randomIndex = Math.floor(
-      seededRandom(sessionSeed + selectedColors.length) * availableColors.length
-    );
+    const randomIndex = Math.floor(Math.random() * availableColors.length);
     selectedColors.push(availableColors[randomIndex]);
     availableColors.splice(randomIndex, 1);
   }

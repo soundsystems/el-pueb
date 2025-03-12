@@ -9,11 +9,11 @@ import {
 } from '@vis.gl/react-google-maps';
 
 import { LocationCard } from '@/components/LocationCard';
-import { LoadingSpinner } from '@/components/ui/loading';
 import { getRandomMarkerColors } from '@/lib/constants/colors';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import React from 'react';
+import { Vortex } from 'react-loader-spinner';
 
 type Location = {
   name: string;
@@ -103,7 +103,7 @@ const createMarker = (
   return (
     <AdvancedMarker
       position={location.position}
-      title={`El Pueblito ${location.name}`}
+      title={location.name}
       onClick={() => {
         setSelectedLocation(
           location.slug === selectedLocation ? null : location.slug
@@ -116,15 +116,18 @@ const createMarker = (
           position={location.position}
           onCloseClick={() => setSelectedLocation(null)}
         >
-          <div className="p-2">
-            <div className="mb-2 flex justify-center">
+          <div
+            className="rounded-lg p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2"
+            style={{ '--tw-outline-color': markerColor } as React.CSSProperties}
+          >
+            <div className="mb-4 flex justify-center">
               <img
                 src="/logo.png"
-                alt="El Pueblito Logo"
-                className="h-12 w-auto object-contain"
+                alt="El Pueblito"
+                className="h-24 w-auto object-contain"
               />
             </div>
-            <h3 className="mb-2 text-center font-bold text-base">
+            <h3 className="mb-2 flex justify-center font-bold text-base">
               {location.name}
             </h3>
             <p className="mb-2">{location.address}</p>
@@ -134,8 +137,14 @@ const createMarker = (
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-sm transition-opacity hover:opacity-80"
-              style={{ color: markerColor }}
+              className="font-semibold text-sm transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              style={
+                {
+                  color: markerColor,
+                  '--tw-ring-color': markerColor,
+                } as React.CSSProperties
+              }
+              autoFocus
             >
               View on Google Maps
             </a>
@@ -205,6 +214,7 @@ export default function LocationsPage() {
   const [markerColors, setMarkerColors] = useState<string[]>([]);
   const [mapError, setMapError] = useState<string | null>(null);
   const [envVarsLoaded, setEnvVarsLoaded] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
 
   useEffect(() => {
     setMarkerColors(getRandomMarkerColors());
@@ -219,6 +229,39 @@ export default function LocationsPage() {
     window.addEventListener('resize', checkScreenSize);
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!envVarsLoaded) return;
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedIndex((prev) =>
+            prev <= 0 ? locations.length - 1 : prev - 1
+          );
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedIndex((prev) =>
+            prev === locations.length - 1 ? 0 : prev + 1
+          );
+          break;
+        case 'Enter':
+          if (focusedIndex >= 0) {
+            setSelectedLocation(
+              selectedLocation === locations[focusedIndex].slug
+                ? null
+                : locations[focusedIndex].slug
+            );
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [envVarsLoaded, focusedIndex, selectedLocation]);
 
   const selectedLocationData = locations.find(
     (loc) => loc.slug === selectedLocation
@@ -247,6 +290,15 @@ export default function LocationsPage() {
   }, [apiKey, mapId, darkMapId]);
 
   if (!envVarsLoaded) {
+    const STATIC_COLORS = [
+      '#231F20', // black
+      '#006847', // green
+      '#CF0822', // crimson
+      '#F1A720', // gold
+      '#065955', // teal
+      '#AA8C30', // brown
+    ] as [string, string, string, string, string, string];
+
     return (
       <div className="container mx-auto px-4">
         <motion.h1
@@ -258,7 +310,16 @@ export default function LocationsPage() {
           Our Locations
         </motion.h1>
         <div className="flex min-h-[200px] flex-col items-center justify-center gap-4">
-          <LoadingSpinner size={32} />
+          <div className={undefined}>
+            <Vortex
+              visible={true}
+              height={32}
+              width={32}
+              ariaLabel="vortex-loading"
+              wrapperClass="vortex-wrapper"
+              colors={STATIC_COLORS}
+            />
+          </div>
           <p className="text-sm text-stone-600">Loading map configuration...</p>
         </div>
       </div>
@@ -298,6 +359,8 @@ export default function LocationsPage() {
                 selectedLocation={selectedLocation}
                 setSelectedLocation={setSelectedLocation}
                 markerColor={markerColors[index] || '#000000'}
+                isFocused={index === focusedIndex}
+                index={index}
               />
             ))}
         </motion.div>
