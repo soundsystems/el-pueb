@@ -22,7 +22,7 @@ type MultiLocationOrganization = Organization & {
 const jsonLd: WithContext<MultiLocationOrganization> = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'El Pueblito Mexican Restaurant',
+  name: 'El Pueblito | Mexican Restaurant',
   description:
     'Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas',
   url: 'https://elpueblitonwa.com',
@@ -59,7 +59,7 @@ const jsonLd: WithContext<MultiLocationOrganization> = {
     },
     {
       '@type': 'Restaurant',
-      name: 'El Pueblito Mexican Restaurant - Highfill',
+      name: 'El Pueblito | Mexican Restaurant - Highfill',
       description:
         'Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas',
       image: 'https://elpueblitonwa.com/images/hero/resized/DSC00811.jpg',
@@ -88,7 +88,7 @@ const jsonLd: WithContext<MultiLocationOrganization> = {
     },
     {
       '@type': 'Restaurant',
-      name: 'El Pueblito Mexican Restaurant - Prairie Creek',
+      name: 'El Pueblito | Mexican Restaurant - Prairie Creek',
       description:
         'Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas',
       image: 'https://elpueblitonwa.com/images/hero/resized/DSC00811.jpg',
@@ -117,7 +117,7 @@ const jsonLd: WithContext<MultiLocationOrganization> = {
     },
     {
       '@type': 'Restaurant',
-      name: 'El Pueblito Mexican Restaurant - Centerton',
+      name: 'El Pueblito |  Mexican Restaurant - Centerton',
       description:
         'Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas',
       image: 'https://elpueblitonwa.com/images/hero/resized/DSC00811.jpg',
@@ -149,7 +149,7 @@ const jsonLd: WithContext<MultiLocationOrganization> = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'El Pueblito',
+    default: 'El Pueblito | Mexican Restaurant',
     template: '%s | El Pueblito',
   },
   description:
