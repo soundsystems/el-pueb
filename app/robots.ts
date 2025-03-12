@@ -13,6 +13,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/'],
       },
     ],
-    sitemap: 'https://elpueblito.com/sitemap.xml',
+    sitemap: 'https://elpueblitonwa.com/sitemap.xml',
   };
 }
