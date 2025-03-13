@@ -17,13 +17,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const locations = ['bella-vista', 'highfill', 'prairie-creek', 'centerton'];
   const qrRoutes = locations.flatMap((location) => [
     {
-      url: `${baseUrl}/?source=table&location=${location}`,
+      url: `${baseUrl}/?source=table&amp;location=${location}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/menu?source=bar&location=${location}`,
+      url: `${baseUrl}/menu?source=bar&amp;location=${location}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
