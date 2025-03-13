@@ -375,6 +375,7 @@ export default function LocationsPage() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
             className="mt-8 w-full overflow-hidden rounded-xl bg-stone-50/70 shadow-lg"
+            id="map-container"
           >
             <APIProvider
               apiKey={apiKey}
