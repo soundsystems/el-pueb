@@ -9,21 +9,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
-      priority: route === '' ? 1 : 0.8,
+      priority: route === '' ? 1 : 0.9,
     })
   );
 
   // Define QR tracked routes
   const locations = ['bella-vista', 'highfill', 'prairie-creek', 'centerton'];
-  const sources = ['bar', 'table'];
-  const qrRoutes = locations.flatMap((location) =>
-    sources.map((source) => ({
-      url: `${baseUrl}/locations/${location}?source=${source}&amp;location=${location}`,
+  const qrRoutes = locations.flatMap((location) => [
+    {
+      url: `${baseUrl}/?source=table&location=${location}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
-    }))
-  );
+    },
+    {
+      url: `${baseUrl}/menu?source=bar&location=${location}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }
+  ]);
 
   return [...staticRoutes, ...qrRoutes];
 }
