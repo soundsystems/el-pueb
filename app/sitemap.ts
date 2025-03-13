@@ -14,7 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   );
 
   // Define QR tracked routes
-  const locations = ['bella-vista', 'highfill', 'prairie-creek', 'centerton'];
+  const locations = ['bella-vista', 'highfill', 'rogers', 'centerton'];
   const qrRoutes = locations.flatMap((location) => [
     {
       url: `${baseUrl}/?source=table&amp;location=${location}`,
