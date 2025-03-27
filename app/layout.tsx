@@ -9,11 +9,84 @@ import { cn } from '@/lib/utils';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { GeistSans } from 'geist/font/sans';
+import localFont from 'next/font/local';
 import type { Metadata } from 'next';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Suspense } from 'react';
 import type { Organization, Restaurant, WithContext } from 'schema-dts';
 import { CSPostHogProvider } from './providers';
+
+// Register the Bronto font
+const brontoFont = localFont({
+  src: [
+    {
+      path: '../fonts/Bronto/Bronto-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-RegularItalic.woff2',
+      weight: '400',
+      style: 'italic',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-Extralight.woff2',
+      weight: '200',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-ExtralightItalic.woff2',
+      weight: '200',
+      style: 'italic',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-LightItalic.woff2',
+      weight: '300',
+      style: 'italic',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-MediumItalic.woff2',
+      weight: '500',
+      style: 'italic',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-Semibold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-SemiboldItalic.woff2',
+      weight: '600',
+      style: 'italic',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-BoldItalic.woff2',
+      weight: '700',
+      style: 'italic',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-Black.woff2',
+      weight: '900',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/Bronto/Bronto-Ultrablack.woff2',
+      weight: '950',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-bronto',
+});
 
 type MultiLocationOrganization = Organization & {
   '@graph': Restaurant[];
@@ -205,7 +278,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={GeistSans.className}>
+    <html lang="en" className={`${brontoFont.variable} ${GeistSans.variable}`}>
       <head>
         <meta
           name="viewport"
@@ -220,7 +293,8 @@ export default function RootLayout({
       <CSPostHogProvider>
         <body
           className={cn(
-            'min-h-screen w-full bg-[#E4D5C3] pr-safe-right pl-safe-left font-sans antialiased',
+            'min-h-screen w-full bg-[#E4D5C3] pr-safe-right pl-safe-left font-bronto antialiased',
+            brontoFont.variable,
             GeistSans.variable
           )}
         >

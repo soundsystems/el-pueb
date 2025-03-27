@@ -39,7 +39,7 @@ export const reviews: Review[] = [
   {
     name: 'Lisa Lynn',
     location: 'Highfill',
-    text: "I really enjoyed my meal, and my grandson claimed his Steven special was the best ever! ...Overall, it's a great place to eat!",
+    text: "I really enjoyed my meal, and my grandson claimed his Steven special was the best ever!",
     rating: 5,
   },
   {

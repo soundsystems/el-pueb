@@ -34,21 +34,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 
-interface FormData extends z.infer<typeof formSchema> {
-  inquiryType: string;
-  businessName?: string;
-}
-
-const MotionInput = motion.create(Input);
-const MotionTextarea = motion.create(Textarea);
-const MotionCard = motion.create(Card);
+// Fix motion types
+const MotionInput = motion(Input);
+const MotionTextarea = motion(Textarea);
+const MotionCard = motion(Card);
 
 type InquiryType = 'customer' | 'business';
 
 const CUSTOMER_OPTIONS = [
   'General Question/Inquiry',
   'Feedback on My Experience',
-  'Reservation Request',
   'Event Booking Inquiry',
   'Menu Questions (Dietary Restrictions, Allergies, etc.)',
 ] as const;
@@ -78,13 +73,19 @@ const formSchema = z.object({
   location: z.string().min(1, 'Please select a location'),
 });
 
+type FormSchemaType = z.infer<typeof formSchema>;
+
+interface FormData extends FormSchemaType {
+  inquiryType: string;
+}
+
 type ContactFormState = {
   success?: boolean;
   error?: string;
   firstName?: string;
 };
 
-const FormMessage = ({ ...props }) => {
+const FormMessage = (props: React.ComponentProps<typeof ShadcnFormMessage>) => {
   return <ShadcnFormMessage {...props} className="mt-2 text-red-300" />;
 };
 
@@ -92,11 +93,15 @@ const ContactForm = () => {
   const router = useRouter();
   const [state, formAction] = useActionState<ContactFormState, FormData>(
     submitContact,
-    {}
+    {
+      success: false,
+      error: undefined,
+      firstName: undefined,
+    }
   );
   const [selectedTab, setSelectedTab] = useState<InquiryType>('customer');
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormSchemaType>({
     resolver: async (data, context, options) => {
       const result = await zodResolver(formSchema)(data, context, options);
 
@@ -142,7 +147,7 @@ const ContactForm = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const { pending } = useFormStatus();
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = (data: FormSchemaType) => {
     const submissionData = {
       ...data,
       inquiryType: selectedTab === 'customer' ? 'Customer' : 'Business',
@@ -203,6 +208,13 @@ const ContactForm = () => {
               <CardTitle className="text-center font-bold text-stone-900 text-xl dark:text-stone-50">
                 Contact Us
               </CardTitle>
+              <p className="mt-2 text-center text-sm font-semibold text-stone-700 dark:text-stone-300">
+                Please allow our team up to 48 hours to respond to your request.
+              </p>
+              {/* <p className="mt-2 text-left text-xs text-stone-700 dark:text-stone-300">
+                If the matter is urgent or time-sensitive, please give us a call  
+                at the relevant location during open hours.
+              </p> */}
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -286,6 +298,11 @@ const ContactForm = () => {
                           id={`${selectedTab}-tab`}
                           aria-labelledby={`${selectedTab}-trigger`}
                         >
+                          {selectedTab === 'customer' && (
+                            <p className="mb-3 text-sm font-medium text-center text-stone-700 dark:text-stone-300">
+                              Seating is first-come, first-serve. No reservations required.
+                            </p>
+                          )}
                           <FormField
                             control={form.control}
                             name="reason"

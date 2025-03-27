@@ -87,7 +87,7 @@ export default function Header() {
     {
       id: 'pick-up',
       label: (
-        <div className="flex items-center gap-1 font-black">
+        <div className="flex items-center gap-1 font-ultrablack">
           <span className="md:hidden">Order</span>
           <span className="hidden whitespace-nowrap md:inline">
             Order Pick Up
@@ -244,7 +244,7 @@ export default function Header() {
                     <Link
                       href={tab.href}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative whitespace-nowrap rounded-full px-2 py-1.5 font-semibold transition-colors duration-300 sm:px-3 ${
+                      className={`relative whitespace-nowrap rounded-full px-2 py-1.5 font-black transition-colors duration-300 sm:px-3 ${
                         activeTab === tab.id
                           ? 'text-stone-50'
                           : 'text-stone-950 hover:text-stone-50'
@@ -284,7 +284,7 @@ export default function Header() {
             className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden text-sm md:text-md lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
           >
             {isOpen ? (
-              <span className="font-semibold text-[#006847]">
+              <span className="font-bold text-[#006847]">
                 Open Today {hoursToday}
               </span>
             ) : (

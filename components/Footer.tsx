@@ -45,7 +45,7 @@ const Footer = () => {
   return (
     <footer className="sticky mt-6 pb-6">
       <div className="mx-auto flex flex-col items-center">
-        <div className="-mb-4 w-fit text-pretty rounded-xl bg-stone-950 p-2 text-center text-stone-50 text-xs lg:text-sm">
+        <div className="-mb-4 w-fit text-pretty rounded-xl bg-stone-950 p-2 text-center text-stone-50 text-sm md:text-base font-semibold">
           Subscribe below ⬇️ to stay in the loop 🌵
         </div>
         <Subscribe />

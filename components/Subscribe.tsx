@@ -245,7 +245,7 @@ export default function Subscribe() {
         }}
         style={{ pointerEvents: 'none' }}
       >
-        <h3 className="text-center text-sm text-stone-50 transition-colors duration-300 ease-linear">
+        <h3 className="text-center text-sm md:text-base text-stone-50 font-bold transition-colors duration-300 ease-linear">
           La Familia Pueblito
         </h3>
       </motion.div>
@@ -259,7 +259,7 @@ export default function Subscribe() {
       </span>
       <span>
         <input
-          className="mx-2 min-h-[44px] w-48 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 placeholder-stone-50/80 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light hover:outline hover:outline-1 focus:border-transparent focus:outline-2"
+          className="mx-2 min-h-[44px] w-48 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 placeholder-stone-50/80 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:text-sm placeholder:font-light hover:outline hover:outline-1 focus:border-transparent focus:outline-2"
           name="email"
           required
           type="email"
@@ -296,7 +296,7 @@ export default function Subscribe() {
       <input type="hidden" name="email" value={state.email} />
       <div className="flex space-x-2">
         <input
-          className="min-h-[44px] w-24 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-pueb focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
+          className="min-h-[44px] w-24 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-stone-200 focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
           name="firstName"
           required
           type="text"
@@ -307,7 +307,7 @@ export default function Subscribe() {
           autoCapitalize="off"
         />
         <input
-          className="min-h-[44px] w-24 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-pueb focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
+          className="min-h-[44px] w-24 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-stone-200 focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
           name="lastName"
           required
           type="text"
@@ -319,7 +319,7 @@ export default function Subscribe() {
         />
       </div>
       <input
-        className="min-h-[44px] w-full select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-pueb focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
+        className="min-h-[44px] w-full select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 outline outline-1 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-stone-200 focus:scale-[1.02] focus:border-transparent focus:outline-2 active:scale-[1.02]"
         name="phone"
         required
         type="tel"
@@ -355,7 +355,7 @@ export default function Subscribe() {
           <span className="font-semibold text-sm text-yellow-500 uppercase transition-colors duration-300 ease-linear md:text-base">
             THANK YOU FOR SUBSCRIBING!
           </span>
-          <span className="text-center text-stone-950 text-xs dark:text-stone-50">
+          <span className="text-center text-stone-950 text-xs font-bold dark:text-stone-50">
             Welcome to La Familia Pueblito!
           </span>
         </div>

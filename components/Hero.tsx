@@ -170,10 +170,10 @@ const Hero = () => {
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
         <div className="container mx-auto px-2">
           <h2 className="text-pretty text-center font-semibold text-xs tablet:text-base text-stone-800 xl:text-base">
-            A family owned and operated Mexican restaurant <br className="tablet:hidden" /> serving <span className="tablet:hidden">NWA</span>{' '}
+            A family owned and operated Mexican restaurant serving <span className="tablet:hidden">NWA</span>{' '}
             <span className="tablet:inline hidden">Northwest Arkansas</span>{' '}
             for over a decade. 
-           <br className="hidden tablet:block xl:hidden" /> Every dish invokes <br className="tablet:hidden" /> our authentic family recipes and rich cultural heritage.
+           <br/> Every dish invokes our authentic family recipes and rich cultural heritage.
           </h2>
         </div>
       </div>
@@ -186,7 +186,7 @@ const Hero = () => {
 
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
         <div className="container mx-auto max-w-6xl px-2 md:px-8">
-          <h3 className="text-pretty text-center font-normal text-sm text-stone-700 md:text-base">
+          <h3 className="text-pretty text-center font-semibold text-xs tablet:text-base text-stone-700 xl:text-base">
            Savor fresh, made-from-scratch dishes, handcrafted margaritas,
             <br className="md:hidden" /> and warm family-friendly vibes.
           </h3>

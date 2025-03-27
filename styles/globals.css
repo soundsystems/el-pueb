@@ -14,6 +14,11 @@
 }
 
 @layer base {
+  /* Bronto font global styles */
+  .font-bronto {
+    font-feature-settings: "clig" off, "liga" on;
+  }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;

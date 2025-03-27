@@ -553,14 +553,14 @@ export default function Component() {
                       forceLunch && item.name === 'Lunch, Combos & Kids';
 
                     let buttonStyle =
-                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
+                      'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors duration-300 ease-in-out px-2';
                     if (isLunchTab) {
                       buttonStyle = isActive
-                        ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
-                        : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
+                        ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-colors duration-300 ease-in-out px-2'
+                        : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-colors duration-300 ease-in-out px-2 rounded-md';
                     } else if (isActive) {
                       buttonStyle =
-                        'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
+                        'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-colors duration-300 ease-in-out px-2';
                     }
 
                     return (
@@ -601,7 +601,9 @@ export default function Component() {
                           id={`menu-btn-${index}`}
                           variant={getButtonVariant(isLunchTab, isActive)}
                           className={cn(
-                            'w-full whitespace-nowrap px-2 text-center text-xs md:text-sm',
+                            'w-full whitespace-nowrap px-2 text-center text-xs md:text-sm font-semibold',
+                            isActive ? 'font-black scale-105' : 'scale-100',
+                            'transition-transform duration-150 ease-in-out',
                             buttonStyle
                           )}
                         >
@@ -627,14 +629,14 @@ export default function Component() {
                         forceLunch && item.name === 'Lunch, Combos & Kids';
 
                       let buttonStyle =
-                        'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-all duration-300 ease-in-out px-2';
+                        'hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors duration-300 ease-in-out px-2';
                       if (isLunchTab) {
                         buttonStyle = isActive
-                          ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-all duration-300 ease-in-out px-2'
-                          : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-all duration-300 ease-in-out px-2 rounded-md';
+                          ? 'bg-yellow-500 text-black hover:bg-yellow-500 transition-colors duration-300 ease-in-out px-2'
+                          : 'bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-colors duration-300 ease-in-out px-2 rounded-md';
                       } else if (isActive) {
                         buttonStyle =
-                          'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-all duration-300 ease-in-out px-2';
+                          'bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-colors duration-300 ease-in-out px-2';
                       }
 
                       return (
@@ -674,7 +676,9 @@ export default function Component() {
                             id={`menu-btn-desktop-${index}`}
                             variant={getButtonVariant(isLunchTab, isActive)}
                             className={cn(
-                              'whitespace-nowrap text-sm',
+                              'whitespace-nowrap text-sm md:text-base font-semibold',
+                              isActive ? 'font-black scale-105' : 'scale-100',
+                              'transition-transform duration-150 ease-out',
                               buttonStyle
                             )}
                           >

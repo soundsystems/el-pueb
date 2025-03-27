@@ -92,16 +92,12 @@ export const LocationCard = ({
           >
             {location.name}
           </motion.h2>
+          
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className={`flex items-start gap-1 md:gap-2 ${
-              selectedLocation === location.slug
-                ? 'text-stone-300'
-                : 'text-stone-600'
-            }`}
+            className="flex justify-center mb-2"
           >
-            <MapPin className="h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
             <Link
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                 `El Pueblito ${location.name} ${location.address}`
@@ -121,20 +117,30 @@ export const LocationCard = ({
                 }
               }}
             >
-              {location.address}
+              <div className="flex items-center gap-1 md:gap-2">
+                <MapPin className="h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
+                <span>{location.address}</span>
+              </div>
             </Link>
           </motion.div>
+          
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className="mt-2 flex flex-col gap-0.5 text-[11px] md:text-xs"
+            className="mt-2 flex flex-col gap-0.5 text-[11px] md:text-xs text-left"
             style={{
               color: selectedLocation === location.slug ? '#FFFFFF' : '#000000',
               transition: 'color 0.3s ease',
             }}
           >
-            <div>• {location.hours.weekdays}</div>
-            <div>• {location.hours.weekend}</div>
+            <div className="pl-4 relative">
+              <span className="absolute left-0">•</span>
+              {location.hours.weekdays}
+            </div>
+            <div className="pl-4 relative">
+              <span className="absolute left-0">•</span>
+              {location.hours.weekend}
+            </div>
           </motion.div>
         </div>
         <motion.div

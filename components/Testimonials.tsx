@@ -17,6 +17,42 @@ function formatName(fullName: string) {
   return `${firstName} ${lastName ? `${lastName[0]}.` : ''}`;
 }
 
+function formatForDesktop(text: string) {
+  const sentences = splitIntoSentences(text);
+  let result = '';
+  let wordCount = 0;
+  let nextBreakPoint = 20;
+  
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i].trim();
+    const sentenceWordCount = sentence.split(/\s+/).length;
+    
+    // If adding this sentence would cross the next breakpoint
+    if (wordCount + sentenceWordCount > nextBreakPoint) {
+      // If we're within 10 words of the breakpoint, add line break after this sentence
+      if (wordCount + sentenceWordCount < nextBreakPoint + 10) {
+        result += sentence + '\n\n';
+        nextBreakPoint = Math.floor((wordCount + sentenceWordCount) / 100 + 1) * 100;
+      } 
+      // If we're already past the breakpoint, add the line break before this sentence
+      else if (wordCount > nextBreakPoint - 10) {
+        result += '\n\n' + sentence + ' ';
+        nextBreakPoint = Math.floor((wordCount + sentenceWordCount) / 100 + 1) * 100;
+      }
+      // Otherwise just add the sentence normally
+      else {
+        result += sentence + ' ';
+      }
+    } else {
+      result += sentence + ' ';
+    }
+    
+    wordCount += sentenceWordCount;
+  }
+  
+  return result.trim();
+}
+
 export default function TestimonialCarousel() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -75,7 +111,7 @@ export default function TestimonialCarousel() {
   return (
     <section className="w-full rounded-xl bg-stone-50/50 py-10 shadow-lg backdrop-blur-sm">
       <div className="mx-auto w-full max-w-screen-lg px-2 md:px-8 lg:px-12">
-        <h2 className="mb-8 text-center font-bold text-[#0f8540] text-xl md:text-2xl lg:text-3xl">
+        <h2 className="mb-8 text-center font-black text-[#0f8540] text-xl md:text-2xl lg:text-3xl">
           Our Commitment to Excellence
         </h2>
 
@@ -91,7 +127,7 @@ export default function TestimonialCarousel() {
               ))}
             </div>
             <div className="w-full max-w-xl px-1 lg:max-w-4xl">
-              <blockquote className="mb-4 text-pretty text-center text-base text-gray-800">
+              <blockquote className="mb-4 text-pretty text-center text-base text-stone-900">
                 {testimonials.reduce(
                   (longest, t) =>
                     t.text.length > longest.length ? t.text : longest,
@@ -99,10 +135,10 @@ export default function TestimonialCarousel() {
                 )}
               </blockquote>
               <cite className="block text-center">
-                <span className="block font-semibold text-[#0f8540] text-lg not-italic">
+                <span className="block font-bold text-[#0f8540] text-lg md:text-xl not-italic">
                   Name
                 </span>
-                <span className="block text-gray-600 text-sm">Location</span>
+                <span className="block text-stone-800 text-sm">Location</span>
               </cite>
             </div>
           </div>
@@ -141,8 +177,8 @@ export default function TestimonialCarousel() {
                   />
                 ))}
               </div>
-              <div className="w-full max-w-xl px-1 lg:max-w-4xl">
-                <blockquote className="mb-4 text-pretty text-center text-base text-gray-800">
+              <div className="w-full max-w-max px-1 lg:max-w-4xl">
+                <blockquote className="mb-4 text-pretty text-center text-sm md:text-base text-gray-800">
                   <span className="block lg:hidden">
                     {splitIntoSentences(testimonials[current].text).map(
                       (sentence, i) => (
@@ -152,8 +188,8 @@ export default function TestimonialCarousel() {
                       )
                     )}
                   </span>
-                  <span className="hidden lg:block">
-                    "{testimonials[current].text}"
+                  <span className="hidden lg:block whitespace-pre-line leading-relaxed prose prose-stone mx-auto">
+                    "{formatForDesktop(testimonials[current].text)}"
                   </span>
                 </blockquote>
                 <cite className="block text-center">

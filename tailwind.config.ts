@@ -6,6 +6,15 @@ const config: Config = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'font-light',
+    'font-normal',
+    'font-medium',
+    'font-semibold',
+    'font-bold',
+    'font-black',
+    'font-ultrablack',
+  ],
   theme: {
     extend: {
       screens: {
@@ -21,9 +30,19 @@ const config: Config = {
         'adobe-light': '#E8DCC6', // Light adobe for contrast
       },
       fontFamily: {
-        // You might want to update these with fonts that match Mexican restaurant branding
-        sans: ['var(--font-inter)'],
+        // Updated font families
+        sans: ['var(--font-bronto)', 'var(--font-inter)', 'sans-serif'],
         display: ['var(--font-playfair-display)'],
+        bronto: ['var(--font-bronto)', 'sans-serif'],
+      },
+      fontWeight: {
+        light: '300',
+        normal: '400',
+        medium: '500',
+        semibold: '600',
+        bold: '700',
+        black: '900',
+        ultrablack: '950',
       },
     },
   },
