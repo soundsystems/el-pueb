@@ -355,7 +355,7 @@ export default function Subscribe() {
           <span className="font-semibold text-sm text-yellow-500 uppercase transition-colors duration-300 ease-linear md:text-base">
             THANK YOU FOR SUBSCRIBING!
           </span>
-          <span className="text-center text-stone-950 text-xs font-bold dark:text-stone-50">
+          <span className="text-center text-stone-950 text-sm font-bold dark:text-stone-50">
             Welcome to La Familia Pueblito!
           </span>
         </div>
@@ -434,7 +434,7 @@ export default function Subscribe() {
       {process.env.NODE_ENV === 'development' && (
         <button
           onClick={() => setShowConfetti(true)}
-          className="fixed right-4 bottom-20 z-[9999] rounded-full bg-stone-950/90 p-3 text-stone-50 text-xs shadow-lg"
+          className="fixed right-4 bottom-20 z-[9999] rounded-full bg-stone-950/90 p-3 text-stone-50 text-sm shadow-lg"
           type="button"
         >
           Test Confetti 🎉
@@ -467,7 +467,7 @@ export default function Subscribe() {
                   <span className="font-semibold text-sm text-yellow-500 uppercase transition-colors duration-300 ease-linear md:text-base">
                     THANK YOU FOR SUBSCRIBING!
                   </span>
-                  <span className="pb-2 text-center text-stone-50 text-xs">
+                  <span className="pb-2 text-center text-stone-50 text-sm">
                     Welcome to La Familia Pueblito
                   </span>
                 </motion.div>
@@ -508,7 +508,7 @@ export default function Subscribe() {
               key={state.message}
             >
               <div className="rounded-lg bg-stone-950/90 px-3 py-1.5 backdrop-blur-sm">
-                <span className="font-light text-red-500/80 text-xs">
+                <span className="font-light text-red-500/80 text-sm">
                   {state.message}
                 </span>
               </div>

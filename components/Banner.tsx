@@ -59,7 +59,7 @@ export default function FlowingBanner() {
           {bannerItems.map((item, index) => (
             <span
               key={index}
-              className="mx-4 font-medium text-xs tracking-wide"
+              className="mx-4 font-medium text-sm tracking-wide"
             >
               <span role="img" aria-hidden="true" className="mr-1.5">
                 {item.emoji}
@@ -84,7 +84,7 @@ export default function FlowingBanner() {
           {bannerItems.map((item, index) => (
             <span
               key={`dup-${index}`}
-              className="mx-4 font-medium text-xs tracking-wide"
+              className="mx-4 font-medium text-sm tracking-wide"
             >
               <span role="img" aria-hidden="true" className="mr-1.5">
                 {item.emoji}

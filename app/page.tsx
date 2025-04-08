@@ -40,7 +40,7 @@ export default function HomePage() {
             animate="visible"
             exit="exit"
             variants={sectionVariants}
-          >
+          > 
             <Hero />
           </motion.section>
 

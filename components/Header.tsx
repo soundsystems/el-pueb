@@ -173,7 +173,7 @@ export default function Header() {
             transition={springTransition}
             className="w-full flex-1 md:flex md:min-w-[400px] md:justify-center"
           >
-            <nav className="flex items-center justify-center space-x-1 pt-2 text-base lg:text-lg">
+            <nav className="flex items-center justify-center space-x-1 text-lg lg:text-xl">
               {tabs.map((tab, index) => (
                 <motion.div
                   key={tab.id}
@@ -281,7 +281,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springTransition}
-            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden text-sm md:text-md lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
+            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
           >
             {isOpen ? (
               <span className="font-bold text-[#006847]">
@@ -299,7 +299,7 @@ export default function Header() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springTransition}
-        className="py-2 text-center text-sm md:text-md lg:hidden"
+        className="py-2 text-center text-base lg:hidden"
       >
         {isOpen ? (
           <span className="font-semibold text-[#03502D]">

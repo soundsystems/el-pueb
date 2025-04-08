@@ -127,17 +127,17 @@ export const LocationCard = ({
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className="mt-2 flex flex-col gap-0.5 text-[11px] md:text-xs text-left"
+            className="mt-2 flex flex-col gap-0.5 text-sm md:text-base text-left"
             style={{
               color: selectedLocation === location.slug ? '#FFFFFF' : '#000000',
               transition: 'color 0.3s ease',
             }}
           >
-            <div className="pl-4 relative">
+            <div className="pl-4 pt-2 relative">
               <span className="absolute left-0">•</span>
               {location.hours.weekdays}
             </div>
-            <div className="pl-4 relative">
+            <div className="pl-4 pt-1 relative">
               <span className="absolute left-0">•</span>
               {location.hours.weekend}
             </div>
@@ -146,11 +146,11 @@ export const LocationCard = ({
         <motion.div
           layout
           transition={{ layout: springTransition }}
-          className="mt-auto"
+          className="pt-2"
         >
           <Link
             href={`tel:${location.phone}`}
-            className={`font-bold text-xs decoration-[2px] transition-all duration-300 md:text-sm ${
+            className={`font-bold text-sm decoration-[2px] transition-all duration-300 md:text-base ${
               selectedLocation === location.slug
                 ? 'text-stone-50 underline'
                 : 'text-stone-900 no-underline hover:underline'

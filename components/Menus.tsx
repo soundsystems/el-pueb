@@ -601,7 +601,7 @@ export default function Component() {
                           id={`menu-btn-${index}`}
                           variant={getButtonVariant(isLunchTab, isActive)}
                           className={cn(
-                            'w-full whitespace-nowrap px-2 text-center text-xs md:text-sm font-semibold',
+                            'w-full whitespace-nowrap px-2 text-center text-sm md:text-sm font-semibold',
                             isActive ? 'font-black scale-105' : 'scale-100',
                             'transition-transform duration-150 ease-in-out',
                             buttonStyle
