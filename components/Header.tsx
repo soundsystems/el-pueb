@@ -220,7 +220,7 @@ export default function Header() {
                                   }}
                                 >
                                   <DropdownMenuItem
-                                    className="flex cursor-pointer justify-center text-center shadow-lg data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#F8C839] data-[highlighted]:transition-colors"
+                                    className="flex cursor-pointer justify-center text-center text-base md:text-lg lg:text-xl shadow-lg data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#F8C839] data-[highlighted]:transition-colors"
                                     asChild
                                   >
                                     <motion.a
