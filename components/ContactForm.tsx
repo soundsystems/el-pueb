@@ -206,7 +206,7 @@ const ContactForm = () => {
           <MotionCard className="mx-auto w-5/6 max-w-lg bg-stone-50/70 backdrop-blur-sm dark:bg-stone-950/90">
             <CardHeader>
               <CardTitle className="text-center font-bold text-stone-900 text-xl dark:text-stone-50">
-                Contact Us
+                Búscanos
               </CardTitle>
               <p className="mt-2 text-center text-sm font-semibold text-stone-700 dark:text-stone-300">
                 Please allow our team up to 48 hours to respond to your request.
@@ -309,7 +309,7 @@ const ContactForm = () => {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-stone-900 dark:text-stone-50">
-                                  Reason for Contact
+                                  Reason for Reaching Out
                                 </FormLabel>
                                 <Select
                                   onValueChange={field.onChange}

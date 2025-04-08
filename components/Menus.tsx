@@ -221,7 +221,7 @@ export default function Component() {
   }, [api, forceLunch]);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -545,9 +545,14 @@ export default function Component() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="my-4 grid grid-cols-2 gap-2"
+                  className="my-4 grid grid-cols-2 gap-2 lg:inline-block lg:space-x-4 lg:text-center"
                 >
                   {menuItems.map((item, index) => {
+                    // Skip mobileOnly items in desktop view
+                    if (!isMobile && item.mobileOnly) {
+                      return null;
+                    }
+
                     const isActive = getActiveNavIndex(currentPage) === index;
                     const isLunchTab =
                       forceLunch && item.name === 'Lunch, Combos & Kids';
@@ -569,7 +574,7 @@ export default function Component() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        className="w-full"
+                        className="flex justify-center lg:inline-block"
                         whileTap={{ scale: 0.95 }}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => {
@@ -601,10 +606,11 @@ export default function Component() {
                           id={`menu-btn-${index}`}
                           variant={getButtonVariant(isLunchTab, isActive)}
                           className={cn(
-                            'w-full whitespace-nowrap px-2 text-center text-sm md:text-sm font-semibold',
+                            'whitespace-nowrap px-2 text-center text-sm md:text-sm font-semibold',
                             isActive ? 'font-black scale-105' : 'scale-100',
                             'transition-transform duration-150 ease-in-out',
-                            buttonStyle
+                            buttonStyle,
+                            !isMobile && 'lg:last:hidden'
                           )}
                         >
                           {item.mobileName || item.name}
@@ -619,7 +625,7 @@ export default function Component() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="my-4 flex flex-wrap justify-center gap-2"
+                  className="my-4 grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:justify-center lg:space-x-6 lg:text-center"
                 >
                   {menuItems
                     .filter((item) => !item.mobileOnly)
@@ -695,7 +701,7 @@ export default function Component() {
           <motion.div layout>
             <Carousel
               setApi={setApi}
-              className="w-full"
+              className="w-full lg:mt-0"
               opts={{
                 align: 'start',
                 ...(isMobile

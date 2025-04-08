@@ -173,7 +173,7 @@ export default function Header() {
             transition={springTransition}
             className="w-full flex-1 md:flex md:min-w-[400px] md:justify-center"
           >
-            <nav className="flex items-center justify-center space-x-1 text-lg lg:text-xl">
+            <nav className="flex items-center justify-center space-x-1 text-lg font-ultrablack lg:text-xl">
               {tabs.map((tab, index) => (
                 <motion.div
                   key={tab.id}
@@ -244,7 +244,7 @@ export default function Header() {
                     <Link
                       href={tab.href}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`relative whitespace-nowrap rounded-full px-2 py-1.5 font-black transition-colors duration-300 sm:px-3 ${
+                      className={`relative whitespace-nowrap rounded-full px-2 py-1.5 font-bold transition-colors duration-300 sm:px-3 ${
                         activeTab === tab.id
                           ? 'text-stone-50'
                           : 'text-stone-950 hover:text-stone-50'
@@ -281,14 +281,14 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springTransition}
-            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-base"
+            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-lg"
           >
             {isOpen ? (
               <span className="font-bold text-[#006847]">
                 Open Today {hoursToday}
               </span>
             ) : (
-              <span className="font-semibold text-[#CF0822]">
+              <span className="font-bold text-[#CF0822]">
                 {closedMessage}
               </span>
             )}
@@ -299,14 +299,14 @@ export default function Header() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springTransition}
-        className="py-2 text-center text-base lg:hidden"
+        className="py-2 text-center text-base md:text-lg md:-mt-6 lg:hidden"
       >
         {isOpen ? (
-          <span className="font-semibold text-[#03502D]">
+          <span className="font-bold text-[#03502D]">
             Open Today {hoursToday}
           </span>
         ) : (
-          <span className="font-semibold text-[#CE1226]">{closedMessage}</span>
+          <span className="font-bold text-[#CE1226]">{closedMessage}</span>
         )}
       </motion.div>
     </motion.header>

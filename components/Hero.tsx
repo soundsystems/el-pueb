@@ -170,7 +170,7 @@ const Hero = () => {
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
         <div className="container mx-auto px-2">
           <h2 className="text-pretty text-center font-semibold text-sm tablet:text-base text-stone-800 xl:text-base">
-            We are a family owned and operated Mexican restaurant proudly <br className="md:hidden" /> serving the  Northwest Arkansas community for well over a decade. 
+            We are a family owned and operated Mexican restaurant proudly <br className="lg:hidden" /> serving the  Northwest Arkansas community for well over a decade. 
            <br/> Every dish invokes our authentic family recipes and rich cultural heritage.
           </h2>
         </div>
