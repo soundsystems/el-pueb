@@ -127,7 +127,7 @@ export default function TestimonialCarousel() {
               ))}
             </div>
             <div className="w-full max-w-xl px-1 lg:max-w-4xl">
-              <blockquote className="mb-4 text-pretty text-center text-base text-stone-900">
+              <blockquote className="mb-4 text-pretty text-center text-base font-bold text-stone-900">
                 {testimonials.reduce(
                   (longest, t) =>
                     t.text.length > longest.length ? t.text : longest,
@@ -135,7 +135,7 @@ export default function TestimonialCarousel() {
                 )}
               </blockquote>
               <cite className="block text-center">
-                <span className="block font-bold text-[#0f8540] text-lg md:text-xl not-italic">
+                <span className="block font-black text-[#0f8540] text-lg md:text-xl not-italic">
                   Name
                 </span>
                 <span className="block text-stone-800 text-sm">Location</span>
@@ -178,7 +178,7 @@ export default function TestimonialCarousel() {
                 ))}
               </div>
               <div className="w-full max-w-max px-1 lg:max-w-4xl">
-                <blockquote className="mb-4 text-pretty text-center text-sm md:text-base text-gray-800">
+                <blockquote className="mb-4 text-pretty text-center text-base lg:text-lg text-stone-800">
                   <span className="block lg:hidden">
                     {splitIntoSentences(testimonials[current].text).map(
                       (sentence, i) => (
@@ -202,7 +202,7 @@ export default function TestimonialCarousel() {
                   >
                     {formatName(testimonials[current].name)}
                   </span>
-                  <span className="block text-gray-600 text-sm">
+                  <span className="block text-stone-600 font-semibold text-base lg:text-lg">
                     {testimonials[current].location}
                   </span>
                 </cite>
