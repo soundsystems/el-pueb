@@ -209,7 +209,7 @@ const ContactForm = () => {
                 Búscanos
               </CardTitle>
               <p className="mt-2 text-center text-sm font-semibold text-stone-700 dark:text-stone-300">
-                Please allow our team up to 48 hours to respond to your request.
+                Please allow our team up to 48 hours <br className='tablet:hidden' /> to respond to your request.
               </p>
               {/* <p className="mt-2 text-left text-xs text-stone-700 dark:text-stone-300">
                 If the matter is urgent or time-sensitive, please give us a call  
@@ -300,7 +300,7 @@ const ContactForm = () => {
                         >
                           {selectedTab === 'customer' && (
                             <p className="mb-3 text-sm font-medium text-center text-stone-700 dark:text-stone-300">
-                              Seating is first-come, first-serve. No reservations required.
+                              Seating is first-come, first-serve. <br className='tablet:hidden' /> No reservations required.
                             </p>
                           )}
                           <FormField

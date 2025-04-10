@@ -64,14 +64,12 @@ export const LocationCard = ({
           selectedLocation === location.slug ? null : location.slug
         );
         if (selectedLocation !== location.slug) {
-          if (window.innerWidth < 768) {
-            setTimeout(() => {
-              document.getElementById('map-container')?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }, 200);
-          }
+          setTimeout(() => {
+            document.getElementById('map-container')?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }, 200);
         }
       }}
       style={{ '--marker-color': markerColor } as React.CSSProperties}
@@ -104,7 +102,7 @@ export const LocationCard = ({
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`font-semibold text-xs transition-all duration-300 md:text-sm xl:text-md ${
+              className={`font-semibold text-sm transition-all duration-300 md:text-base ${
                 selectedLocation === location.slug
                   ? 'text-[color:var(--marker-color)] hover:brightness-75 md:text-stone-50 md:hover:text-[color:var(--marker-color)] md:hover:brightness-100'
                   : 'text-stone-600 hover:text-[color:var(--marker-color)]'
@@ -117,9 +115,13 @@ export const LocationCard = ({
                 }
               }}
             >
-              <div className="flex items-center gap-1 md:gap-2">
-                <MapPin className="h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
-                <span>{location.address}</span>
+              <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
+                  <MapPin className="h-3 w-3 flex-shrink-0 md:h-4 md:w-4" />
+                  <span className="md:hidden">{location.address.split(',')[0]}</span>
+                  <span className="hidden md:inline">{location.address}</span>
+                </div>
+                <span className="md:hidden pl-4">{location.address.split(',').slice(1).join(',').trim()}</span>
               </div>
             </Link>
           </motion.div>

@@ -169,10 +169,15 @@ const Hero = () => {
     <motion.div className="w-full space-y-6">
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
         <div className="container mx-auto px-2">
-          <h2 className="text-pretty text-center font-semibold text-sm tablet:text-base text-stone-800 xl:text-base">
-            We are a family owned and operated Mexican restaurant proudly <br className="lg:hidden" /> serving the  Northwest Arkansas community for well over a decade. 
-           <br/> Every dish invokes our authentic family recipes and rich cultural heritage.
-          </h2>
+<h2 className="text-pretty text-center font-semibold text-sm tablet:text-base text-stone-800 xl:text-base">
+ <span className="block lg:hidden"> We are a family-owned and operated Mexican restaurant, <br className="lg:hidden" /> 
+  <span className="block max-[445px]:hidden lg:hidden">proudly serving the Northwest Arkansas community for well over a decade.</span>
+  <span className="hidden max-[445px]:block lg:hidden">proudly serving the NWA community for well over a decade.</span>
+    </span>
+    <span className="hidden lg:block">
+    We are a family-owned and operated Mexican restaurant, proudly serving the Northwest Arkansas community for well over a decade.
+  </span>
+</h2>
         </div>
       </div>
 
@@ -183,10 +188,17 @@ const Hero = () => {
       </div>
 
       <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
+        <div className="container mx-auto px-2">
+          <h2 className="text-pretty text-center font-semibold text-sm tablet:text-base text-stone-800 xl:text-base">
+            Each dish carries the heart of our heritage — time-honored family <br className="max-lg:block hidden" /> recipes lovingly preserved and perfected across generations.
+          </h2>
+        </div>
+      </div>
+
+      <div className="w-full bg-stone-50/60 py-4 backdrop-blur-sm">
         <div className="container mx-auto max-w-6xl px-2 md:px-8">
           <h3 className="text-pretty text-center font-semibold text-sm tablet:text-base text-stone-700 xl:text-base">
-           Savor fresh, made-from-scratch dishes, handcrafted margaritas,
-            <br className="md:hidden" /> and warm family-friendly vibes.
+           Savor fresh, made-from-scratch dishes, handcrafted <br className="max-[561px]:block hidden" />  margaritas, and warm family-friendly vibes.
           </h3>
         </div>
       </div>

@@ -98,6 +98,7 @@ const createMarker = (
     transform: 'scale(1.25)',
     border: '2px solid white',
     boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+    zIndex: location.slug === selectedLocation ? 1 : 10,
   };
 
   return (
@@ -115,39 +116,59 @@ const createMarker = (
         <InfoWindow
           position={location.position}
           onCloseClick={() => setSelectedLocation(null)}
+          maxWidth={320}
         >
           <div
             className="rounded-lg p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2"
-            style={{ '--tw-outline-color': markerColor } as React.CSSProperties}
+            style={{ 
+              '--tw-outline-color': markerColor
+            } as React.CSSProperties}
           >
             <div className="mb-4 flex justify-center">
               <img
                 src="/logo.png"
                 alt="El Pueblito"
-                className="h-24 w-auto object-contain"
+                className="h-20 w-auto object-contain"
               />
             </div>
             <h3 className="mb-2 flex justify-center font-bold text-base">
               {location.name}
             </h3>
-            <p className="mb-2">{location.address}</p>
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                `El Pueblito ${location.name} ${location.address}`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-sm transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-2"
-              style={
-                {
+            <p className="mb-3 text-center">{location.address}</p>
+            <div className="flex justify-center mb-1">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  `El Pueblito ${location.name} ${location.address}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block font-semibold text-sm px-3 py-1 rounded transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
                   color: markerColor,
+                  backgroundColor: 'transparent',
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: markerColor,
+                  '--tw-ring-offset-width': '2px',
+                  '--tw-ring-offset-color': '#fff',
                   '--tw-ring-color': markerColor,
-                } as React.CSSProperties
-              }
-              autoFocus
-            >
-              View on Google Maps
-            </a>
+                  '--tw-ring-offset-shadow': '0 0 #0000',
+                  '--tw-ring-shadow': '0 0 #0000',
+                  boxShadow: 'var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000)'
+                } as React.CSSProperties}
+                autoFocus
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = markerColor;
+                  e.currentTarget.style.color = '#f5f5f4'; // stone-50
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = markerColor;
+                }}
+              >
+                View on Google Maps
+              </a>
+            </div>
           </div>
         </InfoWindow>
       )}
@@ -222,7 +243,7 @@ export default function LocationsPage() {
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1024);
+      setIsLargeScreen(window.innerWidth >= 1547);
     };
 
     checkScreenSize();
@@ -349,7 +370,9 @@ export default function LocationsPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className={`grid gap-4 md:gap-8 ${isLargeScreen ? 'lg:grid-cols-2' : 'grid-cols-1'}`}
+          className={`grid gap-4 md:gap-8 ${
+            isLargeScreen ? 'lg:grid-cols-2' : 'grid-cols-1'
+          }`}
         >
           {markerColors.length > 0 &&
             locations.map((location, index) => (
