@@ -421,7 +421,7 @@ const ContactForm = () => {
                                 initial="blurred"
                                 whileFocus="focused"
                                 className={cn(
-                                  'mt-2 bg-stone-50 font-light text-base',
+                                  'mt-2 bg-stone-50 font-normal text-base',
                                   'focus:border-pueb/80 focus:ring-pueb/80',
                                   'dark:bg-stone-900 dark:text-stone-100',
                                   'transition-transform duration-200 active:scale-[1.02]'
@@ -455,7 +455,7 @@ const ContactForm = () => {
                                 initial="blurred"
                                 whileFocus="focused"
                                 className={cn(
-                                  'mt-2 bg-stone-50 font-light text-base',
+                                  'mt-2 bg-stone-50 font-normal text-base',
                                   'focus:border-pueb/80 focus:ring-pueb/80',
                                   'dark:bg-stone-900 dark:text-stone-100',
                                   'transition-transform duration-200 active:scale-[1.02]'
@@ -485,7 +485,7 @@ const ContactForm = () => {
                                 initial="blurred"
                                 whileFocus="focused"
                                 className={cn(
-                                  'mt-2 bg-stone-50 font-light text-base',
+                                  'mt-2 bg-stone-50 font-normal text-base',
                                   'focus:border-pueb/80 focus:ring-pueb/80',
                                   'dark:bg-stone-900 dark:text-stone-100',
                                   'transition-transform duration-200 active:scale-[1.02]'
@@ -518,7 +518,7 @@ const ContactForm = () => {
                               whileFocus="focused"
                               type="email"
                               className={cn(
-                                'mt-2 bg-stone-50 font-light text-base',
+                                'mt-2 bg-stone-50 font-normal text-base',
                                 'focus:border-pueb/80 focus:ring-pueb/80',
                                 'dark:bg-stone-900 dark:text-stone-100',
                                 'transition-transform duration-200 active:scale-[1.02]'
@@ -552,7 +552,7 @@ const ContactForm = () => {
                               initial="blurred"
                               whileFocus="focused"
                               className={cn(
-                                'momentum-scroll mt-2 bg-stone-50 font-light text-base',
+                                'momentum-scroll mt-2 bg-stone-50 font-normal text-base',
                                 'focus:border-pueb/80 focus:ring-pueb/80',
                                 'dark:bg-stone-900 dark:text-stone-100',
                                 'transition-transform duration-200 active:scale-[1.02]'
