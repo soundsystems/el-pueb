@@ -86,7 +86,7 @@ export const LocationCard = ({
           <motion.h2
             layout
             transition={{ layout: springTransition }}
-            className={`mb-1 font-black text-xl md:mb-2 md:text-2xl ${selectedLocation === location.slug ? 'text-stone-50' : 'text-stone-900'}`}
+            className={`mb-1 font-black text-xl md:mb-2 md:text-2xl lg:text-3xl ${selectedLocation === location.slug ? 'text-stone-50' : 'text-stone-900'}`}
           >
             {location.name}
           </motion.h2>
@@ -102,7 +102,7 @@ export const LocationCard = ({
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`font-semibold text-sm transition-all duration-300 md:text-base ${
+              className={`font-semibold text-base transition-all duration-300 md:text-lg ${
                 selectedLocation === location.slug
                   ? 'text-[color:var(--marker-color)] hover:brightness-75 md:text-stone-50 md:hover:text-[color:var(--marker-color)] md:hover:brightness-100'
                   : 'text-stone-600 hover:text-[color:var(--marker-color)]'
@@ -129,10 +129,11 @@ export const LocationCard = ({
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className="mt-2 flex flex-col gap-0.5 text-sm md:text-base text-left"
+            className="mt-2 flex flex-col gap-0.5 text-lg text-left"
             style={{
               color: selectedLocation === location.slug ? '#FFFFFF' : '#000000',
               transition: 'color 0.3s ease',
+              fontWeight: 600
             }}
           >
             <div className="pl-4 pt-2 relative">
@@ -152,7 +153,7 @@ export const LocationCard = ({
         >
           <Link
             href={`tel:${location.phone}`}
-            className={`font-bold text-sm decoration-[2px] transition-all duration-300 md:text-base ${
+            className={`font-bold text-base decoration-[2px] transition-all duration-300 md:text-lg ${
               selectedLocation === location.slug
                 ? 'text-stone-50 underline'
                 : 'text-stone-900 no-underline hover:underline'
