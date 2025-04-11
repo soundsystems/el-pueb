@@ -1,56 +1,15 @@
 'use client';
 
 import { CONFETTI_COLORS } from '@/lib/constants/colors';
-import { reviews } from '@/lib/constants/reviews';
+import { reviews, formatForDesktop, splitIntoSentences } from '@/lib/constants/reviews';
 import { Star } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
-const SENTENCE_SPLITTER = /(?<=[.!?])\s+/;
-
-function splitIntoSentences(text: string) {
-  return text.split(SENTENCE_SPLITTER);
-}
 
 function formatName(fullName: string) {
   const [firstName, lastName] = fullName.split(' ');
   return `${firstName} ${lastName ? `${lastName[0]}.` : ''}`;
-}
-
-function formatForDesktop(text: string) {
-  const sentences = splitIntoSentences(text);
-  let result = '';
-  let wordCount = 0;
-  let nextBreakPoint = 20;
-  
-  for (let i = 0; i < sentences.length; i++) {
-    const sentence = sentences[i].trim();
-    const sentenceWordCount = sentence.split(/\s+/).length;
-    
-    // If adding this sentence would cross the next breakpoint
-    if (wordCount + sentenceWordCount > nextBreakPoint) {
-      // If we're within 10 words of the breakpoint, add line break after this sentence
-      if (wordCount + sentenceWordCount < nextBreakPoint + 10) {
-        result += sentence + '\n\n';
-        nextBreakPoint = Math.floor((wordCount + sentenceWordCount) / 100 + 1) * 100;
-      } 
-      // If we're already past the breakpoint, add the line break before this sentence
-      else if (wordCount > nextBreakPoint - 10) {
-        result += '\n\n' + sentence + ' ';
-        nextBreakPoint = Math.floor((wordCount + sentenceWordCount) / 100 + 1) * 100;
-      }
-      // Otherwise just add the sentence normally
-      else {
-        result += sentence + ' ';
-      }
-    } else {
-      result += sentence + ' ';
-    }
-    
-    wordCount += sentenceWordCount;
-  }
-  
-  return result.trim();
 }
 
 export default function TestimonialCarousel() {
@@ -62,6 +21,7 @@ export default function TestimonialCarousel() {
   const [dotColors, setDotColors] = useState(() => CONFETTI_COLORS.slice(0, 8));
   const measureRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
 
   // Randomly select testimonials and colors on client-side only
   useEffect(() => {
@@ -79,9 +39,41 @@ export default function TestimonialCarousel() {
   useEffect(() => {
     if (!contentRef.current) return;
 
-    const height = contentRef.current.offsetHeight;
-    setMaxHeight(height + 32); // Add some padding
-  }, []); // Empty dependency array since we only need to measure once
+    // Find the longest review and format it
+    const longestReview = testimonials.reduce(
+      (longest, t) => (t.text.length > longest.length ? t.text : longest),
+      ''
+    );
+    const formattedText = formatForDesktop(longestReview, isSmallScreen);
+
+    // Create a temporary element to measure the formatted text
+    const tempElement = document.createElement('div');
+    tempElement.style.position = 'absolute';
+    tempElement.style.visibility = 'hidden';
+    tempElement.style.width = '100%';
+    tempElement.style.fontSize = '1rem'; // Match the font size used in the component
+    tempElement.style.lineHeight = '1.5'; // Match the line height used in the component
+    tempElement.style.whiteSpace = 'pre-wrap'; // Ensure line breaks are considered
+    tempElement.innerText = formattedText;
+    document.body.appendChild(tempElement);
+
+    const height = tempElement.offsetHeight;
+    setMaxHeight(height + 140); // Add more padding to ensure space
+
+    // Clean up the temporary element
+    document.body.removeChild(tempElement);
+  }, [testimonials, isSmallScreen]); // Recalculate if testimonials or screen size change
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 620);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   useEffect(() => {
     if (isPaused) {
@@ -109,9 +101,9 @@ export default function TestimonialCarousel() {
   };
 
   return (
-    <section className="w-full rounded-xl bg-stone-50/50 py-10 shadow-lg backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-screen-lg px-2 md:px-8 lg:px-12">
-        <h2 className="mb-8 text-center font-black text-[#0f8540] text-xl md:text-2xl lg:text-3xl">
+    <section className="w-full rounded-xl bg-stone-50/40 py-12 shadow-lg backdrop-blur-sm">
+      <div className="mx-auto w-full max-w-screen-lg px-4 md:px-10 lg:px-14">
+        <h2 className="mb-10 text-center font-black text-[#0f8540] text-2xl md:text-3xl">
           Our Commitment to Excellence
         </h2>
 
@@ -119,19 +111,21 @@ export default function TestimonialCarousel() {
         <div className="-left-[9999px] -top-[9999px] invisible fixed">
           <div
             ref={contentRef}
-            className="flex flex-col items-center justify-center py-16 md:py-12"
+            className="flex flex-col items-center justify-center py-20 md:py-16"
           >
-            <div className="mb-4 flex justify-center">
+            <div className="mb-6 flex justify-center">
               {[...new Array(5)].map((_, i) => (
                 <Star key={i} className="h-6 w-6" />
               ))}
             </div>
-            <div className="w-full max-w-xl px-1 lg:max-w-4xl">
-              <blockquote className="mb-4 text-pretty text-center text-base font-bold text-stone-900">
-                {testimonials.reduce(
-                  (longest, t) =>
-                    t.text.length > longest.length ? t.text : longest,
-                  ''
+            <div className="w-full max-w-xl px-2 lg:max-w-4xl">
+              <blockquote className="mb-6 text-pretty text-center text-base font-bold text-stone-900">
+                {splitIntoSentences(testimonials[current].text).map(
+                  (sentence, i) => (
+                    <p key={i} className="mb-2 last:mb-0">
+                      {sentence.trim()}
+                    </p>
+                  )
                 )}
               </blockquote>
               <cite className="block text-center">
@@ -164,10 +158,11 @@ export default function TestimonialCarousel() {
                   setIsUserNavigated(false);
                 }
               }}
-              className="absolute inset-0 flex flex-col items-center justify-center py-16 md:py-12"
+              className="absolute inset-0 flex flex-col items-center justify-center py-20 md:py-16"
+              style={{ height: maxHeight }}
             >
               <div
-                className="mb-4 flex justify-center"
+                className="mb-6 flex justify-center"
                 aria-label={`Rating: ${testimonials[current].rating} out of 5 stars`}
               >
                 {[...new Array(testimonials[current].rating)].map((_, i) => (
@@ -177,8 +172,8 @@ export default function TestimonialCarousel() {
                   />
                 ))}
               </div>
-              <div className="w-full max-w-max px-1 lg:max-w-4xl">
-                <blockquote className="mb-4 text-pretty text-center text-base lg:text-lg text-stone-800">
+              <div className="w-full max-w-max px-2 lg:max-w-4xl">
+                <blockquote className="mb-6 text-pretty text-center text-base font-medium lg:text-lg text-stone-950s">
                   <span className="block lg:hidden">
                     {splitIntoSentences(testimonials[current].text).map(
                       (sentence, i) => (
@@ -189,12 +184,12 @@ export default function TestimonialCarousel() {
                     )}
                   </span>
                   <span className="hidden lg:block whitespace-pre-line leading-relaxed prose prose-stone mx-auto">
-                    "{formatForDesktop(testimonials[current].text)}"
+                    "{formatForDesktop(testimonials[current].text, isSmallScreen)}"
                   </span>
                 </blockquote>
                 <cite className="block text-center">
                   <span
-                    className="block font-semibold text-lg not-italic"
+                    className="block text-lg md:text-xl not-italic"
                     style={{
                       color: dotColors[current],
                       filter: 'brightness(60%)',
@@ -202,7 +197,7 @@ export default function TestimonialCarousel() {
                   >
                     {formatName(testimonials[current].name)}
                   </span>
-                  <span className="block text-stone-600 font-semibold text-base lg:text-lg">
+                  <span className="block text-stone-700 font-semibold text-base md:text-lg">
                     {testimonials[current].location}
                   </span>
                 </cite>
@@ -211,7 +206,7 @@ export default function TestimonialCarousel() {
           </AnimatePresence>
         </div>
 
-        <div className="mt-6 flex justify-center gap-1.5 md:gap-2">
+        <div className="mt-8 flex justify-center gap-1.5 md:gap-2">
           {testimonials.map((_, index) => (
             <Button
               type="button"
@@ -232,6 +227,22 @@ export default function TestimonialCarousel() {
               aria-selected={current === index}
             />
           ))}
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm lg:text-base text-stone-800">
+            These reviews are sourced from our Google Business Profile. 
+            <a 
+              href="https://www.google.com/search?sca_esv=a2d1b3f2df31e648&tbm=lcl&q=el+pueblito+mexican+restaurant+arkansas#"
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="ml-1 font-semibold text-[#0f8540] hover:underline"
+            >
+              <br />
+              Leave a review
+            </a>
+            {' '}to see your feedback featured here!
+          </p>
         </div>
       </div>
     </section>

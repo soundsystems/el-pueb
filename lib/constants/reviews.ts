@@ -5,6 +5,8 @@ interface Review {
   location: string;
 }
 
+export const SENTENCE_SPLITTER = /(?<=[.!?])\s+/;
+
 export const reviews: Review[] = [
   {
     name: 'Santosh Kotyankar',
@@ -121,3 +123,90 @@ export const reviews: Review[] = [
     rating: 5,
   },
 ];
+
+export const splitIntoSentences = (text: string) => {
+  return text.split(SENTENCE_SPLITTER);
+};
+
+export const formatForDesktop = (text: string, isSmallScreen: boolean) => {
+  const sentences = splitIntoSentences(text);
+  let result = '';
+  let currentLine = '';
+  let currentLineWords = 0;
+  const MAX_WORDS_PER_LINE = 8;
+  const CONJUNCTIONS = ['and', 'or', 'but', 'nor', 'for', 'yet', 'so'];
+
+  const isShortSentence = (sentence: string) => {
+    const words = sentence.trim().split(/\s+/);
+    return words.length <= 4 || /^\d+\/\d+$/.test(words[words.length - 1]);
+  };
+
+  const shouldBreakLine = (sentence: string) => {
+    const words = sentence.trim().split(/\s+/);
+    if (currentLineWords >= MAX_WORDS_PER_LINE) return true;
+    if (currentLineWords > 0 && words.length <= 2) return true;
+    if (currentLineWords + words.length < 3) return false;
+    if (currentLineWords >= 3 && words.length >= 3) return true;
+    return false;
+  };
+
+  for (let i = 0; i < sentences.length; i++) {
+    let sentence = sentences[i].trim();
+    const sentenceWordCount = sentence.split(/\s+/).length;
+
+    if (sentenceWordCount >= 12) {
+      sentence = breakLongSentence(sentence, isSmallScreen);
+    }
+
+    if (isShortSentence(sentence)) {
+      const nextSentence = sentences[i + 1]?.trim();
+      if (nextSentence && isShortSentence(nextSentence)) {
+        currentLine += sentence + ' ';
+        currentLineWords += sentenceWordCount;
+        continue;
+      }
+      if (currentLineWords > 0) {
+        result += currentLine.trim() + '\n\n';
+        currentLine = '';
+        currentLineWords = 0;
+      }
+      result += sentence + ' ';
+      continue;
+    }
+
+    if (shouldBreakLine(sentence)) {
+      if (currentLineWords > 0) {
+        result += currentLine.trim() + '\n\n';
+        currentLine = '';
+        currentLineWords = 0;
+      }
+    }
+
+    currentLine += sentence + ' ';
+    currentLineWords += sentenceWordCount;
+
+    if (currentLineWords >= MAX_WORDS_PER_LINE) {
+      result += currentLine.trim() + '\n\n';
+      currentLine = '';
+      currentLineWords = 0;
+    }
+  }
+
+  if (currentLine.trim()) {
+    result += currentLine.trim();
+  }
+
+  return result.trim();
+};
+
+export const breakLongSentence = (sentence: string, isSmallScreen: boolean) => {
+  const words = sentence.split(/\s+/);
+  if (words.length < 12) return sentence;
+
+  if (isSmallScreen) {
+    const mid = Math.floor(words.length / 2);
+    return words.slice(0, mid).join(' ') + '\n' + words.slice(mid).join(' ');
+  }
+
+  return sentence;
+};

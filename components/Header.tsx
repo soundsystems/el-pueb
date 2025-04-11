@@ -52,6 +52,19 @@ const dropdownAnimation = {
   transition: bouncySpring,
 };
 
+export function updateHoursText(text: string) {
+  const headerElements = document.querySelectorAll('.header-hours');
+  
+  if (headerElements.length > 0) {
+    headerElements.forEach((element) => {
+      const span = element.querySelector('span');
+      if (span) {
+        span.textContent = text;
+      }
+    });
+  }
+}
+
 export default function Header() {
   const [open, setOpen] = useState(false);
   const isLargeScreen = useScreenSize();
@@ -69,6 +82,13 @@ export default function Header() {
       setActiveTab('');
     }
   }, [pathname]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      const newText = isOpen ? `Open Now ${hoursToday}` : closedMessage;
+      updateHoursText(newText);
+    }
+  }, [isOpen, hoursToday, closedMessage]);
 
   const locations = useMemo(
     () => [
@@ -281,7 +301,7 @@ export default function Header() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springTransition}
-            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-lg"
+            className="-translate-y-1/2 absolute top-1/2 right-4 my-2 hidden lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-lg header-hours"
           >
             {isOpen ? (
               <span className="font-bold text-[#006847]">
@@ -299,7 +319,7 @@ export default function Header() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springTransition}
-        className="py-2 text-center text-base md:text-lg md:-mt-6 lg:hidden"
+        className="py-2 text-center text-base md:text-lg md:-mt-6 lg:hidden header-hours"
       >
         {isOpen ? (
           <span className="font-bold text-[#03502D]">

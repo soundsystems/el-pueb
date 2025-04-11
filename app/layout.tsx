@@ -15,6 +15,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Suspense } from 'react';
 import type { Organization, Restaurant, WithContext } from 'schema-dts';
 import { CSPostHogProvider } from './providers';
+import DebugToolsWrapper from '@/components/debug/DebugToolsWrapper';
 
 // Register the Bronto font
 const brontoFont = localFont({
@@ -319,6 +320,7 @@ export default function RootLayout({
           </Suspense>
           <GoogleAnalytics gaId="G-JKSWQ70B8Z" />
           <GoogleTagManager gtmId="GTM-WB8P228N" />
+          <DebugToolsWrapper />
         </body>
       </CSPostHogProvider>
     </html>

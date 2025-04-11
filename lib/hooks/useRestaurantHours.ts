@@ -1,3 +1,4 @@
+'use client';
 import { useEffect, useState } from 'react';
 
 type DaySchedule = {
@@ -6,16 +7,21 @@ type DaySchedule = {
 };
 
 const HOURS: { [key: number]: DaySchedule } = {
-  0: { open: '11:00', close: '21:00' }, // Sunday
-  1: { open: '11:00', close: '21:00' }, // Monday
-  2: { open: '11:00', close: '21:00' }, // Tuesday
-  3: { open: '11:00', close: '21:00' }, // Wednesday
-  4: { open: '11:00', close: '21:00' }, // Thursday
-  5: { open: '11:00', close: '22:00' }, // Friday
-  6: { open: '11:00', close: '22:00' }, // Saturday
+  0: { open: '11:00 AM', close: '9:00 PM' }, // Sunday
+  1: { open: '11:00 AM', close: '9:00 PM' }, // Monday
+  2: { open: '11:00 AM', close: '9:00 PM' }, // Tuesday
+  3: { open: '11:00 AM', close: '9:00 PM' }, // Wednesday
+  4: { open: '11:00 AM', close: '9:00 PM' }, // Thursday
+  5: { open: '11:00 AM', close: '10:00 PM' }, // Friday
+  6: { open: '11:00 AM', close: '10:00 PM' }, // Saturday
 };
 
-export const useRestaurantHours = () => {
+type DebugOptions = {
+  debugDate?: Date;
+  debugTime?: string;
+};
+
+export const useRestaurantHours = (debugOptions?: DebugOptions) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hoursToday, setHoursToday] = useState('');
   const [closedMessage, setClosedMessage] = useState('');
@@ -23,25 +29,49 @@ export const useRestaurantHours = () => {
   useEffect(() => {
     const getClosedMessage = (now: Date, schedule: DaySchedule) => {
       const currentTime = now.getHours() * 100 + now.getMinutes();
-      const [openHour] = schedule.open.split(':').map(Number);
-      const [closeHour] = schedule.close.split(':').map(Number);
-      const openTime = openHour * 100;
-      const closeTime = closeHour * 100;
+      const { hours: openHour, minutes: openMinute } = parseTime(schedule.open);
+      const openTime = new Date(now);
+      openTime.setHours(openHour, openMinute, 0, 0);
 
-      if (currentTime < openTime) {
+      if (currentTime < openHour * 100) {
         // Before opening
-        const openingTime = new Date(now).setHours(openHour, 0);
-        return `Back Open at ${formatTime(openingTime)}`;
+        return `¡Buenos días! We open at ${formatTime(openTime.getTime())}`;
       }
-      if (currentTime >= closeTime) {
+      if (currentTime >= openHour * 100) {
         // After closing
-        return 'Closed Until Tomorrow';
+        return `Closed until ${formatTime(openTime.getTime())} Tomorrow`;
       }
       return '';
     };
 
+    const formatTime = (date: number) => {
+      return new Date(date).toLocaleString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    };
+
+    const parseTime = (timeStr: string) => {
+      const [time, period] = timeStr.split(' ');
+      const [hours, minutes] = time.split(':').map(Number);
+      return {
+        hours: period === 'PM' && hours !== 12 ? hours + 12 : period === 'AM' && hours === 12 ? 0 : hours,
+        minutes
+      };
+    };
+
     const checkIfOpen = () => {
-      const now = new Date();
+      let now: Date;
+      
+      if (debugOptions?.debugDate && debugOptions?.debugTime) {
+        const [hours, minutes] = debugOptions.debugTime.split(':').map(Number);
+        now = new Date(debugOptions.debugDate);
+        now.setHours(hours, minutes);
+      } else {
+        now = new Date();
+      }
+
       const day = now.getDay();
       const schedule = HOURS[day];
 
@@ -50,13 +80,13 @@ export const useRestaurantHours = () => {
       }
 
       const currentTime = now.getHours() * 100 + now.getMinutes();
-      const [openHour, openMinute] = schedule.open.split(':').map(Number);
-      const [closeHour, closeMinute] = schedule.close.split(':').map(Number);
+      const { hours: openHour, minutes: openMinute } = parseTime(schedule.open);
+      const { hours: closeHour, minutes: closeMinute } = parseTime(schedule.close);
       const openTime = openHour * 100 + openMinute;
       const closeTime = closeHour * 100 + closeMinute;
 
-      const formattedOpen = new Date().setHours(openHour, openMinute);
-      const formattedClose = new Date().setHours(closeHour, closeMinute);
+      const formattedOpen = new Date(now).setHours(openHour, openMinute);
+      const formattedClose = new Date(now).setHours(closeHour, closeMinute);
 
       setHoursToday(`until ${formatTime(formattedClose)}`);
 
@@ -68,14 +98,6 @@ export const useRestaurantHours = () => {
       return isCurrentlyOpen;
     };
 
-    const formatTime = (date: number) => {
-      return new Date(date).toLocaleString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
-    };
-
     const updateStatus = () => {
       setIsOpen(checkIfOpen());
     };
@@ -84,7 +106,7 @@ export const useRestaurantHours = () => {
     const interval = setInterval(updateStatus, 60000); // Check every minute
 
     return () => clearInterval(interval);
-  }, []);
+  }, [debugOptions?.debugDate, debugOptions?.debugTime]);
 
   return { isOpen, hoursToday, closedMessage };
 };
