@@ -129,7 +129,7 @@ export const LocationCard = ({
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className="mt-2 flex flex-col gap-0.5 text-lg text-left"
+            className="mt-2 flex flex-col gap-0.5 text-base md:text-lg text-left"
             style={{
               color: selectedLocation === location.slug ? '#FFFFFF' : '#000000',
               transition: 'color 0.3s ease',
