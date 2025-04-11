@@ -129,20 +129,20 @@ export const LocationCard = ({
           <motion.div
             layout
             transition={{ layout: springTransition }}
-            className="mt-2 flex flex-col gap-0.5 text-base md:text-lg text-left"
+            className="mt-2 flex flex-col gap-0.5 text-[.79rem] tablet:text-base md:text-lg text-left"
             style={{
               color: selectedLocation === location.slug ? '#FFFFFF' : '#000000',
               transition: 'color 0.3s ease',
               fontWeight: 600
             }}
           >
-            <div className="pl-4 pt-2 relative">
-              <span className="absolute left-0">•</span>
-              {location.hours.weekdays}
+            <div className="flex items-start gap-1 pt-2">
+              <span>•</span>
+              <span>{location.hours.weekdays}</span>
             </div>
-            <div className="pl-4 pt-1 relative">
-              <span className="absolute left-0">•</span>
-              {location.hours.weekend}
+            <div className="flex items-start gap-1 pt-1">
+              <span>•</span>
+              <span>{location.hours.weekend}</span>
             </div>
           </motion.div>
         </div>
