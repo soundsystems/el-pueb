@@ -37,8 +37,8 @@ const locations: Location[] = [
     position: { lat: 36.4659829, lng: -94.2997737 },
     placeId: 'ChIJ6UYv8unz0IcRDeDm1icSF4g',
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11am-9pm',
-      weekend: 'Fri-Sat: 11am-10pm',
+      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
+      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
     },
   },
   {
@@ -49,8 +49,8 @@ const locations: Location[] = [
     position: { lat: 36.2619322, lng: -94.3498537 },
     placeId: 'ChIJN48WaACL0IcRgQJ8z9j_XE8',
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11am-9pm',
-      weekend: 'Fri-Sat: 11am-10pm',
+      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
+      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
     },
   },
   {
@@ -61,8 +61,8 @@ const locations: Location[] = [
     position: { lat: 36.3404949, lng: -94.0650799 },
     placeId: 'ChIJj4N21mE92IcRiswN1sLGnCE',
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11am-9pm',
-      weekend: 'Fri-Sat: 11am-10pm',
+      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
+      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
     },
   },
   {
@@ -73,8 +73,8 @@ const locations: Location[] = [
     position: { lat: 36.3592987, lng: -94.2822265 },
     placeId: 'ChIJ87Jm17AP0IcRybiTHtVWpUQ',
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11am-9pm',
-      weekend: 'Fri-Sat: 11am-10pm',
+      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
+      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
     },
   },
 ];
