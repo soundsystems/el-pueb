@@ -101,7 +101,7 @@ export default function TestimonialCarousel() {
   };
 
   return (
-    <section className="w-full rounded-xl bg-stone-50/40 py-12 shadow-lg backdrop-blur-sm">
+    <section className="w-full rounded-xl bg-stone-50/40 pb-10 pt-4 shadow-lg backdrop-blur-sm">
       <div className="mx-auto w-full max-w-screen-lg px-4 md:px-10 lg:px-14">
         <h2 className="mb-10 text-center font-black text-[#0f8540] text-2xl md:text-3xl">
           Our Commitment to Excellence
@@ -229,7 +229,7 @@ export default function TestimonialCarousel() {
           ))}
         </div>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 -mb-4 text-center">
           <p className="text-sm lg:text-base text-stone-800">
             These reviews are sourced from our Google Business Profile. 
             <a 

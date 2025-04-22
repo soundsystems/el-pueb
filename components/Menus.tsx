@@ -160,7 +160,9 @@ const MenuCarouselItem = ({
               'object-contain p-2',
               isLoading ? 'opacity-0' : 'opacity-100'
             )}
-            sizes="(max-width: 768px) 100vw, 50vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 960px"
+            quality={90}
+            loading={shouldPrioritize ? "eager" : "lazy"}
             onLoad={() => setIsLoading(false)}
           />
         </div>
@@ -440,30 +442,16 @@ export default function Component() {
     }
   }, []);
 
-  // Preload adjacent images when current page changes
+  // Only preload the next image
   useEffect(() => {
     const allImages = menuItems.flatMap((item) => item.images);
-    const preloadCount = isMobile ? 2 : 4; // Preload more images on desktop
-
-    let indicesToPreload: number[];
-    if (isMobile) {
-      indicesToPreload = Array.from(
-        { length: preloadCount },
-        (_, i) => currentPage + i + 1
-      );
-    } else {
-      // In desktop mode, preload the next two pairs
-      const currentPair = Math.floor(currentPage / 2) * 2;
-      indicesToPreload = [
-        currentPair,
-        currentPair + 1,
-        currentPair + 2,
-        currentPair + 3,
-      ];
+    const nextIndex = currentPage + 1;
+    
+    if (nextIndex < allImages.length) {
+      const img = new window.Image();
+      img.src = allImages[nextIndex];
     }
-
-    preloadImages(indicesToPreload.filter((i) => i < allImages.length));
-  }, [currentPage, isMobile, preloadImages]);
+  }, [currentPage, menuItems]);
 
   // Preload lunch images when in lunch mode
   useEffect(() => {

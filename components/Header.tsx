@@ -226,6 +226,7 @@ export default function Header() {
                             className="border-none bg-[#03502D] font-semibold text-stone-50"
                             sideOffset={5}
                             align="end"
+                            side="bottom"
                             forceMount
                           >
                             <motion.div {...dropdownAnimation}>
@@ -240,7 +241,7 @@ export default function Header() {
                                   }}
                                 >
                                   <DropdownMenuItem
-                                    className="flex cursor-pointer justify-center text-center text-base md:text-lg lg:text-xl shadow-lg data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#F8C839] data-[highlighted]:transition-colors"
+                                    className="flex cursor-pointer justify-center text-center text-base md:text-lg lg:text-xl shadow-lg data-[highlighted]:bg-[#03502D] data-[highlighted]:text-[#FFD9A2] data-[highlighted]:transition-colors"
                                     asChild
                                   >
                                     <motion.a

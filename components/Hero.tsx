@@ -93,9 +93,10 @@ const HeroCarousel = ({
                     alt={image.alt}
                     fill
                     priority={index === 0}
-                    className="object-contain"
-                    sizes="(max-width: 768px) 100vw, 85vw"
-                    quality={100}
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 85vw, 1024px"
+                    quality={90}
+                    loading={index <= 2 ? "eager" : "lazy"}
                   />
                 </div>
               </motion.div>
@@ -154,10 +155,13 @@ const Hero = () => {
 
     setShuffledImages(shuffleArray(carouselImages));
 
-    // Preload first few images immediately
-    for (const image of carouselImages.slice(0, 3)) {
-      const img = new window.Image();
-      img.src = image.src;
+    // Preload the first image
+    if (typeof window !== 'undefined') {
+      const firstImage = carouselImages[0];
+      if (firstImage) {
+        const img = new window.Image();
+        img.src = firstImage.src;
+      }
     }
   }, []);
 
@@ -171,7 +175,11 @@ const Hero = () => {
         <div className="container mx-auto px-2 font-bold text-center text-pretty">
 <h2 className="text-sm tablet:text-base text-stone-950">
  <span className="block lg:hidden"> We are a family-owned and operated Mexican restaurant, <br className="lg:hidden" /> 
-  <span className="block max-[445px]:hidden lg:hidden">proudly serving the Northwest Arkansas community for well over a decade.</span>
+  <span className="block max-[445px]:hidden lg:hidden">
+    proudly serving the Northwest Arkansas community{' '}
+    <br className="min-[446px]:block max-[454px]:block min-[455px]:hidden" />
+    for well over a decade.
+  </span>
   <span className="hidden max-[445px]:block lg:hidden">proudly serving the NWA community for well over a decade.</span>
     </span>
     <span className="hidden text-lg lg:block">
@@ -195,7 +203,7 @@ const Hero = () => {
         </div>
 
       <div>
-        <div className="container mx-auto max-w-6xl px-2 md:px-8">
+        <div className="container mx-auto max-w-6xl pt-2 px-2 md:px-8">
           <h2>
            Savor fresh, made-from-scratch dishes, handcrafted <br className="max-[561px]:block hidden" />  margaritas, and warm family-friendly vibes.
           </h2>
