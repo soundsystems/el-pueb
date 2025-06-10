@@ -177,7 +177,7 @@ async function sendWelcomeEmails(formData: SubscribeFormData) {
 
   await resend.emails.send({
     from: 'El Pueblito Notifications <notifications@familia.elpueblitonwa.com>',
-    to: 'elpueblitonwa@gmail.com',
+    to: 'team@elpueblitonwa.com',
     subject: 'New Newsletter Subscriber',
     html: `
       <h2>New Newsletter Subscriber</h2>
