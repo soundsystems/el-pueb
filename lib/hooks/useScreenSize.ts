@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 export function useScreenSize() {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
@@ -18,11 +18,11 @@ export function useScreenSize() {
     resizeObserver.observe(document.body);
 
     // Backup with regular event listener
-    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener('resize', checkScreenSize);
+      window.removeEventListener("resize", checkScreenSize);
     };
   }, []);
 

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 
 export const useWindowDimensions = () => {
   const [dimensions, setDimensions] = useState({
@@ -10,7 +10,7 @@ export const useWindowDimensions = () => {
 
   useEffect(() => {
     // Only run on client side
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     const handleResize = () => {
       setDimensions({
@@ -22,9 +22,9 @@ export const useWindowDimensions = () => {
     // Set initial dimensions
     handleResize();
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return dimensions;
-}; 
+};

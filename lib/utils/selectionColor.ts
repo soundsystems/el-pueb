@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { CONFETTI_COLORS } from '../constants/colors';
+import { CONFETTI_COLORS } from "../constants/colors";
 
 const hexToRGBA = (hex: string, alpha = 0.3): string => {
   const r = Number.parseInt(hex.slice(1, 3), 16);
@@ -10,11 +10,11 @@ const hexToRGBA = (hex: string, alpha = 0.3): string => {
 };
 
 export const initializeSelectionColor = () => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
-  let lastColor = '';
+  let lastColor = "";
   let isSelecting = false;
-  const styleTag = document.createElement('style');
+  const styleTag = document.createElement("style");
   document.head.appendChild(styleTag);
 
   // Add base styles with transition
@@ -61,7 +61,7 @@ export const initializeSelectionColor = () => {
   let selectionTimeout: NodeJS.Timeout;
 
   // Track when selection starts
-  document.addEventListener('mousedown', () => {
+  document.addEventListener("mousedown", () => {
     const selection = window.getSelection();
     if (selection?.toString().length === 0) {
       isSelecting = true;
@@ -71,12 +71,12 @@ export const initializeSelectionColor = () => {
   });
 
   // Reset selection state when mouse is released
-  document.addEventListener('mouseup', () => {
+  document.addEventListener("mouseup", () => {
     isSelecting = false;
   });
 
   // Debounce selection changes
-  document.addEventListener('selectionchange', () => {
+  document.addEventListener("selectionchange", () => {
     const selection = window.getSelection();
     if (selection?.toString().length === 0) {
       isSelecting = false;

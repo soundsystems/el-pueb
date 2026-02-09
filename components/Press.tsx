@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 interface Article {
   title: string;
@@ -10,32 +10,32 @@ interface Article {
 
 const articles: Article[] = [
   {
-    title: 'Best Mexican Food in NWA',
-    url: 'https://www.bkmag.com/2024/11/19/best-caribbean-restaurants-brooklyn/',
-    logo: '/logos/bkmag-icon.svg',
-    emoji: '🏆',
-    publication: 'Brooklyn Magazine',
+    title: "Best Mexican Food in NWA",
+    url: "https://www.bkmag.com/2024/11/19/best-caribbean-restaurants-brooklyn/",
+    logo: "/logos/bkmag-icon.svg",
+    emoji: "🏆",
+    publication: "Brooklyn Magazine",
   },
   {
-    title: 'Cinco de Mayo Celebration',
-    url: 'https://www.nytimes.com/2024/06/17/style/juneteenth-brooklyn-lay-out.html',
-    logo: '/logos/nytimes-icon.svg',
-    emoji: '🎉',
-    publication: 'The New York Times',
+    title: "Cinco de Mayo Celebration",
+    url: "https://www.nytimes.com/2024/06/17/style/juneteenth-brooklyn-lay-out.html",
+    logo: "/logos/nytimes-icon.svg",
+    emoji: "🎉",
+    publication: "The New York Times",
   },
   {
-    title: 'New Highfill Location',
-    url: 'https://patch.com/new-york/bed-stuy/pop-jerk-chicken-spot-gets-forever-home-eater',
-    logo: '/logos/patch-icon.svg',
-    emoji: '🏡',
-    publication: 'Patch',
+    title: "New Highfill Location",
+    url: "https://patch.com/new-york/bed-stuy/pop-jerk-chicken-spot-gets-forever-home-eater",
+    logo: "/logos/patch-icon.svg",
+    emoji: "🏡",
+    publication: "Patch",
   },
   {
-    title: 'Living the Mexican-American Dream',
-    url: 'https://ny.eater.com/2022/9/14/23339205/wadadli-am-jerk-chicken-cafe-bed-stuy-brooklyn',
-    logo: '/logos/eater-icon.svg',
-    emoji: '🇲🇽',
-    publication: 'Eater NY',
+    title: "Living the Mexican-American Dream",
+    url: "https://ny.eater.com/2022/9/14/23339205/wadadli-am-jerk-chicken-cafe-bed-stuy-brooklyn",
+    logo: "/logos/eater-icon.svg",
+    emoji: "🇲🇽",
+    publication: "Eater NY",
   },
 ];
 
@@ -46,20 +46,20 @@ export function Press() {
       className="mb-1 w-64 rounded-xl bg-zinc-50/70 px-2 pb-2 shadow-md"
     >
       <h2
-        id="press-highlights"
         className="my-1 select-none text-center font-bold text-black"
+        id="press-highlights"
       >
         Press Highlights
       </h2>
       <ul className="m-0 list-none p-0">
         {articles.map((article) => (
-          <li key={article.url} className="mb-1 last:mb-0">
+          <li className="mb-1 last:mb-0" key={article.url}>
             <Link
-              href={article.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-between space-x-1 rounded-md border-black/10 border-b px-2 py-1 transition-colors duration-300 hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-pueb focus-visible:ring-offset-2"
               aria-label={`Read "${article.title}" on ${article.publication}`}
+              className="group flex items-center justify-between space-x-1 rounded-md border-black/10 border-b px-2 py-1 transition-colors duration-300 hover:bg-black focus:outline-none focus-visible:ring-2 focus-visible:ring-pueb focus-visible:ring-offset-2"
+              href={article.url}
+              rel="noopener noreferrer"
+              target="_blank"
             >
               {/* <Image
                 src={article.logo}
@@ -72,16 +72,16 @@ export function Press() {
                 {article.title}
               </span>
               <span
-                className="flex-shrink-0 text-base transition-transform duration-300 group-hover:scale-125"
-                role="img"
                 aria-label={
                   {
-                    '🏆': 'award',
-                    '🎉': 'celebration',
-                    '🏡': 'new location',
-                    '🇲🇽': 'Mexican flag',
-                  }[article.emoji] || ''
+                    "🏆": "award",
+                    "🎉": "celebration",
+                    "🏡": "new location",
+                    "🇲🇽": "Mexican flag",
+                  }[article.emoji] || ""
                 }
+                className="flex-shrink-0 text-base transition-transform duration-300 group-hover:scale-125"
+                role="img"
               >
                 {article.emoji}
               </span>

@@ -1,19 +1,17 @@
-'use client';
+"use client";
 
 import {
-  APIProvider,
   AdvancedMarker,
+  APIProvider,
   Map as GoogleMap,
   InfoWindow,
   useMap,
-} from '@vis.gl/react-google-maps';
-
-import { LocationCard } from '@/components/LocationCard';
-import { getRandomMarkerColors } from '@/lib/constants/colors';
-import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useState } from 'react';
-import React from 'react';
-import { Vortex } from 'react-loader-spinner';
+} from "@vis.gl/react-google-maps";
+import { AnimatePresence, motion } from "motion/react";
+import React, { useEffect, useState } from "react";
+import { Vortex } from "react-loader-spinner";
+import { LocationCard } from "@/components/LocationCard";
+import { getRandomMarkerColors } from "@/lib/constants/colors";
 
 type Location = {
   name: string;
@@ -30,51 +28,51 @@ type Location = {
 
 const locations: Location[] = [
   {
-    name: 'Bella Vista',
-    address: '1707 Forest Hills Blvd, Bella Vista, AR 72715',
-    phone: '+1-479-855-2324',
-    slug: 'bella-vista',
-    position: { lat: 36.4659829, lng: -94.2997737 },
-    placeId: 'ChIJ6UYv8unz0IcRDeDm1icSF4g',
+    name: "Bella Vista",
+    address: "1707 Forest Hills Blvd, Bella Vista, AR 72715",
+    phone: "+1-479-855-2324",
+    slug: "bella-vista",
+    position: { lat: 36.465_982_9, lng: -94.299_773_7 },
+    placeId: "ChIJ6UYv8unz0IcRDeDm1icSF4g",
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
-      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
+      weekdays: "Mon-Thu & Sun: 11:00 AM - 9:00 PM",
+      weekend: "Fri-Sat: 11:00 AM - 10:00 PM",
     },
   },
   {
-    name: 'Highfill',
-    address: '708 NW Highfill St, Gentry, AR 72734',
-    phone: '+1-479-525-6034',
-    slug: 'highfill',
-    position: { lat: 36.2619322, lng: -94.3498537 },
-    placeId: 'ChIJN48WaACL0IcRgQJ8z9j_XE8',
+    name: "Highfill",
+    address: "708 NW Highfill St, Gentry, AR 72734",
+    phone: "+1-479-525-6034",
+    slug: "highfill",
+    position: { lat: 36.261_932_2, lng: -94.349_853_7 },
+    placeId: "ChIJN48WaACL0IcRgQJ8z9j_XE8",
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
-      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
+      weekdays: "Mon-Thu & Sun: 11:00 AM - 9:00 PM",
+      weekend: "Fri-Sat: 11:00 AM - 10:00 PM",
     },
   },
   {
-    name: 'Prairie Creek',
-    address: '14340 AR-12, Rogers, AR 72756',
-    phone: '+1-479-372-6275',
-    slug: 'prairie-creek',
-    position: { lat: 36.3404949, lng: -94.0650799 },
-    placeId: 'ChIJj4N21mE92IcRiswN1sLGnCE',
+    name: "Prairie Creek",
+    address: "14340 AR-12, Rogers, AR 72756",
+    phone: "+1-479-372-6275",
+    slug: "prairie-creek",
+    position: { lat: 36.340_494_9, lng: -94.065_079_9 },
+    placeId: "ChIJj4N21mE92IcRiswN1sLGnCE",
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
-      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
+      weekdays: "Mon-Thu & Sun: 11:00 AM - 9:00 PM",
+      weekend: "Fri-Sat: 11:00 AM - 10:00 PM",
     },
   },
   {
-    name: 'Centerton',
-    address: '300 E Centerton Blvd, Centerton, AR 72719',
-    phone: '+1-479-224-4820',
-    slug: 'centerton',
-    position: { lat: 36.3592987, lng: -94.2822265 },
-    placeId: 'ChIJ87Jm17AP0IcRybiTHtVWpUQ',
+    name: "Centerton",
+    address: "300 E Centerton Blvd, Centerton, AR 72719",
+    phone: "+1-479-224-4820",
+    slug: "centerton",
+    position: { lat: 36.359_298_7, lng: -94.282_226_5 },
+    placeId: "ChIJ87Jm17AP0IcRybiTHtVWpUQ",
     hours: {
-      weekdays: 'Mon-Thu & Sun: 11:00 AM - 9:00 PM',
-      weekend: 'Fri-Sat: 11:00 AM - 10:00 PM',
+      weekdays: "Mon-Thu & Sun: 11:00 AM - 9:00 PM",
+      weekend: "Fri-Sat: 11:00 AM - 10:00 PM",
     },
   },
 ];
@@ -82,7 +80,6 @@ const locations: Location[] = [
 const createMarker = (
   location: Location,
   index: number,
-  map: google.maps.Map | null,
   isDarkMode: boolean,
   markerColors: string[],
   selectedLocation: string | null,
@@ -91,80 +88,85 @@ const createMarker = (
   const markerColor = markerColors[index];
   const markerStyle = {
     backgroundColor: markerColor,
-    borderRadius: '50%',
-    cursor: 'pointer',
-    height: '24px',
-    width: '24px',
-    transform: 'scale(1.25)',
-    border: '2px solid white',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+    borderRadius: "50%",
+    cursor: "pointer",
+    height: "24px",
+    width: "24px",
+    transform: "scale(1.25)",
+    border: "2px solid white",
+    boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
     zIndex: location.slug === selectedLocation ? 1 : 10,
   };
 
   return (
     <AdvancedMarker
-      position={location.position}
-      title={location.name}
       onClick={() => {
         setSelectedLocation(
           location.slug === selectedLocation ? null : location.slug
         );
       }}
+      position={location.position}
+      title={location.name}
     >
       <div style={markerStyle} />
       {location.slug === selectedLocation && (
         <InfoWindow
-          position={location.position}
-          onCloseClick={() => setSelectedLocation(null)}
           maxWidth={320}
+          onCloseClick={() => setSelectedLocation(null)}
+          position={location.position}
         >
           <div
             className="rounded-lg p-2 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2"
-            style={{ 
-              '--tw-outline-color': markerColor
-            } as React.CSSProperties}
+            style={
+              {
+                "--tw-outline-color": markerColor,
+              } as React.CSSProperties
+            }
           >
             <div className="mb-4 flex justify-center">
               <img
-                src="/logo.png"
                 alt="El Pueblito"
                 className="h-20 w-auto object-contain"
+                src="/logo.png"
               />
             </div>
             <h3 className="mb-2 flex justify-center font-bold text-base">
               {location.name}
             </h3>
             <p className="mb-3 text-center">{location.address}</p>
-            <div className="flex justify-center mb-1">
+            <div className="mb-1 flex justify-center">
               <a
+                autoFocus
+                className="inline-block rounded px-3 py-1 font-semibold text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                   `El Pueblito ${location.name} ${location.address}`
                 )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block font-semibold text-sm px-3 py-1 rounded transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                style={{
-                  color: markerColor,
-                  backgroundColor: 'transparent',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: markerColor,
-                  '--tw-ring-offset-width': '2px',
-                  '--tw-ring-offset-color': '#fff',
-                  '--tw-ring-color': markerColor,
-                  '--tw-ring-offset-shadow': '0 0 #0000',
-                  '--tw-ring-shadow': '0 0 #0000',
-                  boxShadow: 'var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000)'
-                } as React.CSSProperties}
-                autoFocus
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = markerColor;
-                  e.currentTarget.style.color = '#f5f5f4'; // stone-50
-                }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.backgroundColor = "transparent";
                   e.currentTarget.style.color = markerColor;
                 }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = markerColor;
+                  e.currentTarget.style.color = "#f5f5f4"; // stone-50
+                }}
+                rel="noopener noreferrer"
+                style={
+                  {
+                    color: markerColor,
+                    backgroundColor: "transparent",
+                    borderWidth: "1px",
+                    borderStyle: "solid",
+                    borderColor: markerColor,
+                    "--tw-ring-offset-width": "2px",
+                    "--tw-ring-offset-color": "#fff",
+                    "--tw-ring-color": markerColor,
+                    "--tw-ring-offset-shadow": "0 0 #0000",
+                    "--tw-ring-shadow": "0 0 #0000",
+                    boxShadow:
+                      "var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow, 0 0 #0000)",
+                  } as React.CSSProperties
+                }
+                target="_blank"
               >
                 View on Google Maps
               </a>
@@ -193,30 +195,28 @@ const MapComponent = ({
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
     setIsDarkMode(darkModeQuery.matches);
 
     const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
-    darkModeQuery.addEventListener('change', handler);
-    return () => darkModeQuery.removeEventListener('change', handler);
+    darkModeQuery.addEventListener("change", handler);
+    return () => darkModeQuery.removeEventListener("change", handler);
   }, []);
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: "100%", height: "100%" }}>
       <GoogleMap
-        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID}
         defaultCenter={{ lat: 36.36, lng: -94.25 }}
         defaultZoom={11}
-        gestureHandling={'greedy'}
         disableDefaultUI={false}
-        style={{ width: '100%', height: '100%' }}
+        gestureHandling={"greedy"}
+        style={{ width: "100%", height: "100%" }}
       >
         {locations.map((location, index) => (
           <React.Fragment key={location.slug}>
             {createMarker(
               location,
               index,
-              map,
               isDarkMode,
               markerColors,
               selectedLocation,
@@ -247,8 +247,8 @@ export default function LocationsPage() {
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    return () => window.removeEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
   useEffect(() => {
@@ -256,19 +256,19 @@ export default function LocationsPage() {
       if (!envVarsLoaded) return;
 
       switch (e.key) {
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setFocusedIndex((prev) =>
             prev <= 0 ? locations.length - 1 : prev - 1
           );
           break;
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setFocusedIndex((prev) =>
             prev === locations.length - 1 ? 0 : prev + 1
           );
           break;
-        case 'Enter':
+        case "Enter":
           if (focusedIndex >= 0) {
             setSelectedLocation(
               selectedLocation === locations[focusedIndex].slug
@@ -280,52 +280,103 @@ export default function LocationsPage() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [envVarsLoaded, focusedIndex, selectedLocation]);
 
   const selectedLocationData = locations.find(
     (loc) => loc.slug === selectedLocation
   );
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string;
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_ID as string;
-  const darkMapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_DARK_ID as string;
-
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   useEffect(() => {
-    // Debug logging for environment variables
-    console.log('API Key:', apiKey);
-    console.log('Map ID:', mapId);
-    console.log('Dark Map ID:', darkMapId);
-
     // Check if the environment variables have actual values (not just empty strings)
-    const hasValidApiKey = apiKey && apiKey.length > 0;
-    const hasValidMapId = mapId && mapId.length > 0;
+    const hasValidApiKey = apiKey.length > 0;
 
-    console.log('Has valid API key:', hasValidApiKey);
-    console.log('Has valid Map ID:', hasValidMapId);
-
-    if (hasValidApiKey && hasValidMapId) {
-      setEnvVarsLoaded(true);
+    // Log API key status (first 10 chars only for security)
+    if (hasValidApiKey) {
+      console.log(
+        "Google Maps API Key loaded:",
+        `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}`
+      );
+      console.log("Current domain:", window.location.hostname);
+      console.log("Current origin:", window.location.origin);
+    } else {
+      console.error("Google Maps API Key is missing or empty");
     }
-  }, [apiKey, mapId, darkMapId]);
+
+    // Listen for Google Maps errors that might not be caught by onError
+    const handleGoogleMapsError = (event: ErrorEvent) => {
+      if (
+        event.message?.includes("Google Maps") ||
+        event.message?.includes("maps.googleapis.com") ||
+        event.filename?.includes("maps.googleapis.com")
+      ) {
+        console.error("Google Maps Error Event:", {
+          message: event.message,
+          filename: event.filename,
+          lineno: event.lineno,
+          colno: event.colno,
+          error: event.error,
+        });
+        setMapError(
+          `Google Maps error: ${event.message || "Unknown error"}`
+        );
+      }
+    };
+
+    // Listen for unhandled promise rejections from Google Maps
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      if (
+        typeof reason === "string" &&
+        (reason.includes("Google Maps") ||
+          reason.includes("BillingNotEnabled") ||
+          reason.includes("RefererNotAllowed") ||
+          reason.includes("ApiKeyInvalid"))
+      ) {
+        console.error("Google Maps Promise Rejection:", reason);
+        setMapError(`Google Maps error: ${reason}`);
+      } else if (reason instanceof Error) {
+        const errorMsg = reason.message.toLowerCase();
+        if (
+          errorMsg.includes("billingnotenabled") ||
+          errorMsg.includes("referer") ||
+          errorMsg.includes("apikey")
+        ) {
+          console.error("Google Maps Error Object:", reason);
+          setMapError(`Google Maps error: ${reason.message}`);
+        }
+      }
+    };
+
+    window.addEventListener("error", handleGoogleMapsError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    setEnvVarsLoaded(hasValidApiKey);
+
+    return () => {
+      window.removeEventListener("error", handleGoogleMapsError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
+  }, [apiKey]);
 
   if (!envVarsLoaded) {
-    const STATIC_COLORS = [
-      '#231F20', // black
-      '#006847', // green
-      '#CF0822', // crimson
-      '#F1A720', // gold
-      '#065955', // teal
-      '#AA8C30', // brown
+    const StaticColors = [
+      "#231F20", // black
+      "#006847", // green
+      "#CF0822", // crimson
+      "#F1A720", // gold
+      "#065955", // teal
+      "#AA8C30", // brown
     ] as [string, string, string, string, string, string];
 
     return (
       <div className="container mx-auto px-4">
         <motion.h1
+          animate={{ opacity: 1, y: 0 }}
           className="pointer-events-none mb-2 select-none text-center font-black text-2xl text-stone-900 md:mb-4 md:text-4xl"
           initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
         >
           Our Locations
@@ -333,12 +384,12 @@ export default function LocationsPage() {
         <div className="flex min-h-[200px] flex-col items-center justify-center gap-4">
           <div className={undefined}>
             <Vortex
-              visible={true}
-              height={32}
-              width={32}
               ariaLabel="vortex-loading"
+              colors={StaticColors}
+              height={32}
+              visible={true}
+              width={32}
               wrapperClass="vortex-wrapper"
-              colors={STATIC_COLORS}
             />
           </div>
           <p className="text-sm text-stone-600">Loading map configuration...</p>
@@ -355,9 +406,9 @@ export default function LocationsPage() {
         </div>
       )}
       <motion.h1
-        className="pointer-events-none mb-2 select-none text-center font-black text-2xl text-stone-900 md:mb-4 md:text-4xl"
-        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        className="pointer-events-none mb-2 select-none pt-4 text-center font-black text-3xl text-stone-900 md:mb-4 md:pt-6 md:text-5xl"
+        initial={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.2 }}
       >
         Our Locations
@@ -365,25 +416,23 @@ export default function LocationsPage() {
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={isLargeScreen ? 'large' : 'small'}
-          initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          className={`grid gap-4 md:gap-8 ${isLargeScreen ? "lg:grid-cols-2" : "grid-cols-1"}`}
           exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          key={isLargeScreen ? "large" : "small"}
           transition={{ duration: 0.2 }}
-          className={`grid gap-4 md:gap-8 ${
-            isLargeScreen ? 'lg:grid-cols-2' : 'grid-cols-1'
-          }`}
         >
           {markerColors.length > 0 &&
             locations.map((location, index) => (
               <LocationCard
+                index={index}
+                isFocused={index === focusedIndex}
                 key={location.slug}
                 location={location}
+                markerColor={markerColors[index] || "#000000"}
                 selectedLocation={selectedLocation}
                 setSelectedLocation={setSelectedLocation}
-                markerColor={markerColors[index] || '#000000'}
-                isFocused={index === focusedIndex}
-                index={index}
               />
             ))}
         </motion.div>
@@ -392,34 +441,83 @@ export default function LocationsPage() {
       <AnimatePresence>
         {selectedLocationData && markerColors.length > 0 && (
           <motion.div
-            layout
-            initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: isLargeScreen ? 400 : 400 }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
             className="mt-8 w-full overflow-hidden rounded-xl bg-stone-50/70 shadow-lg"
+            exit={{ opacity: 0, height: 0 }}
             id="map-container"
+            initial={{ opacity: 0, height: 0 }}
+            layout
+            transition={{ duration: 0.3 }}
           >
             <APIProvider
               apiKey={apiKey}
-              libraries={['places', 'marker', 'geometry']}
-              version="beta"
+              libraries={["marker", "geometry"]}
               onError={(error: unknown) => {
-                console.error('Google Maps Error:', error);
-                setMapError(
-                  error instanceof Error
-                    ? error.message
-                    : 'An error occurred loading the map'
-                );
+                console.error("Google Maps API Error (onError callback):", error);
+                console.error("Error type:", typeof error);
+                console.error("Error constructor:", error?.constructor?.name);
+                
+                if (error instanceof Error) {
+                  console.error("Error stack:", error.stack);
+                }
+
+                const errorMessage =
+                  error instanceof Error ? error.message : String(error);
+                const errorString = errorMessage.toLowerCase();
+
+                // Log the full error object for debugging
+                try {
+                  const errorDetails = error instanceof Error
+                    ? {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack,
+                      }
+                    : error;
+                  console.error("Full error details:", errorDetails);
+                } catch {
+                  console.error("Could not serialize error object");
+                }
+
+                if (
+                  errorString.includes("billingnotenabled") ||
+                  errorString.includes("billing")
+                ) {
+                  setMapError(
+                    "Google Maps billing is not enabled. Please enable billing in Google Cloud Console."
+                  );
+                } else if (
+                  errorString.includes("referer") ||
+                  errorString.includes("referrer") ||
+                  errorString.includes("not allowed") ||
+                  errorString.includes("referernotallowed")
+                ) {
+                  setMapError(
+                    `API key referrer restrictions are blocking this domain. Current domain: ${window.location.hostname}. Check HTTP referrer restrictions in Google Cloud Console and ensure they include: ${window.location.origin}/* and ${window.location.hostname}/*`
+                  );
+                } else if (
+                  errorString.includes("invalid") ||
+                  errorString.includes("key") ||
+                  errorString.includes("apikeyinvalid")
+                ) {
+                  setMapError(
+                    "Invalid API key. Please verify your NEXT_PUBLIC_GOOGLE_MAPS_API_KEY environment variable."
+                  );
+                } else {
+                  setMapError(
+                    `Map error: ${errorMessage || "Unknown error occurred"}`
+                  );
+                }
               }}
+              version="beta"
             >
               <MapComponent
-                position={selectedLocationData.position}
                 locations={locations}
+                markerColors={markerColors}
+                onMarkersInit={() => {}}
+                position={selectedLocationData.position}
                 selectedLocation={selectedLocation}
                 setSelectedLocation={setSelectedLocation}
-                onMarkersInit={() => {}}
-                markerColors={markerColors}
               />
             </APIProvider>
           </motion.div>

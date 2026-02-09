@@ -1,7 +1,7 @@
-'use client';
-import { MARKER_COLORS } from '@/lib/constants/colors';
-import { useMemo } from 'react';
-import { Vortex } from 'react-loader-spinner';
+"use client";
+import { useMemo } from "react";
+import { Vortex } from "react-loader-spinner";
+import { MARKER_COLORS } from "@/lib/constants/colors";
 
 export function LoadingSpinner({
   size = 80,
@@ -33,12 +33,12 @@ export function LoadingSpinner({
   return (
     <div className={className}>
       <Vortex
-        visible={true}
-        height={size}
-        width={size}
         ariaLabel="vortex-loading"
-        wrapperClass="vortex-wrapper"
         colors={colors}
+        height={size}
+        visible={true}
+        width={size}
+        wrapperClass="vortex-wrapper"
       />
     </div>
   );

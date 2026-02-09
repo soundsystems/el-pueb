@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { AnimatePresence } from 'motion/react';
-import posthog from 'posthog-js';
-import { PostHogProvider } from 'posthog-js/react';
-import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { AnimatePresence } from "motion/react";
+import posthog from "posthog-js";
+import { PostHogProvider } from "posthog-js/react";
+import type { ReactNode } from "react";
+import { useEffect } from "react";
 
 export function CSPostHogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if the environment is not development
-    if (process.env.NODE_ENV !== 'development') {
+    if (process.env.NODE_ENV !== "development") {
       posthog.init(`${process.env.NEXT_PUBLIC_POSTHOG_API_KEY}`, {
         autocapture: true,
         capture_pageview: true,

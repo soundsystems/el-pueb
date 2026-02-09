@@ -1,33 +1,33 @@
-import type { MetadataRoute } from 'next';
+import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://elpueblitonwa.com';
+  const baseUrl = "https://elpueblitonwa.com";
 
   // Define all static routes
-  const staticRoutes = ['', '/menu', '/about', '/contact', '/locations'].map(
+  const staticRoutes = ["", "/menu", "/about", "/contact", "/locations"].map(
     (route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: route === '' ? 1 : 0.9,
+      changeFrequency: "weekly" as const,
+      priority: route === "" ? 1 : 0.9,
     })
   );
 
   // Define QR tracked routes
-  const locations = ['bella-vista', 'highfill', 'rogers', 'centerton'];
+  const locations = ["bella-vista", "highfill", "rogers", "centerton"];
   const qrRoutes = locations.flatMap((location) => [
     {
       url: `${baseUrl}/?source=table&amp;location=${location}`,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
+      changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     {
       url: `${baseUrl}/menu?source=bar&amp;location=${location}`,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
+      changeFrequency: "weekly" as const,
       priority: 0.8,
-    }
+    },
   ]);
 
   return [...staticRoutes, ...qrRoutes];

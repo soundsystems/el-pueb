@@ -1,18 +1,18 @@
-'use server';
+"use server";
 
-import { Resend } from 'resend';
-import { z } from 'zod';
+import { Resend } from "resend";
+import { z } from "zod";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const formSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  email: z.string().email('Invalid email address'),
-  message: z.string().min(1, 'Message is required'),
+  email: z.string().email("Invalid email address"),
+  message: z.string().min(1, "Message is required"),
   inquiryType: z.string(),
-  reason: z.string().min(1, 'Please select a reason for contact'),
-  location: z.string().min(1, 'Please select a location'),
+  reason: z.string().min(1, "Please select a reason for contact"),
+  location: z.string().min(1, "Please select a location"),
   businessName: z.string().optional(),
 });
 
@@ -43,14 +43,14 @@ export async function submitContact(
     if (!validatedFields.success) {
       return {
         error:
-          validatedFields.error.errors[0]?.message ||
-          'Invalid form data. Please check your inputs.',
+          validatedFields.error.issues[0]?.message ||
+          "Invalid form data. Please check your inputs.",
       };
     }
 
     await resend.emails.send({
-      from: 'El Pueblito Contact Form <hola@familia.elpueblitonwa.com>',
-      to: 'team@elpueblitonwa.com',
+      from: "El Pueblito Contact Form <hola@familia.elpueblitonwa.com>",
+      to: "team@elpueblitonwa.com",
       subject: `New ${formData.reason} (${formData.inquiryType})`,
       html: `
         <h2>New ${formData.inquiryType}</h2>
@@ -67,7 +67,7 @@ export async function submitContact(
     };
   } catch (_) {
     return {
-      error: 'Something went wrong. Please try again later.',
+      error: "Something went wrong. Please try again later.",
     };
   }
 }
@@ -78,16 +78,16 @@ const PHONE_VALIDATION_REGEX =
 const subscribeFormSchema = z.object({
   email: z
     .string()
-    .min(1, 'Please enter your email')
-    .email('Please provide a valid email address'),
-  firstName: z.string().min(1, 'Please enter your first name').optional(),
-  lastName: z.string().min(1, 'Please enter your last name').optional(),
+    .min(1, "Please enter your email")
+    .email("Please provide a valid email address"),
+  firstName: z.string().min(1, "Please enter your first name").optional(),
+  lastName: z.string().min(1, "Please enter your last name").optional(),
   phone: z
     .string()
-    .min(1, 'Please enter your phone number')
+    .min(1, "Please enter your phone number")
     .regex(
       PHONE_VALIDATION_REGEX,
-      'Please enter a valid phone number like (123) 456-7890'
+      "Please enter a valid phone number like (123) 456-7890"
     )
     .optional(),
 });
@@ -95,15 +95,15 @@ const subscribeFormSchema = z.object({
 const emailSchema = z.object({
   email: z
     .string()
-    .min(1, 'Please enter your email')
-    .email('Please provide a valid email address'),
+    .min(1, "Please enter your email")
+    .email("Please provide a valid email address"),
 });
 
 type SubscribeFormState = {
   success?: boolean;
   error?: boolean | string;
   message?: string;
-  step?: 'email' | 'details';
+  step?: "email" | "details";
   email?: string;
 };
 
@@ -120,14 +120,14 @@ type SubscribeFormData = {
 // Update helper functions with proper typing
 function validateDetailsStep(formData: SubscribeFormData) {
   const schema = subscribeFormSchema.extend({
-    firstName: z.string().min(1, 'Please enter your first name'),
-    lastName: z.string().min(1, 'Please enter your last name'),
+    firstName: z.string().min(1, "Please enter your first name"),
+    lastName: z.string().min(1, "Please enter your last name"),
     phone: z
       .string()
-      .min(1, 'Please enter your phone number')
+      .min(1, "Please enter your phone number")
       .regex(
         PHONE_VALIDATION_REGEX,
-        'Please enter a valid phone number like (123) 456-7890'
+        "Please enter a valid phone number like (123) 456-7890"
       ),
   });
   return schema.safeParse(formData);
@@ -135,13 +135,13 @@ function validateDetailsStep(formData: SubscribeFormData) {
 
 async function sendWelcomeEmails(formData: SubscribeFormData) {
   await resend.emails.send({
-    from: 'El Pueblito <hola@familia.elpueblitonwa.com>',
+    from: "El Pueblito <hola@familia.elpueblitonwa.com>",
     to: formData.email,
-    subject: 'Welcome to La Familia Pueblito! 🌮',
+    subject: "Welcome to La Familia Pueblito! 🌮",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #03502D;">¡Bienvenidos a La Familia Pueblito!</h1>
-        <p>¡Muchas gracias! You've succesfully signed up for our newsletter${formData.firstName ? `, <strong>${formData.firstName}</strong>` : ''}! We're excited to have you join our family.</p>
+        <p>¡Muchas gracias! You've succesfully signed up for our newsletter${formData.firstName ? `, <strong>${formData.firstName}</strong>` : ""}! We're excited to have you join our family.</p>
         <p>You'll be the first to know about:</p>
         <ul style="list-style-type: none; padding-left: 0;">
           <li style="margin-bottom: 12px;">
@@ -176,15 +176,15 @@ async function sendWelcomeEmails(formData: SubscribeFormData) {
   });
 
   await resend.emails.send({
-    from: 'El Pueblito Notifications <notifications@familia.elpueblitonwa.com>',
-    to: 'team@elpueblitonwa.com',
-    subject: 'New Newsletter Subscriber',
+    from: "El Pueblito Notifications <notifications@familia.elpueblitonwa.com>",
+    to: "team@elpueblitonwa.com",
+    subject: "New Newsletter Subscriber",
     html: `
       <h2>New Newsletter Subscriber</h2>
       <p><strong>Email:</strong> ${formData.email}</p>
-      ${formData.firstName ? `<p><strong>First Name:</strong> ${formData.firstName}</p>` : ''}
-      ${formData.lastName ? `<p><strong>Last Name:</strong> ${formData.lastName}</p>` : ''}
-      ${formData.phone ? `<p><strong>Phone:</strong> ${formData.phone}</p>` : ''}
+      ${formData.firstName ? `<p><strong>First Name:</strong> ${formData.firstName}</p>` : ""}
+      ${formData.lastName ? `<p><strong>Last Name:</strong> ${formData.lastName}</p>` : ""}
+      ${formData.phone ? `<p><strong>Phone:</strong> ${formData.phone}</p>` : ""}
       <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
     `,
   });
@@ -200,13 +200,13 @@ export async function subscribe(
   }
 ): Promise<SubscribeFormState> {
   try {
-    if (prevState.step === 'details') {
+    if (prevState.step === "details") {
       if (subscriberCache.has(formData.email)) {
         return {
           success: true,
-          message: 'Already subscribed!',
+          message: "Already subscribed!",
           error: false,
-          step: 'details',
+          step: "details",
         };
       }
 
@@ -215,8 +215,8 @@ export async function subscribe(
         return {
           error: true,
           message:
-            validatedFields.error.errors[0]?.message ||
-            'Please check your inputs',
+            validatedFields.error.issues[0]?.message ||
+            "Please check your inputs",
           step: prevState.step,
         };
       }
@@ -226,15 +226,15 @@ export async function subscribe(
         await sendWelcomeEmails(formData);
         return {
           success: true,
-          message: 'Successfully subscribed!',
+          message: "Successfully subscribed!",
           error: false,
-          step: 'details',
+          step: "details",
         };
       } catch (_) {
         subscriberCache.delete(formData.email);
         return {
           error: true,
-          message: 'Error sending welcome email. Please try again.',
+          message: "Error sending welcome email. Please try again.",
           step: prevState.step,
         };
       }
@@ -245,22 +245,22 @@ export async function subscribe(
       return {
         error: true,
         message:
-          validatedEmail.error.errors[0]?.message || 'Please check your email',
-        step: 'email',
+          validatedEmail.error.issues[0]?.message || "Please check your email",
+        step: "email",
       };
     }
 
     return {
       success: true,
-      message: 'Email validated',
-      step: 'details',
+      message: "Email validated",
+      step: "details",
       email: formData.email,
       error: false,
     };
   } catch (_) {
     return {
       error: true,
-      message: 'Something went wrong. Please try again.',
+      message: "Something went wrong. Please try again.",
       step: prevState.step,
     };
   }

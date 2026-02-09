@@ -1,48 +1,47 @@
-import type { Config } from 'tailwindcss';
+import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    './pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   safelist: [
-    'font-light',
-    'font-normal',
-    'font-medium',
-    'font-semibold',
-    'font-bold',
-    'font-black',
-    'font-ultrablack',
+    "font-light",
+    "font-normal",
+    "font-medium",
+    "font-semibold",
+    "font-bold",
+    "font-black",
+    "font-ultrablack",
   ],
   theme: {
     extend: {
       screens: {
-        tablet: '640px', // For our specific tablet use case
+        tablet: "640px", // For our specific tablet use case
       },
       colors: {
         // Mexican restaurant-themed colors
-        primary: '#D62828', // Deep red
-        secondary: '#006847', // Mexican green
-        accent: '#F4C430', // Warm yellow (pueb)
-        adobe: '#DBAD6C', // eagle hilight tan, // Warm tan/adobe
-        'adobe-dark': '#C4B5A3', // Darker adobe for contrast
-        'adobe-light': '#E8DCC6', // Light adobe for contrast
+        primary: "#D62828", // Deep red
+        secondary: "#006847", // Mexican green
+        accent: "#F4C430", // Warm yellow (pueb)
+        adobe: "#DBAD6C", // eagle hilight tan, // Warm tan/adobe
+        "adobe-dark": "#C4B5A3", // Darker adobe for contrast
+        "adobe-light": "#E8DCC6", // Light adobe for contrast
       },
       fontFamily: {
         // Updated font families
-        sans: ['var(--font-bronto)', 'var(--font-inter)', 'sans-serif'],
-        display: ['var(--font-playfair-display)'],
-        bronto: ['var(--font-bronto)', 'sans-serif'],
+        sans: ["var(--font-bronto)", "var(--font-inter)", "sans-serif"],
+        display: ["var(--font-playfair-display)"],
+        bronto: ["var(--font-bronto)", "sans-serif"],
       },
       fontWeight: {
-        light: '300',
-        normal: '400',
-        medium: '500',
-        semibold: '600',
-        bold: '700',
-        black: '900',
-        ultrablack: '950',
+        light: "300",
+        normal: "400",
+        medium: "500",
+        semibold: "600",
+        bold: "700",
+        black: "900",
+        ultrablack: "950",
       },
     },
   },

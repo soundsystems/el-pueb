@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { initializeSelectionColor } from '@/lib/utils/selectionColor';
-import { useEffect } from 'react';
+import { useEffect } from "react";
+import { initializeSelectionColor } from "@/lib/utils/selectionColor";
 
 export default function SelectionColorInitializer() {
   useEffect(() => {

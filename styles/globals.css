@@ -16,9 +16,11 @@
 @layer base {
   /* Bronto font global styles */
   .font-bronto {
-    font-feature-settings: "clig" off, "liga" on;
+    font-feature-settings:
+      "clig" off,
+      "liga" on;
   }
-  
+
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -46,6 +48,44 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
     --pueb: #f4c430;
+
+    /* Dynamic menu item colors for reviews */
+    --menu-color-1: #f8c839;
+    --menu-color-2: #fcca3d;
+    --menu-color-3: #fdeaaf;
+    --menu-color-4: #006847;
+    --menu-color-5: #5b9d88;
+    --menu-color-6: #cf0822;
+    --menu-color-7: #ff0000;
+    --menu-color-8: #ef6a4b;
+    --menu-color-9: #f9aa51;
+    --menu-color-10: #f1a720;
+    --menu-color-11: #aa8c30;
+    --menu-color-12: #f16e15;
+    --menu-color-13: #065955;
+    --menu-color-14: #b07229;
+    --menu-color-15: #8f4620;
+    --menu-color-16: #953220;
+    --menu-color-17: #dbad6c;
+    --menu-color-18: #717732;
+    --menu-color-19: #9ca169;
+    --menu-color-20: #f15670;
+    --menu-color-21: #f690a1;
+    --menu-color-22: #eda8af;
+    --menu-color-23: #fbcad3;
+    --menu-color-24: #d42d40;
+    --menu-color-25: #30c2dc;
+    --menu-color-26: #8bbebf;
+    --menu-color-27: #0b8489;
+    --menu-color-28: #02534e;
+    --menu-color-29: #0972a6;
+    --menu-color-30: #202020;
+    --menu-color-31: #231f20;
+    --menu-color-32: #1f2121;
+    --menu-color-33: #ffffff;
+    --menu-color-34: #fdf2d2;
+    --menu-color-35: #f8c839;
+    --menu-color-36: #fcca3d;
   }
   .dark {
     --background: 240 10% 3.9%;

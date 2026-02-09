@@ -1,85 +1,235 @@
-'use client';
+"use client";
 
-import { CONFETTI_COLORS } from '@/lib/constants/colors';
-import { reviews, formatForDesktop, splitIntoSentences } from '@/lib/constants/reviews';
-import { Star } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef, useState } from 'react';
-import { Button } from './ui/button';
+import { Star } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import {
+  formatForDesktop,
+  highlightMenuItems,
+  reviews,
+  selectReviewsByTier,
+  splitIntoSentences,
+} from "@/lib/constants/reviews";
+import {
+  formatReviewDate,
+  getSourceIcon,
+  getSourceLabel,
+} from "@/lib/utils/dateFormatter";
+import { Button } from "./ui/button";
+import { LoadingSpinner } from "./ui/loading";
 
 function formatName(fullName: string) {
-  const [firstName, lastName] = fullName.split(' ');
-  return `${firstName} ${lastName ? `${lastName[0]}.` : ''}`;
+  const [firstName, lastName] = fullName.split(" ");
+  return `${firstName} ${lastName ? `${lastName[0]}.` : ""}`;
 }
 
-export default function TestimonialCarousel() {
+interface TestimonialCarouselProps {
+  debugMode?: boolean;
+}
+
+export default function TestimonialCarousel({
+  debugMode: externalDebugMode = false,
+}: TestimonialCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isUserNavigated, setIsUserNavigated] = useState(false);
   const [maxHeight, setMaxHeight] = useState(0);
-  const [testimonials, setTestimonials] = useState(() => reviews.slice(0, 8));
-  const [dotColors, setDotColors] = useState(() => CONFETTI_COLORS.slice(0, 8));
-  const measureRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [testimonials, setTestimonials] = useState<typeof reviews>(() =>
+    reviews.slice(0, 8)
+  );
+  const [dotColors, setDotColors] = useState<string[]>([]);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+  const [isHeightCalculated, setIsHeightCalculated] = useState(false);
+  const [debugMode, setDebugMode] = useState(externalDebugMode);
+  const [forceHeightRecalc, setForceHeightRecalc] = useState(0);
 
-  // Randomly select testimonials and colors on client-side only
+  // Touch/swipe state
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isHolding, setIsHolding] = useState(false);
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Set up global function for opening event dialog
   useEffect(() => {
-    const randomTestimonials = [...reviews]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 8);
-    const randomColors = [...CONFETTI_COLORS]
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 8);
-    setTestimonials(randomTestimonials);
-    setDotColors(randomColors);
+    (window as unknown as { openEventDialog?: () => void }).openEventDialog =
+      () => {
+        window.location.href = "/contact?event=true";
+      };
+
+    return () => {
+      delete (window as unknown as { openEventDialog?: () => void })
+        .openEventDialog;
+    };
   }, []);
 
-  // Calculate max height on mount
+  // Load testimonials using tiered system (re-selects on screen size change)
   useEffect(() => {
-    if (!contentRef.current) return;
-
-    // Find the longest review and format it
-    const longestReview = testimonials.reduce(
-      (longest, t) => (t.text.length > longest.length ? t.text : longest),
-      ''
+    const { selectedReviews, selectedColors } = selectReviewsByTier(
+      reviews,
+      8,
+      debugMode || externalDebugMode,
+      isSmallScreen
     );
-    const formattedText = formatForDesktop(longestReview, isSmallScreen);
 
-    // Create a temporary element to measure the formatted text
-    const tempElement = document.createElement('div');
-    tempElement.style.position = 'absolute';
-    tempElement.style.visibility = 'hidden';
-    tempElement.style.width = '100%';
-    tempElement.style.fontSize = '1rem'; // Match the font size used in the component
-    tempElement.style.lineHeight = '1.5'; // Match the line height used in the component
-    tempElement.style.whiteSpace = 'pre-wrap'; // Ensure line breaks are considered
-    tempElement.innerText = formattedText;
-    document.body.appendChild(tempElement);
+    setTestimonials(selectedReviews);
+    setDotColors(selectedColors);
 
-    const height = tempElement.offsetHeight;
-    setMaxHeight(height + 140); // Add more padding to ensure space
+    // Reset current index if out of bounds after re-selection
+    setCurrent((prev) => {
+      if (prev >= selectedReviews.length) {
+        return 0;
+      }
+      return prev;
+    });
 
-    // Clean up the temporary element
-    document.body.removeChild(tempElement);
-  }, [testimonials, isSmallScreen]); // Recalculate if testimonials or screen size change
+    // Force height recalculation when testimonials change
+    setForceHeightRecalc((prev) => prev + 1);
 
+    // Debug logging removed for production
+  }, [debugMode, externalDebugMode, isSmallScreen]);
+
+  // Sync internal debugMode with external changes
+  useEffect(() => {
+    if (externalDebugMode !== debugMode) {
+      setDebugMode(externalDebugMode);
+    }
+  }, [externalDebugMode, debugMode]);
+
+  // Handle screen size changes and height calculation
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsSmallScreen(window.innerWidth < 620);
+      const newIsSmallScreen = window.innerWidth < 620;
+      setIsSmallScreen(newIsSmallScreen);
+
+      // Find the longest review from all testimonials
+      const longestReview = testimonials.reduce(
+        (longest, t) => (t.text.length > longest.length ? t.text : longest),
+        ""
+      );
+
+      // Analyze the longest review by content units
+      const sentences = splitIntoSentences(longestReview);
+      const words = longestReview.split(/\s+/).length;
+      const sentenceCount = sentences.length;
+      const reviewLength = longestReview.length;
+
+      // Determine review tier for optimized padding
+      let reviewTier:
+        | "tiny-1"
+        | "tiny-2"
+        | "short"
+        | "medium"
+        | "long"
+        | "extra-long";
+      if (reviewLength <= 25) {
+        reviewTier = "tiny-1";
+      } else if (reviewLength <= 50) {
+        reviewTier = "tiny-2";
+      } else if (reviewLength <= 150) {
+        reviewTier = "medium";
+      } else if (reviewLength <= 300) {
+        reviewTier = "long";
+      } else {
+        reviewTier = "extra-long";
+      }
+
+      // Calculate height based on content units
+      let estimatedTextHeight;
+      if (newIsSmallScreen) {
+        // Mobile: Each sentence gets its own line with spacing
+        const lineHeight = 18; // Conservative line height for mobile
+        const sentenceSpacing = 8; // Conservative spacing between sentences
+        estimatedTextHeight =
+          sentenceCount * lineHeight + (sentenceCount - 1) * sentenceSpacing;
+      } else {
+        // Desktop: Estimate based on words and average line length
+        const avgWordsPerLine = 20; // More words per line for desktop
+        const lineHeight = 18; // Tighter line height for desktop
+        const estimatedLines = Math.ceil(words / avgWordsPerLine);
+        estimatedTextHeight = estimatedLines * lineHeight;
+      }
+
+      // Calculate additional space needed for other elements
+      const starsHeight = 24; // 6 stars * 4px height
+      const starsMarginBottom = 24; // mb-6 below stars
+      const blockquoteMarginBottom = 24; // mb-6 below blockquote
+      const nameHeight = newIsSmallScreen ? 24 : 32; // Name line height
+      const locationHeight = newIsSmallScreen ? 20 : 28; // Location line height
+      const sourceDateHeight = newIsSmallScreen ? 20 : 28; // Source/date line height
+      const sourceDateMarginTop = 8; // mt-2 above source/date
+      const containerPaddingTop = newIsSmallScreen ? 8 : 24; // pt-2 md:py-6
+      const containerPaddingBottom = newIsSmallScreen ? 24 : 24; // pb-6 md:py-6
+      const innerPadding = 8; // px-2 on inner container
+
+      // Use the estimated text height plus fixed component heights
+      const totalHeight =
+        estimatedTextHeight +
+        starsHeight +
+        starsMarginBottom +
+        blockquoteMarginBottom +
+        nameHeight +
+        locationHeight +
+        sourceDateMarginTop +
+        sourceDateHeight +
+        containerPaddingTop +
+        containerPaddingBottom +
+        innerPadding * 2;
+
+      // Optimized buffer based on review tier
+      let tierBasedBuffer;
+      if (reviewTier === "tiny-1") {
+        // Tiny reviews (≤25 chars): minimal padding
+        tierBasedBuffer = newIsSmallScreen ? 8 : 5;
+      } else if (reviewTier === "tiny-2") {
+        // Tiny reviews (26-50 chars): minimal padding
+        tierBasedBuffer = newIsSmallScreen ? 13 : 8;
+      } else if (reviewTier === "medium") {
+        // Medium reviews (51-150 chars): moderate padding
+        tierBasedBuffer = newIsSmallScreen ? 30 : 10;
+      } else if (reviewTier === "long") {
+        // Long reviews (151-300 chars): generous padding
+        tierBasedBuffer = newIsSmallScreen ? 55 : 25;
+      } else {
+        // Extra-long reviews (>300 chars): maximum padding
+        tierBasedBuffer = newIsSmallScreen ? 80 : 60;
+      }
+
+      // Additional sentence-based buffer (reduced for shorter reviews and desktop)
+      const sentenceBuffer = Math.floor(
+        sentenceCount *
+          (reviewTier === "tiny-1" || reviewTier === "tiny-2"
+            ? 4
+            : newIsSmallScreen
+              ? 8
+              : 5)
+      );
+      const finalBuffer = tierBasedBuffer + sentenceBuffer;
+
+      const finalHeight = totalHeight + finalBuffer;
+
+      // Cap the height at 100% of screen height with padding
+      const maxScreenHeight = window.innerHeight * 1.0 - 40; // Subtract 40px for padding
+      const cappedHeight = Math.min(finalHeight, maxScreenHeight);
+
+      // Height calculation completed
+
+      setMaxHeight(cappedHeight);
+
+      // Always update height calculated flag
+      setIsHeightCalculated(true);
     };
 
     checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
+    window.addEventListener("resize", checkScreenSize);
 
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, [testimonials, forceHeightRecalc]); // Only recalculate when testimonials change or forced recalculation
+
+  // Height recalculation tracking
 
   useEffect(() => {
     if (isPaused) {
       const resumeTimer = setTimeout(() => {
         setIsPaused(false);
-        setIsUserNavigated(false);
       }, 6000);
       return () => clearTimeout(resumeTimer);
     }
@@ -91,117 +241,294 @@ export default function TestimonialCarousel() {
     return () => clearInterval(timer);
   }, [isPaused, testimonials.length]);
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        setCurrent(
+          (prev) => (prev - 1 + testimonials.length) % testimonials.length
+        );
+        setIsPaused(true);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        setCurrent((prev) => (prev + 1) % testimonials.length);
+        setIsPaused(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [testimonials.length]);
+
   const handleDotClick = (index: number) => {
-    setIsUserNavigated(true);
-    // Small delay to ensure exit animation starts first
+    // Small delay to ensure smooth transition
     setTimeout(() => {
       setCurrent(index);
       setIsPaused(true);
     }, 10);
   };
 
-  return (
-    <section className="w-full rounded-xl bg-stone-50/40 pb-10 pt-4 shadow-lg backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-screen-lg px-4 md:px-10 lg:px-14">
-        <h2 className="mb-10 text-center font-black text-[#0f8540] text-2xl md:text-3xl">
-          Our Commitment to Excellence
-        </h2>
+  // Touch event handlers for swipe functionality
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
 
-        {/* Hidden div to measure content */}
-        <div className="-left-[9999px] -top-[9999px] invisible fixed">
-          <div
-            ref={contentRef}
-            className="flex flex-col items-center justify-center py-20 md:py-16"
-          >
-            <div className="mb-6 flex justify-center">
-              {[...new Array(5)].map((_, i) => (
-                <Star key={i} className="h-6 w-6" />
-              ))}
-            </div>
-            <div className="w-full max-w-xl px-2 lg:max-w-4xl">
-              <blockquote className="mb-6 text-pretty text-center text-base font-bold text-stone-900">
-                {splitIntoSentences(testimonials[current].text).map(
-                  (sentence, i) => (
-                    <p key={i} className="mb-2 last:mb-0">
-                      {sentence.trim()}
-                    </p>
-                  )
-                )}
-              </blockquote>
-              <cite className="block text-center">
-                <span className="block font-black text-[#0f8540] text-lg md:text-xl not-italic">
-                  Name
-                </span>
-                <span className="block text-stone-800 text-sm">Location</span>
-              </cite>
-            </div>
+    // Start hold timer for tap-to-pause functionality
+    setIsHolding(true);
+    holdTimerRef.current = setTimeout(() => {
+      if (isHolding) {
+        setIsPaused(true);
+        // Auto-resume after 3 seconds
+        setTimeout(() => {
+          setIsPaused(false);
+        }, 3000);
+      }
+    }, 500); // 500ms hold to trigger pause
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+
+    // Cancel hold timer if user is swiping
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+    setIsHolding(false);
+  };
+
+  const handleTouchEnd = () => {
+    const hasValidTouch = touchStart !== null && touchEnd !== null;
+
+    if (!hasValidTouch) {
+      // If it's a tap (no swipe), handle tap-to-pause
+      if (isHolding && holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+        setIsPaused(true);
+        // Auto-resume after 3 seconds
+        setTimeout(() => {
+          setIsPaused(false);
+        }, 3000);
+      }
+      setIsHolding(false);
+      return;
+    }
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      // Swipe left - go to next testimonial
+      setCurrent((prev) => (prev + 1) % testimonials.length);
+      setIsPaused(true);
+    } else if (isRightSwipe) {
+      // Swipe right - go to previous testimonial
+      setCurrent(
+        (prev) => (prev - 1 + testimonials.length) % testimonials.length
+      );
+      setIsPaused(true);
+    }
+
+    setIsHolding(false);
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
+  };
+
+  // Cleanup hold timer on unmount
+  useEffect(
+    () => () => {
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+      }
+    },
+    []
+  );
+
+  // Don't render until height is calculated
+  if (!isHeightCalculated) {
+    return (
+      <section className="w-full rounded-xl bg-stone-50/40 pb-10 shadow-lg backdrop-blur-sm">
+        <div className="mx-auto w-full max-w-screen-lg px-4 md:px-16 lg:px-20">
+          <div className="mb-6 flex items-center justify-between pt-4">
+            <h2 className="flex-1 text-center font-black text-3xl text-zinc-950 md:text-4xl">
+              Our Commitment to Excellence
+            </h2>
+          </div>
+          <div className="flex items-center justify-center py-20">
+            <LoadingSpinner size={50} />
           </div>
         </div>
+      </section>
+    );
+  }
 
-        <div
-          ref={measureRef}
-          className="relative"
-          style={{ height: maxHeight || 'auto' }}
-        >
-          <AnimatePresence initial={false} mode="wait">
-            <motion.div
-              key={current}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{
-                duration: isUserNavigated ? 0.33 : 0.9,
-                ease: 'easeOut',
-              }}
-              onAnimationComplete={() => {
-                if (isUserNavigated) {
-                  setIsUserNavigated(false);
-                }
-              }}
-              className="absolute inset-0 flex flex-col items-center justify-center py-20 md:py-16"
-              style={{ height: maxHeight }}
+  return (
+    <section className="w-full rounded-xl bg-stone-50/40 pt-2 pb-10 shadow-lg backdrop-blur-sm">
+      <div className="mx-auto w-full max-w-screen-lg px-4 md:px-16 lg:px-20">
+        <div className="mb-6 flex items-center justify-center pt-4">
+          <h2 className="text-center font-black text-2xl text-zinc-950 md:text-3xl lg:text-4xl">
+            Our Commitment to Excellence
+          </h2>
+        </div>
+
+        <div className="group relative">
+          {/* Left Arrow - Hidden on mobile */}
+          <button
+            aria-label="Previous testimonial"
+            className="-left-6 -translate-y-1/2 absolute top-1/2 z-20 hidden h-8 w-8 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 opacity-0 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400 group-hover:opacity-100 md:block"
+            onClick={() => {
+              setCurrent(
+                (prev) => (prev - 1 + testimonials.length) % testimonials.length
+              );
+              setIsPaused(true);
+            }}
+            type="button"
+          >
+            <svg
+              className="mx-auto h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <div
-                className="mb-6 flex justify-center"
-                aria-label={`Rating: ${testimonials[current].rating} out of 5 stars`}
+              <title>Previous testimonial</title>
+              <path
+                d="M15 19l-7-7 7-7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+              />
+            </svg>
+          </button>
+
+          {/* Right Arrow - Hidden on mobile */}
+          <button
+            aria-label="Next testimonial"
+            className="-right-6 -translate-y-1/2 absolute top-1/2 z-20 hidden h-8 w-8 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 opacity-0 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400 group-hover:opacity-100 md:block"
+            onClick={() => {
+              setCurrent((prev) => (prev + 1) % testimonials.length);
+              setIsPaused(true);
+            }}
+            type="button"
+          >
+            <svg
+              className="mx-auto h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <title>Next testimonial</title>
+              <path
+                d="M9 5l7 7-7 7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+              />
+            </svg>
+          </button>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              className="relative touch-pan-y"
+              key={`${current}-${isSmallScreen ? "mobile" : "desktop"}`}
+              onTouchEnd={handleTouchEnd}
+              onTouchMove={handleTouchMove}
+              onTouchStart={handleTouchStart}
+              style={{
+                height: maxHeight || "auto",
+                maxHeight: maxHeight || "auto",
+                overflow: "hidden",
+              }}
+            >
+              <motion.div
+                animate={{ opacity: 1, x: 0 }}
+                className="flex flex-col items-center justify-center pt-2 pb-6 md:py-4"
+                initial={{ opacity: 0, x: 40 }}
+                key={`content-${current}`}
+                transition={{
+                  duration: 0.9,
+                  ease: "easeOut",
+                }}
               >
-                {[...new Array(testimonials[current].rating)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-6 w-6 fill-[#CE1226] text-[#CE1226]"
-                  />
-                ))}
-              </div>
-              <div className="w-full max-w-max px-2 lg:max-w-4xl">
-                <blockquote className="mb-6 text-pretty text-center text-base font-medium lg:text-lg text-stone-950s">
-                  <span className="block lg:hidden">
-                    {splitIntoSentences(testimonials[current].text).map(
-                      (sentence, i) => (
-                        <p key={i} className="mb-2 last:mb-0">
-                          {sentence.trim()}
-                        </p>
-                      )
-                    )}
-                  </span>
-                  <span className="hidden lg:block whitespace-pre-line leading-relaxed prose prose-stone mx-auto">
-                    "{formatForDesktop(testimonials[current].text, isSmallScreen)}"
-                  </span>
-                </blockquote>
-                <cite className="block text-center">
-                  <span
-                    className="block text-lg md:text-xl not-italic"
-                    style={{
-                      color: dotColors[current],
-                      filter: 'brightness(60%)',
-                    }}
-                  >
-                    {formatName(testimonials[current].name)}
-                  </span>
-                  <span className="block text-stone-700 font-semibold text-base md:text-lg">
-                    {testimonials[current].location}
-                  </span>
-                </cite>
-              </div>
+                <div
+                  aria-label={`Rating: ${testimonials[current].rating || 5} out of 5 stars`}
+                  className="mb-6 flex justify-center"
+                  role="img"
+                >
+                  {[...new Array(testimonials[current].rating || 5)].map(
+                    (_, i) => (
+                      <Star
+                        className="h-6 w-6 fill-red-600 text-red-600 drop-shadow-sm"
+                        key={i}
+                        style={{
+                          filter:
+                            "drop-shadow(0 1px 2px rgba(220, 38, 38, 0.3))",
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+                <div className="w-full max-w-max px-2 lg:max-w-4xl">
+                  <blockquote className="mb-6 text-pretty text-center font-medium text-sm text-stone-950 md:text-base lg:text-lg">
+                    <span className="block lg:hidden">
+                      {splitIntoSentences(testimonials[current].text).map(
+                        (sentence, i) => (
+                          <p
+                            className="mb-2 last:mb-0"
+                            dangerouslySetInnerHTML={{
+                              __html: highlightMenuItems(
+                                sentence.trim(),
+                                dotColors[current]
+                              ),
+                            }}
+                            key={i}
+                            style={{ textWrap: "balance" }}
+                          />
+                        )
+                      )}
+                    </span>
+                    <span
+                      className="prose prose-stone mx-auto hidden whitespace-pre-line leading-relaxed lg:block"
+                      dangerouslySetInnerHTML={{
+                        __html: `"${highlightMenuItems(formatForDesktop(testimonials[current].text, isSmallScreen), dotColors[current])}"`,
+                      }}
+                      style={{ textWrap: "balance" }}
+                    />
+                  </blockquote>
+                  <cite className="block text-center">
+                    <span
+                      className="block text-lg not-italic md:text-xl"
+                      style={{
+                        color: dotColors[current],
+                        filter: "brightness(60%)",
+                      }}
+                    >
+                      {formatName(testimonials[current].name)}
+                    </span>
+                    <span className="block font-semibold text-sm text-stone-700 md:text-base lg:text-lg">
+                      {testimonials[current].location}
+                    </span>
+                    <div className="mt-2 flex items-center justify-center gap-2 text-sm text-stone-600">
+                      <span className="flex items-center gap-1">
+                        <span>
+                          {getSourceIcon(testimonials[current].source)}
+                        </span>
+                        <span>
+                          {getSourceLabel(testimonials[current].source)}
+                        </span>
+                      </span>
+                      <span>•</span>
+                      <span>
+                        {formatReviewDate(testimonials[current].date)}
+                      </span>
+                    </div>
+                  </cite>
+                </div>
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
@@ -209,39 +536,39 @@ export default function TestimonialCarousel() {
         <div className="mt-8 flex justify-center gap-1.5 md:gap-2">
           {testimonials.map((_, index) => (
             <Button
-              type="button"
+              aria-label={`Go to testimonial ${index + 1}`}
+              aria-selected={current === index}
+              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ease-in-out hover:opacity-80 md:h-2 md:w-2 ${
+                current === index ? "w-4 md:w-6" : ""
+              }`}
               key={index}
               onClick={() => handleDotClick(index)}
-              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ease-in-out hover:opacity-80 md:h-2 md:w-2 ${
-                current === index ? 'w-4 md:w-6' : ''
-              }`}
               style={{
                 backgroundColor: dotColors[index],
                 opacity: current === index ? 1 : 0.5,
                 filter:
-                  current === index ? 'brightness(100%)' : 'brightness(70%)',
+                  current === index ? "brightness(100%)" : "brightness(70%)",
                 transition:
-                  'opacity 0.3s ease-in-out, width 0.3s ease-in-out, background-color 0.3s ease-in-out',
+                  "opacity 0.3s ease-in-out, width 0.3s ease-in-out, background-color 0.3s ease-in-out",
               }}
-              aria-label={`Go to testimonial ${index + 1}`}
-              aria-selected={current === index}
+              type="button"
             />
           ))}
         </div>
 
-        <div className="mt-6 -mb-4 text-center">
-          <p className="text-sm lg:text-base text-stone-800">
-            These reviews are sourced from our Google Business Profile. 
-            <a 
-              href="https://www.google.com/search?sca_esv=a2d1b3f2df31e648&tbm=lcl&q=el+pueblito+mexican+restaurant+arkansas#"
-              target="_blank" 
-              rel="noopener noreferrer"
+        <div className="-mb-4 mt-6 text-center">
+          <p className="text-sm text-stone-800 lg:text-base">
+            These reviews are sourced from Google and Yelp.
+            <a
               className="ml-1 font-semibold text-[#0f8540] hover:underline"
+              href="https://www.google.com/search?sca_esv=a2d1b3f2df31e648&tbm=lcl&q=el+pueblito+mexican+restaurant+arkansas#"
+              rel="noopener noreferrer"
+              target="_blank"
             >
               <br />
               Leave a review
-            </a>
-            {' '}to see your feedback featured here!
+            </a>{" "}
+            to see your feedback featured here!
           </p>
         </div>
       </div>
