@@ -5,24 +5,24 @@ import { createContext, type ReactNode, useContext, useReducer } from "react";
 type ColorMode = "confetti" | "marker";
 
 interface ColorTestingContextType {
-  menuButtonColorMode: ColorMode;
-  cateringButtonColorMode: ColorMode;
-  menuButtonColorIndex: number;
   cateringButtonColorIndex: number;
-  menuButtonHoverIndex: number;
+  cateringButtonColorMode: ColorMode;
   cateringButtonHoverIndex: number;
-  setMenuButtonColorMode: (mode: ColorMode) => void;
-  setCateringButtonColorMode: (mode: ColorMode) => void;
-  setMenuButtonColorIndex: (index: number | ((prev: number) => number)) => void;
+  getCateringButtonColors: () => { bg: string; hover: string };
+  getMenuButtonColors: () => { bg: string; hover: string };
+  menuButtonColorIndex: number;
+  menuButtonColorMode: ColorMode;
+  menuButtonHoverIndex: number;
   setCateringButtonColorIndex: (
     index: number | ((prev: number) => number)
   ) => void;
-  setMenuButtonHoverIndex: (index: number | ((prev: number) => number)) => void;
+  setCateringButtonColorMode: (mode: ColorMode) => void;
   setCateringButtonHoverIndex: (
     index: number | ((prev: number) => number)
   ) => void;
-  getMenuButtonColors: () => { bg: string; hover: string };
-  getCateringButtonColors: () => { bg: string; hover: string };
+  setMenuButtonColorIndex: (index: number | ((prev: number) => number)) => void;
+  setMenuButtonColorMode: (mode: ColorMode) => void;
+  setMenuButtonHoverIndex: (index: number | ((prev: number) => number)) => void;
 }
 
 interface ColorTestingState {

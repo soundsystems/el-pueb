@@ -15,12 +15,12 @@ type CarouselOptions = UseCarouselParameters[0];
 type CarouselPlugin = UseCarouselParameters[1];
 
 interface CarouselProps {
-  opts?: CarouselOptions;
-  plugins?: CarouselPlugin;
-  orientation?: "horizontal" | "vertical";
-  setApi?: (api: CarouselApi) => void;
   disableKeyboard?: boolean;
+  opts?: CarouselOptions;
+  orientation?: "horizontal" | "vertical";
   pauseAutoplay?: boolean;
+  plugins?: CarouselPlugin;
+  setApi?: (api: CarouselApi) => void;
 }
 
 type CarouselContextProps = {

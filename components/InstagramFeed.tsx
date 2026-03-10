@@ -5,11 +5,11 @@ import { Instagram } from "lucide-react";
 import useSWR from "swr";
 
 interface InstagramPost {
+  caption: string;
   id: string;
+  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
   media_url: string;
   permalink: string;
-  caption: string;
-  media_type: "IMAGE" | "VIDEO" | "CAROUSEL_ALBUM";
   timestamp: string;
 }
 

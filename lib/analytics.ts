@@ -6,8 +6,8 @@ export type Location = "bella-vista" | "rogers" | "highfill" | "centerton";
 
 export interface QRTrackingParams {
   location: Location;
-  source: QRSource;
   page: string;
+  source: QRSource;
 }
 
 // Analytics utility functions

@@ -85,9 +85,9 @@ interface FormData extends FormSchemaType {
 }
 
 interface ContactFormState {
-  success?: boolean;
   error?: string;
   firstName?: string;
+  success?: boolean;
 }
 
 interface ContactFormUiState {

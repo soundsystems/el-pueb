@@ -14,7 +14,7 @@ const nextConfig = {
 
   // Turbopack configuration (moved from experimental.turbo)
   turbopack: {
-    root: __dirname,
+    root: import.meta.dirname,
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
@@ -72,4 +72,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

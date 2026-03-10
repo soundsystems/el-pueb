@@ -1,8 +1,8 @@
 // Menu item type with page number and category
 export interface MenuItem {
+  category: string;
   name: string;
   pageNumber: number;
-  category: string;
   variations?: string[]; // Alternative names for the same item
 }
 

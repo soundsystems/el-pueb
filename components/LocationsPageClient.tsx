@@ -20,16 +20,16 @@ import { LocationCard } from "@/components/LocationCard";
 import { getRandomMarkerColors } from "@/lib/constants/colors";
 
 interface Location {
-  name: string;
   address: string;
-  phone: string;
-  slug: string;
-  position: { lat: number; lng: number };
-  placeId: string;
   hours: {
     weekdays: string;
     weekend: string;
   };
+  name: string;
+  phone: string;
+  placeId: string;
+  position: { lat: number; lng: number };
+  slug: string;
 }
 
 const locations: Location[] = [

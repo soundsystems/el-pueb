@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 
 interface DaySchedule {
-  open: string;
   close: string;
+  open: string;
 }
 
 const HOURS: { [key: number]: DaySchedule } = {

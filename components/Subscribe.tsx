@@ -17,11 +17,11 @@ const PHONE_NUMBER_REGEX = /\D/g;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface SubscribeState {
-  message?: string;
-  error?: boolean | string;
-  success?: boolean;
-  step?: "email" | "details";
   email?: string;
+  error?: boolean | string;
+  message?: string;
+  step?: "email" | "details";
+  success?: boolean;
 }
 
 const initialState: SubscribeState = {

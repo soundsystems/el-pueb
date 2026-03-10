@@ -243,11 +243,11 @@ const dailySpecialsImages = [
 }));
 
 interface HeroImage {
-  src: string;
   alt: string;
   caption: string;
-  menuLink?: string; // Optional link to specific menu section
   isDailyDrinkSpecial?: boolean; // Optional flag for daily drink specials
+  menuLink?: string; // Optional link to specific menu section
+  src: string;
 }
 
 interface AutoplayController {

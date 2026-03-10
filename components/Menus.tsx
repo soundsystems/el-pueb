@@ -36,10 +36,10 @@ import {
 const isDev = process.env.NODE_ENV === "development";
 
 interface MenuItem {
-  name: string;
-  mobileName?: string;
   images: string[];
+  mobileName?: string;
   mobileOnly?: boolean;
+  name: string;
 }
 
 interface MenuButtonState {

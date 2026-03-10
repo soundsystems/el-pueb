@@ -12,7 +12,7 @@ const DiamondBorder = ({ className = "" }: DiamondBorderProps) => {
       dark="#02534E"
       height={40}
       label="Textile divider"
-      light="#FDEAAF"
+      light="#8BBEBF"
     />
   );
 };

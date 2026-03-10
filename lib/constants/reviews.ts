@@ -4,12 +4,12 @@ import { pageToMobileTab } from "./image-captions";
 import { getPageNumberForMenuItem, MENU_ITEMS } from "./menu-items";
 
 export interface Review {
-  name: string;
-  text: string;
-  rating?: number;
-  location: string;
-  source: "Google" | "Yelp";
   date: string;
+  location: string;
+  name: string;
+  rating?: number;
+  source: "Google" | "Yelp";
+  text: string;
 }
 
 export const SENTENCE_SPLITTER = /(?<=[.!?])\s+/;
@@ -25,8 +25,8 @@ const MEDIUM_MAX_LENGTH = 250; // 12.5% - Multi-point reviews
 const _LONG_MAX_LENGTH = 400; // 10% - Detailed experiences
 
 export interface ReviewWithTier extends Review {
-  tier: ReviewTier;
   length: number;
+  tier: ReviewTier;
 }
 
 // Function to categorize reviews by length into tiers

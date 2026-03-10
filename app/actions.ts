@@ -17,20 +17,20 @@ const formSchema = z.object({
 });
 
 interface ContactFormState {
-  success?: boolean;
   error?: string;
   firstName?: string;
+  success?: boolean;
 }
 
 interface ContactFormData {
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  message: string;
-  inquiryType: string;
-  reason: string;
-  location: string;
   businessName?: string;
+  email: string;
+  firstName?: string;
+  inquiryType: string;
+  lastName?: string;
+  location: string;
+  message: string;
+  reason: string;
 }
 
 export async function submitContact(
@@ -100,11 +100,11 @@ const emailSchema = z.object({
 });
 
 interface SubscribeFormState {
-  success?: boolean;
+  email?: string;
   error?: boolean | string;
   message?: string;
   step?: "email" | "details";
-  email?: string;
+  success?: boolean;
 }
 
 const subscriberCache = new Set<string>();

@@ -1,11 +1,11 @@
 import Link from "next/link";
 
 interface Article {
+  emoji: string;
+  logo: string;
+  publication: string;
   title: string;
   url: string;
-  logo: string;
-  emoji: string;
-  publication: string;
 }
 
 const articles: Article[] = [

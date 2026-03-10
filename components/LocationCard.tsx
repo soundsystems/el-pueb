@@ -4,14 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface Location {
-  name: string;
   address: string;
-  phone: string;
-  slug: string;
   hours: {
     weekdays: string;
     weekend: string;
   };
+  name: string;
+  phone: string;
+  slug: string;
 }
 
 const springTransition = {
