@@ -1,8 +1,22 @@
 "use client";
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m as motion,
+  useReducedMotion,
+} from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Loading from "@/app/loading";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,12 +35,33 @@ import {
 
 const isDev = process.env.NODE_ENV === "development";
 
-type MenuItem = {
+interface MenuItem {
   name: string;
   mobileName?: string;
   images: string[];
   mobileOnly?: boolean;
-};
+}
+
+interface MenuButtonState {
+  isActive: boolean;
+  isDotmTab: boolean;
+  isLunchTab: boolean;
+  isMargaritasTab: boolean;
+}
+
+interface MenusState {
+  currentPage: number;
+  forceLunch: boolean;
+  hasNavigatedToLunch: boolean;
+  highlightTarget: boolean;
+}
+
+type MenusAction =
+  | { type: "mark_navigated" }
+  | { type: "set_current_page"; page: number }
+  | { type: "set_force_lunch"; value: boolean }
+  | { type: "set_highlight_target"; value: boolean }
+  | { type: "sync_force_lunch_navigation"; page: number };
 
 const DOTM_CURRENT_IMAGE = "/images/menu/DOTM-Feb.png";
 const DOTM_SPECIALS_IMAGE = "/images/menu/drink-specials.png";
@@ -84,6 +119,116 @@ const DESKTOP_DOT_POSITIONS = [0, 2, 4, 6, 8, 9, 11] as const;
 const DESKTOP_MARGARITAS_START = 9;
 const DESKTOP_MARGARITAS_END = 12;
 
+function subscribeToViewport(onStoreChange: () => void) {
+  window.addEventListener("resize", onStoreChange);
+  return () => window.removeEventListener("resize", onStoreChange);
+}
+
+function getViewportSnapshot() {
+  return window.innerWidth < 1024;
+}
+
+function getMenuButtonStyle({
+  isActive,
+  isDotmTab,
+  isLunchTab,
+  isMargaritasTab,
+}: MenuButtonState) {
+  if (isLunchTab) {
+    return isActive
+      ? "bg-yellow-500 px-2 text-black transition-colors duration-300 ease-in-out hover:bg-yellow-500"
+      : "rounded-md bg-yellow-500/50 px-2 text-black transition-colors duration-300 ease-in-out hover:bg-yellow-500/70 active:bg-yellow-500/90";
+  }
+
+  if (isMargaritasTab || isDotmTab) {
+    return isActive
+      ? "bg-[#1DB2B2] px-2 text-white transition-colors duration-300 ease-in-out hover:bg-[#1DB2B2]/90"
+      : "px-2 transition-colors duration-300 ease-in-out hover:bg-[#1DB2B2]/10 hover:text-[#1DB2B2]";
+  }
+
+  if (isActive) {
+    return "bg-[#03502D] px-2 text-stone-50 transition-colors duration-300 ease-in-out hover:bg-[#03502D]/90";
+  }
+
+  return "px-2 transition-colors duration-300 ease-in-out hover:bg-[#03502D]/10 hover:text-[#03502D]";
+}
+
+function getHighlightScale({
+  isMobile,
+  shouldHighlight,
+  shouldReduceMotion,
+}: {
+  isMobile: boolean;
+  shouldHighlight: boolean;
+  shouldReduceMotion: boolean;
+}) {
+  if (shouldReduceMotion) {
+    return 1;
+  }
+
+  return shouldHighlight && !isMobile ? 1.02 : 1;
+}
+
+function getDesktopActiveSection(currentPage: number) {
+  if (
+    currentPage >= DESKTOP_MARGARITAS_START &&
+    currentPage <= DESKTOP_MARGARITAS_END
+  ) {
+    return DESKTOP_NAV_POSITIONS.length - 1;
+  }
+
+  if (currentPage <= 1) {
+    return 0;
+  }
+
+  if (currentPage <= 3) {
+    return 1;
+  }
+
+  if (currentPage <= 5) {
+    return 2;
+  }
+
+  if (currentPage <= 7) {
+    return 3;
+  }
+
+  if (currentPage === 8) {
+    return 4;
+  }
+
+  return 0;
+}
+
+function menusReducer(state: MenusState, action: MenusAction): MenusState {
+  switch (action.type) {
+    case "mark_navigated":
+      return state.hasNavigatedToLunch
+        ? state
+        : { ...state, hasNavigatedToLunch: true };
+    case "set_current_page":
+      return state.currentPage === action.page
+        ? state
+        : { ...state, currentPage: action.page };
+    case "set_force_lunch":
+      return state.forceLunch === action.value
+        ? state
+        : { ...state, forceLunch: action.value };
+    case "set_highlight_target":
+      return state.highlightTarget === action.value
+        ? state
+        : { ...state, highlightTarget: action.value };
+    case "sync_force_lunch_navigation":
+      return {
+        ...state,
+        currentPage: action.page,
+        hasNavigatedToLunch: true,
+      };
+    default:
+      return state;
+  }
+}
+
 const MenuCarouselItem = ({
   item,
   image,
@@ -106,7 +251,6 @@ const MenuCarouselItem = ({
   highlightTarget?: boolean;
 }) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const isFirstImage = groupIndex === 0 && imageIndex === 0;
   const isLunchSection = item.name === "Lunch, Combos & Kids";
@@ -119,11 +263,11 @@ const MenuCarouselItem = ({
 
   // Check if this page should be highlighted
   const shouldHighlight = highlightTarget && targetPage === absoluteIndex;
-
-  // Use useEffect to update client state after hydration
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const highlightScale = getHighlightScale({
+    isMobile,
+    shouldHighlight: Boolean(shouldHighlight),
+    shouldReduceMotion: Boolean(shouldReduceMotion),
+  });
 
   return (
     <CarouselItem
@@ -134,12 +278,12 @@ const MenuCarouselItem = ({
           !isMobile &&
           "animate-pulse ring-4 ring-yellow-400 ring-opacity-75"
       )}
-      key={`${item.name}-${imageIndex}`}
+      key={image}
     >
       <motion.div
         animate={{
           opacity: 1,
-          scale: shouldReduceMotion ? 1 : shouldHighlight && !isMobile ? 1.02 : 1,
+          scale: highlightScale,
           boxShadow:
             shouldHighlight && !isMobile
               ? "0 0 20px rgba(251, 191, 36, 0.5)"
@@ -149,13 +293,21 @@ const MenuCarouselItem = ({
           "relative h-[75vh] w-full transition-[box-shadow,transform] duration-500 md:h-[85vh]",
           shouldHighlight && !isMobile && "overflow-hidden rounded-lg"
         )}
-        exit={shouldReduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-        initial={shouldReduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+        exit={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1 }
+            : { opacity: 0, scale: 0.95 }
+        }
+        initial={
+          shouldReduceMotion
+            ? { opacity: 1, scale: 1 }
+            : { opacity: 0, scale: 0.95 }
+        }
         layout
         transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3 }}
       >
         <div className="absolute inset-0">
-          {isClient && isLoading && (
+          {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loading />
             </div>
@@ -188,14 +340,21 @@ export default function Component({
   targetPage?: number;
 }) {
   const [api, setApi] = useState<CarouselApi>();
-  const [currentPage, setCurrentPage] = useState(0);
-  const [forceLunch, setForceLunch] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [isMobile, setIsMobile] = useState(true);
-  const [hasNavigatedToLunch, setHasNavigatedToLunch] = useState(false);
-  const [highlightTarget, setHighlightTarget] = useState(false);
+  const [state, dispatch] = useReducer(menusReducer, {
+    currentPage: 0,
+    forceLunch: false,
+    hasNavigatedToLunch: false,
+    highlightTarget: false,
+  });
+  const { currentPage, forceLunch, hasNavigatedToLunch, highlightTarget } =
+    state;
   const shouldReduceMotion = useReducedMotion();
   const { isOpen } = useRestaurantHours();
+  const isMobile = useSyncExternalStore(
+    subscribeToViewport,
+    getViewportSnapshot,
+    () => true
+  );
   const allImages = useMemo(() => {
     return menuItems.flatMap((item) => item.images);
   }, []);
@@ -216,26 +375,39 @@ export default function Component({
     return 0;
   }, []);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const scrollToPage = useCallback(
+    (page: number, instant = false) => {
+      if (!api) {
+        return;
+      }
+
+      api.scrollTo(page, instant);
+      dispatch({ type: "mark_navigated" });
+    },
+    [api]
+  );
+
+  const getLunchStartPage = useCallback(() => {
+    const lunchIndex = menuItems.findIndex(
+      (item) => item.name === "Lunch, Combos & Kids"
+    );
+
+    return lunchIndex === -1 ? 0 : (imageStartOffsets[lunchIndex] ?? 0);
+  }, [imageStartOffsets]);
 
   useEffect(() => {
     const checkLunchHours = () => {
       const now = new Date();
       const hour = now.getHours();
       const isLunchTime = hour >= 11 && hour < 15; // 11 AM to 3 PM
-      setForceLunch(isOpen && isLunchTime);
+      dispatch({ type: "set_force_lunch", value: isOpen && isLunchTime });
     };
 
-    // Only run lunch check after client hydration
-    if (isClient) {
-      checkLunchHours();
-      const interval = setInterval(checkLunchHours, 60_000); // Check every minute to see if it's lunch time yet
+    checkLunchHours();
+    const interval = setInterval(checkLunchHours, 60_000);
 
-      return () => clearInterval(interval);
-    }
-  }, [isClient, isOpen]);
+    return () => clearInterval(interval);
+  }, [isOpen]);
 
   // Handle initial tab navigation from URL parameter
   useEffect(() => {
@@ -249,21 +421,20 @@ export default function Component({
       // Navigate to the first image of the target tab
       // Use a small delay to ensure carousel is ready
       const timer = setTimeout(() => {
-        api.scrollTo(targetImageIndex, true);
-        setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+        scrollToPage(targetImageIndex, true);
       }, 100);
 
       return () => clearTimeout(timer);
     }
-  }, [initialTab, api, imageStartOffsets]);
+  }, [initialTab, api, imageStartOffsets, scrollToPage]);
 
   // Handle target page highlighting
   useEffect(() => {
     if (targetPage !== undefined && !isMobile) {
-      setHighlightTarget(true);
+      dispatch({ type: "set_highlight_target", value: true });
       // Auto-hide highlight after 4 seconds
       const timer = setTimeout(() => {
-        setHighlightTarget(false);
+        dispatch({ type: "set_highlight_target", value: false });
       }, 4000);
 
       return () => clearTimeout(timer);
@@ -273,40 +444,27 @@ export default function Component({
   // Only force lunch navigation on initial load when no specific tab is requested
   useEffect(() => {
     if (forceLunch && api && !hasNavigatedToLunch && initialTab === null) {
-      const lunchIndex = menuItems.findIndex(
-        (item) => item.name === "Lunch, Combos & Kids"
-      );
-      const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
+      const imageIndex = getLunchStartPage();
       // Only scroll if we're not already at the correct position
       if (api.selectedScrollSnap() !== imageIndex) {
         api.scrollTo(imageIndex);
-        setCurrentPage(imageIndex);
+        dispatch({ type: "sync_force_lunch_navigation", page: imageIndex });
+        return;
       }
-      setHasNavigatedToLunch(true);
+      dispatch({ type: "mark_navigated" });
     }
-  }, [api, forceLunch, hasNavigatedToLunch, initialTab, imageStartOffsets]);
-
-  useEffect(() => {
-    if (!isClient) {
-      return;
-    }
-
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [isClient]);
+  }, [api, forceLunch, hasNavigatedToLunch, initialTab, getLunchStartPage]);
 
   useEffect(() => {
     if (!api) {
       return;
     }
     // Keep state in sync when carousel instance changes (e.g. mobile<->desktop remount).
-    setCurrentPage(api.selectedScrollSnap());
+    dispatch({ type: "set_current_page", page: api.selectedScrollSnap() });
 
     const handleSelect = () => {
       const current = api.selectedScrollSnap();
-      setCurrentPage(current);
+      dispatch({ type: "set_current_page", page: current });
     };
     api.on("select", handleSelect);
     return () => {
@@ -336,7 +494,7 @@ export default function Component({
           : currentDesktopDotIndex - 1;
       api.scrollTo(DESKTOP_DOT_POSITIONS[prevDesktopDotIndex]);
     }
-    setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+    dispatch({ type: "mark_navigated" });
   }, [api, isMobile, currentPage, getNearestDesktopDotIndex, allImages.length]);
 
   const handleNextClick = useCallback(() => {
@@ -357,7 +515,7 @@ export default function Component({
           : currentDesktopDotIndex + 1;
       api.scrollTo(DESKTOP_DOT_POSITIONS[nextDesktopDotIndex]);
     }
-    setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+    dispatch({ type: "mark_navigated" });
   }, [api, isMobile, currentPage, getNearestDesktopDotIndex, allImages.length]);
 
   // Desktop navigation helpers
@@ -366,7 +524,7 @@ export default function Component({
       if (!api) {
         return;
       }
-      const currentSection = getDesktopActiveNavIndex(currentPage);
+      const currentSection = getDesktopActiveSection(currentPage);
       const maxSection = DESKTOP_NAV_POSITIONS.length - 1;
       let newSection: number;
       if (direction === "left") {
@@ -376,8 +534,10 @@ export default function Component({
         // Loop to first section if going forward from last section
         newSection = currentSection >= maxSection ? 0 : currentSection + 1;
       }
-      api.scrollTo(DESKTOP_NAV_POSITIONS[newSection] ?? DESKTOP_NAV_POSITIONS[0]);
-      setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+      api.scrollTo(
+        DESKTOP_NAV_POSITIONS[newSection] ?? DESKTOP_NAV_POSITIONS[0]
+      );
+      dispatch({ type: "mark_navigated" });
     },
     [api, currentPage]
   );
@@ -397,7 +557,7 @@ export default function Component({
         newPage = currentPage >= maxPage ? 0 : currentPage + 1;
       }
       api.scrollTo(newPage);
-      setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+      dispatch({ type: "mark_navigated" });
     },
     [api, currentPage, allImages.length]
   );
@@ -431,7 +591,7 @@ export default function Component({
     } else {
       api.scrollTo(DESKTOP_NAV_POSITIONS[index] ?? DESKTOP_NAV_POSITIONS[0]);
     }
-    setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+    dispatch({ type: "mark_navigated" });
   };
 
   const handleDotClick = (index: number) => {
@@ -441,9 +601,12 @@ export default function Component({
     if (isMobile) {
       api.scrollTo(index);
     } else {
-      api.scrollTo(DESKTOP_DOT_POSITIONS[index] ?? DESKTOP_DOT_POSITIONS[0], true);
+      api.scrollTo(
+        DESKTOP_DOT_POSITIONS[index] ?? DESKTOP_DOT_POSITIONS[0],
+        true
+      );
     }
-    setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
+    dispatch({ type: "mark_navigated" });
   };
 
   const handleMenuButtonInteraction = (index: number, elementId: string) => {
@@ -533,14 +696,17 @@ export default function Component({
   };
 
   // Function to preload images
-  const preloadImages = useCallback((indices: number[]) => {
-    for (const index of indices) {
-      if (index >= 0 && index < allImages.length) {
-        const img = document.createElement("img");
-        img.src = allImages[index];
+  const preloadImages = useCallback(
+    (indices: number[]) => {
+      for (const index of indices) {
+        if (index >= 0 && index < allImages.length) {
+          const img = document.createElement("img");
+          img.src = allImages[index];
+        }
       }
-    }
-  }, [allImages]);
+    },
+    [allImages]
+  );
 
   // Only preload the next image
   useEffect(() => {
@@ -552,19 +718,32 @@ export default function Component({
     }
   }, [currentPage, allImages]);
 
-  // Preload lunch images when in lunch mode
-  useEffect(() => {
-    if (forceLunch) {
-      const lunchIndex = menuItems.findIndex(
-        (item) => item.name === "Lunch, Combos & Kids"
-      );
-      if (lunchIndex !== -1) {
-        const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
-        const lunchImages = menuItems[lunchIndex].images;
-        preloadImages(lunchImages.map((_, i) => imageIndex + i));
-      }
+  const lunchPreloadIndices = useMemo(() => {
+    if (!forceLunch) {
+      return [];
     }
-  }, [forceLunch, preloadImages, imageStartOffsets]);
+
+    const lunchIndex = menuItems.findIndex(
+      (item) => item.name === "Lunch, Combos & Kids"
+    );
+
+    if (lunchIndex === -1) {
+      return [];
+    }
+
+    const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
+    return menuItems[lunchIndex].images.map((_, imageOffset) => {
+      return imageIndex + imageOffset;
+    });
+  }, [forceLunch, imageStartOffsets]);
+
+  useEffect(() => {
+    if (lunchPreloadIndices.length === 0) {
+      return;
+    }
+
+    preloadImages(lunchPreloadIndices);
+  }, [lunchPreloadIndices, preloadImages]);
 
   const getButtonVariant = (isLunchTab: boolean, isActive: boolean) => {
     if (isLunchTab) {
@@ -574,361 +753,375 @@ export default function Component({
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4">
-      <AnimatePresence mode="wait">
-        <motion.div
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          initial={{ opacity: 0 }}
-          key={isMobile ? "mobile" : "desktop"}
-          transition={{ duration: 0.3 }}
-        >
-          {forceLunch && (
-            <div className="relative text-center">
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="font-bold text-3xl"
-                initial={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                {(() => {
-                  return (
-                    <motion.button
-                      animate={
-                        shouldReduceMotion
-                          ? { color: "#03502D" }
-                          : {
-                              color: [
-                                "#03502D",
-                                "#FFD700",
-                                "#03502D",
-                                "#FFD700",
-                                "#03502D",
-                              ],
-                            }
-                      }
-                      aria-label="Go to lunch menu section"
-                      className={cn(
-                        "rounded-lg px-2 py-1 italic transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03502D] focus-visible:ring-offset-2"
-                      )}
-                      initial={{ color: "#03502D" }}
-                      onClick={() => {
-                        // Navigate to lunch section
-                        const lunchIndex = menuItems.findIndex(
-                          (item) => item.name === "Lunch, Combos & Kids"
-                        );
-                        if (lunchIndex !== -1 && api) {
-                          const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
-                          api.scrollTo(imageIndex);
-                          setCurrentPage(imageIndex);
-                          setHasNavigatedToLunch(true); // Mark that we've navigated to lunch
-                        }
-                      }}
-                      transition={
-                        shouldReduceMotion
-                          ? { duration: 0 }
-                          : {
-                              duration: 1.3,
-                              ease: "easeInOut",
-                              times: [0, 0.25, 0.5, 0.75, 1],
-                            }
-                      }
-                      type="button"
-                    >
-                      🌯 ¡Echar Lonche! 🌮
-                    </motion.button>
-                  );
-                })()}
-              </motion.div>
-            </div>
-          )}
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              initial={{ opacity: 0 }}
-              key={isMobile ? "mobile" : "desktop"}
-              transition={{ duration: 0.3 }}
-            >
-              {isMobile ? (
+    <LazyMotion features={domAnimation}>
+      <div className="mx-auto w-full max-w-6xl px-4">
+        <AnimatePresence mode="wait">
+          <motion.div
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            key={isMobile ? "mobile" : "desktop"}
+            transition={{ duration: 0.3 }}
+          >
+            {forceLunch && (
+              <div className="relative text-center">
                 <motion.div
                   animate={{ opacity: 1, y: 0 }}
-                  className="my-4 grid grid-cols-2 gap-2 lg:inline-block lg:space-x-4 lg:text-center"
-                  initial={{ opacity: 0, y: -10 }}
-                  layout
-                  transition={{ duration: 0.3 }}
+                  className="font-bold text-3xl"
+                  initial={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  {menuItems.map((item, index) => {
-                    // Skip mobileOnly items in desktop view
-                    if (!isMobile && item.mobileOnly) {
-                      return null;
-                    }
-
-                    const isActive = getActiveNavIndex(currentPage) === index;
-                    const isLunchTab =
-                      forceLunch && item.name === "Lunch, Combos & Kids";
-                    const isMargaritasTab = item.name === "Margaritas & More";
-                    const isDotmTab = item.name.startsWith("DOTM");
-
-                    let buttonStyle =
-                      "hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors duration-300 ease-in-out px-2";
-                    if (isLunchTab) {
-                      buttonStyle = isActive
-                        ? "bg-yellow-500 text-black hover:bg-yellow-500 transition-colors duration-300 ease-in-out px-2"
-                        : "bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-colors duration-300 ease-in-out px-2 rounded-md";
-                    } else if (isMargaritasTab || isDotmTab) {
-                      buttonStyle = isActive
-                        ? "bg-[#1DB2B2] text-white hover:bg-[#1DB2B2]/90 transition-colors duration-300 ease-in-out px-2"
-                        : "hover:bg-[#1DB2B2]/10 hover:text-[#1DB2B2] transition-colors duration-300 ease-in-out px-2";
-                    } else if (isActive) {
-                      buttonStyle =
-                        "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-colors duration-300 ease-in-out px-2";
-                    }
-
+                  {(() => {
                     return (
-                      <motion.div
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-center lg:inline-block"
-                        initial={{ opacity: 0, y: -10 }}
-                        key={item.name}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                        whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
-                        whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
-                      >
-                        <Button
-                          className={cn(
-                            "whitespace-nowrap px-2 text-center font-semibold text-sm md:text-sm",
-                            isActive ? "scale-105 font-black" : "scale-100",
-                            "transition-transform duration-150 ease-in-out",
-                            buttonStyle,
-                            !isMobile && "lg:last:hidden"
-                          )}
-                          id={`menu-btn-${index}`}
-                          onClick={() =>
-                            handleMenuButtonInteraction(index, `menu-btn-${index}`)
+                      <motion.button
+                        animate={
+                          shouldReduceMotion
+                            ? { color: "#03502D" }
+                            : {
+                                color: [
+                                  "#03502D",
+                                  "#FFD700",
+                                  "#03502D",
+                                  "#FFD700",
+                                  "#03502D",
+                                ],
+                              }
+                        }
+                        aria-label="Go to lunch menu section"
+                        className={cn(
+                          "rounded-lg px-2 py-1 italic transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03502D] focus-visible:ring-offset-2"
+                        )}
+                        initial={{ color: "#03502D" }}
+                        onClick={() => {
+                          // Navigate to lunch section
+                          if (api) {
+                            const imageIndex = getLunchStartPage();
+                            api.scrollTo(imageIndex);
+                            dispatch({
+                              type: "sync_force_lunch_navigation",
+                              page: imageIndex,
+                            });
                           }
-                          type="button"
-                          variant={getButtonVariant(isLunchTab, isActive)}
-                        >
-                          {item.mobileName || item.name}
-                        </Button>
-                      </motion.div>
+                        }}
+                        transition={
+                          shouldReduceMotion
+                            ? { duration: 0 }
+                            : {
+                                duration: 1.3,
+                                ease: "easeInOut",
+                                times: [0, 0.25, 0.5, 0.75, 1],
+                              }
+                        }
+                        type="button"
+                      >
+                        🌯 ¡Echar Lonche! 🌮
+                      </motion.button>
                     );
-                  })}
+                  })()}
                 </motion.div>
-              ) : (
-                <motion.div
-                  animate={{ opacity: 1, y: 0 }}
-                  className="my-4 grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:justify-center lg:space-x-6 lg:text-center"
-                  initial={{ opacity: 0, y: -10 }}
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  {menuItems
-                    .filter((item) => !item.mobileOnly)
-                    .map((item, index) => {
+              </div>
+            )}
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                key={isMobile ? "mobile" : "desktop"}
+                transition={{ duration: 0.3 }}
+              >
+                {isMobile ? (
+                  <motion.div
+                    animate={{ opacity: 1, y: 0 }}
+                    className="my-4 grid grid-cols-2 gap-2 lg:inline-block lg:space-x-4 lg:text-center"
+                    initial={{ opacity: 0, y: -10 }}
+                    layout
+                    transition={{ duration: 0.3 }}
+                  >
+                    {menuItems.map((item, index) => {
+                      // Skip mobileOnly items in desktop view
+                      if (!isMobile && item.mobileOnly) {
+                        return null;
+                      }
+
                       const isActive = getActiveNavIndex(currentPage) === index;
                       const isLunchTab =
                         forceLunch && item.name === "Lunch, Combos & Kids";
                       const isMargaritasTab = item.name === "Margaritas & More";
                       const isDotmTab = item.name.startsWith("DOTM");
 
-                      let buttonStyle =
-                        "hover:bg-[#03502D]/10 hover:text-[#03502D] transition-colors duration-300 ease-in-out px-2";
-                      if (isLunchTab) {
-                        buttonStyle = isActive
-                          ? "bg-yellow-500 text-black hover:bg-yellow-500 transition-colors duration-300 ease-in-out px-2"
-                          : "bg-yellow-500/50 text-black hover:bg-yellow-500/70 active:bg-yellow-500/90 transition-colors duration-300 ease-in-out px-2 rounded-md";
-                      } else if (isMargaritasTab || isDotmTab) {
-                        buttonStyle = isActive
-                          ? "bg-[#1DB2B2] text-white hover:bg-[#1DB2B2]/90 transition-colors duration-300 ease-in-out px-2"
-                          : "hover:bg-[#1DB2B2]/10 hover:text-[#1DB2B2] transition-colors duration-300 ease-in-out px-2";
-                      } else if (isActive) {
-                        buttonStyle =
-                          "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90 transition-colors duration-300 ease-in-out px-2";
-                      }
+                      const buttonStyle = getMenuButtonStyle({
+                        isActive,
+                        isDotmTab,
+                        isLunchTab,
+                        isMargaritasTab,
+                      });
 
                       return (
                         <motion.div
                           animate={{ opacity: 1, y: 0 }}
+                          className="flex justify-center lg:inline-block"
                           initial={{ opacity: 0, y: -10 }}
                           key={item.name}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
-                          whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
-                          whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+                          whileHover={
+                            shouldReduceMotion ? undefined : { scale: 1.02 }
+                          }
+                          whileTap={
+                            shouldReduceMotion ? undefined : { scale: 0.95 }
+                          }
                         >
                           <Button
                             className={cn(
-                              "whitespace-nowrap font-semibold text-sm md:text-base",
+                              "whitespace-nowrap px-2 text-center font-semibold text-sm md:text-sm",
                               isActive ? "scale-105 font-black" : "scale-100",
-                              "transition-transform duration-150 ease-out",
-                              buttonStyle
+                              "transition-transform duration-150 ease-in-out",
+                              buttonStyle,
+                              !isMobile && "lg:last:hidden"
                             )}
-                            id={`menu-btn-desktop-${index}`}
+                            id={`menu-btn-${index}`}
                             onClick={() =>
                               handleMenuButtonInteraction(
                                 index,
-                                `menu-btn-desktop-${index}`
+                                `menu-btn-${index}`
                               )
                             }
                             type="button"
                             variant={getButtonVariant(isLunchTab, isActive)}
                           >
-                            {item.name}
+                            {item.mobileName || item.name}
                           </Button>
                         </motion.div>
                       );
                     })}
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    animate={{ opacity: 1, y: 0 }}
+                    className="my-4 grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:justify-center lg:space-x-6 lg:text-center"
+                    initial={{ opacity: 0, y: -10 }}
+                    layout
+                    transition={{ duration: 0.3 }}
+                  >
+                    {menuItems
+                      .filter((item) => !item.mobileOnly)
+                      .map((item, index) => {
+                        const isActive =
+                          getActiveNavIndex(currentPage) === index;
+                        const isLunchTab =
+                          forceLunch && item.name === "Lunch, Combos & Kids";
+                        const isMargaritasTab =
+                          item.name === "Margaritas & More";
+                        const isDotmTab = item.name.startsWith("DOTM");
 
-          <motion.div layout>
-            <Carousel
-              className="w-full lg:mt-0"
-              opts={{
-                align: "start",
-                ...(isMobile
-                  ? {
-                      dragFree: false,
+                        const buttonStyle = getMenuButtonStyle({
+                          isActive,
+                          isDotmTab,
+                          isLunchTab,
+                          isMargaritasTab,
+                        });
+
+                        return (
+                          <motion.div
+                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, y: -10 }}
+                            key={item.name}
+                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                            whileHover={
+                              shouldReduceMotion ? undefined : { scale: 1.02 }
+                            }
+                            whileTap={
+                              shouldReduceMotion ? undefined : { scale: 0.95 }
+                            }
+                          >
+                            <Button
+                              className={cn(
+                                "whitespace-nowrap font-semibold text-sm md:text-base",
+                                isActive ? "scale-105 font-black" : "scale-100",
+                                "transition-transform duration-150 ease-out",
+                                buttonStyle
+                              )}
+                              id={`menu-btn-desktop-${index}`}
+                              onClick={() =>
+                                handleMenuButtonInteraction(
+                                  index,
+                                  `menu-btn-desktop-${index}`
+                                )
+                              }
+                              type="button"
+                              variant={getButtonVariant(isLunchTab, isActive)}
+                            >
+                              {item.name}
+                            </Button>
+                          </motion.div>
+                        );
+                      })}
+                  </motion.div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            <motion.div layout>
+              <Carousel
+                className="w-full lg:mt-0"
+                opts={{
+                  align: "start",
+                  ...(isMobile
+                    ? {
+                        dragFree: false,
+                      }
+                    : {
+                        dragFree: false,
+                        skipSnaps: false,
+                        containScroll: "trimSnaps",
+                      }),
+                }}
+                setApi={setApi}
+              >
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  <Suspense
+                    fallback={
+                      <div className="flex h-[85vh] w-full items-center justify-center">
+                        <Loading />
+                      </div>
                     }
-                  : {
-                      dragFree: false,
-                      skipSnaps: false,
-                      containScroll: "trimSnaps",
-                    }),
-              }}
-              setApi={setApi}
-            >
-              <CarouselContent className="-ml-2 md:-ml-4">
-                <Suspense
-                  fallback={
-                    <div className="flex h-[85vh] w-full items-center justify-center">
-                      <Loading />
-                    </div>
-                  }
-                >
-                  {menuItems.flatMap((item, groupIndex) =>
-                    item.images.map((image, imageIndex) => {
-                      const absoluteIndex =
-                        (imageStartOffsets[groupIndex] ?? 0) + imageIndex;
+                  >
+                    {menuItems.flatMap((item, groupIndex) =>
+                      item.images.map((image, imageIndex) => {
+                        const absoluteIndex =
+                          (imageStartOffsets[groupIndex] ?? 0) + imageIndex;
+
+                        return (
+                          <MenuCarouselItem
+                            absoluteIndex={absoluteIndex}
+                            forceLunch={forceLunch}
+                            groupIndex={groupIndex}
+                            highlightTarget={highlightTarget}
+                            image={image}
+                            imageIndex={imageIndex}
+                            isMobile={isMobile}
+                            item={item}
+                            key={image}
+                            targetPage={targetPage}
+                          />
+                        );
+                      })
+                    )}
+                  </Suspense>
+                </CarouselContent>
+              </Carousel>
+            </motion.div>
+
+            <motion.div layout>
+              <motion.div
+                animate={{ opacity: 1 }}
+                initial={{ opacity: 0 }}
+                transition={{ duration: 0.3, delay: 0.4 }}
+              >
+                <Pagination>
+                  <PaginationContent className="gap-1">
+                    <PaginationItem>
+                      <motion.div
+                        whileHover={
+                          shouldReduceMotion ? undefined : { scale: 1.1 }
+                        }
+                        whileTap={
+                          shouldReduceMotion ? undefined : { scale: 0.9 }
+                        }
+                      >
+                        <Button
+                          aria-label="Previous page"
+                          className="h-8 w-8 p-0 text-[#03502D] hover:bg-[#03502D]/10 hover:text-[#03502D]"
+                          onClick={handlePrevClick}
+                          size="icon"
+                          type="button"
+                          variant="ghost"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    </PaginationItem>
+
+                    {Array.from({
+                      length: isMobile
+                        ? allImages.length
+                        : DESKTOP_DOT_POSITIONS.length,
+                    }).map((_, i) => {
+                      const isLunchPage =
+                        forceLunch && (isMobile ? i === 6 || i === 7 : i === 3);
 
                       return (
-                        <MenuCarouselItem
-                          absoluteIndex={absoluteIndex}
-                          forceLunch={forceLunch}
-                          groupIndex={groupIndex}
-                          highlightTarget={highlightTarget}
-                          image={image}
-                          imageIndex={imageIndex}
-                          isMobile={isMobile}
-                          item={item}
-                          key={`${item.name}-${imageIndex}`}
-                          targetPage={targetPage}
-                        />
+                        <PaginationItem
+                          key={
+                            isMobile
+                              ? allImages[i]
+                              : `desktop-dot-${DESKTOP_DOT_POSITIONS[i]}`
+                          }
+                        >
+                          <button
+                            aria-label={`Go to page ${i + 1}`}
+                            className={cn(
+                              "h-2 w-2 rounded-full transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03502D] focus-visible:ring-offset-2",
+                              {
+                                "bg-[#03502D]":
+                                  getActiveDotIndex(currentPage) === i &&
+                                  !isLunchPage,
+                                "bg-[#03502D]/20":
+                                  !isLunchPage &&
+                                  getActiveDotIndex(currentPage) !== i,
+                                "bg-yellow-500":
+                                  forceLunch &&
+                                  ((isMobile && (i === 6 || i === 7)) ||
+                                    (!isMobile && i === 3)),
+                              }
+                            )}
+                            onClick={() => handleDotClick(i)}
+                            type="button"
+                          />
+                        </PaginationItem>
                       );
-                    })
-                  )}
-                </Suspense>
-              </CarouselContent>
-            </Carousel>
-          </motion.div>
+                    })}
 
-          <motion.div layout>
-            <motion.div
-              animate={{ opacity: 1 }}
-              initial={{ opacity: 0 }}
-              transition={{ duration: 0.3, delay: 0.4 }}
-            >
-              <Pagination>
-                <PaginationContent className="gap-1">
-                  <PaginationItem>
-                    <motion.div
-                      whileHover={shouldReduceMotion ? undefined : { scale: 1.1 }}
-                      whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
-                    >
-                      <Button
-                        aria-label="Previous page"
-                        className="h-8 w-8 p-0 text-[#03502D] hover:bg-[#03502D]/10 hover:text-[#03502D]"
-                        onClick={handlePrevClick}
-                        size="icon"
-                        type="button"
-                        variant="ghost"
+                    <PaginationItem>
+                      <motion.div
+                        whileHover={
+                          shouldReduceMotion ? undefined : { scale: 1.1 }
+                        }
+                        whileTap={
+                          shouldReduceMotion ? undefined : { scale: 0.9 }
+                        }
                       >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                    </motion.div>
-                  </PaginationItem>
-
-                  {Array.from({
-                    length: isMobile
-                      ? allImages.length
-                      : DESKTOP_DOT_POSITIONS.length,
-                  }).map((_, i) => {
-                    const isLunchPage =
-                      forceLunch && (isMobile ? i === 6 || i === 7 : i === 3);
-
-                    return (
-                      <PaginationItem key={i}>
-                        <button
-                          aria-label={`Go to page ${i + 1}`}
-                          className={cn(
-                            "h-2 w-2 rounded-full transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03502D] focus-visible:ring-offset-2",
-                            {
-                              "bg-[#03502D]":
-                                getActiveDotIndex(currentPage) === i &&
-                                !isLunchPage,
-                              "bg-[#03502D]/20":
-                                !isLunchPage &&
-                                getActiveDotIndex(currentPage) !== i,
-                              "bg-yellow-500":
-                                forceLunch &&
-                                ((isMobile && (i === 6 || i === 7)) ||
-                                  (!isMobile && i === 3)),
-                            }
-                          )}
-                          onClick={() => handleDotClick(i)}
+                        <Button
+                          aria-label="Next page"
+                          className="h-8 w-8 p-0 text-[#03502D] hover:bg-[#03502D]/10 hover:text-[#03502D]"
+                          onClick={handleNextClick}
+                          size="icon"
                           type="button"
-                        />
-                      </PaginationItem>
-                    );
-                  })}
-
-                  <PaginationItem>
-                    <motion.div
-                      whileHover={shouldReduceMotion ? undefined : { scale: 1.1 }}
-                      whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
-                    >
-                      <Button
-                        aria-label="Next page"
-                        className="h-8 w-8 p-0 text-[#03502D] hover:bg-[#03502D]/10 hover:text-[#03502D]"
-                        onClick={handleNextClick}
-                        size="icon"
-                        type="button"
-                        variant="ghost"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </motion.div>
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+                          variant="ghost"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </motion.div>
             </motion.div>
           </motion.div>
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
 
-      {isDev && (
-        <button
-          className="fixed right-4 bottom-4 z-50 rounded-full bg-[#03502D] px-4 py-2 text-sm text-stone-50 shadow-lg hover:opacity-90"
-          onClick={() => setForceLunch(!forceLunch)}
-          type="button"
-        >
-          {forceLunch ? "Disable" : "Enable"} Lunch Hours
-        </button>
-      )}
-    </div>
+        {isDev && (
+          <button
+            className="fixed right-4 bottom-4 z-50 rounded-full bg-[#03502D] px-4 py-2 text-sm text-stone-50 shadow-lg hover:opacity-90"
+            onClick={() =>
+              dispatch({ type: "set_force_lunch", value: !forceLunch })
+            }
+            type="button"
+          >
+            {forceLunch ? "Disable" : "Enable"} Lunch Hours
+          </button>
+        )}
+      </div>
+    </LazyMotion>
   );
 }

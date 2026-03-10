@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+const INSTAGRAM_PROFILE_URL = "https://instagram.com/elpueblitonwa";
+
 interface InstagramPost {
   id: string;
   media_url: string;
@@ -20,7 +22,7 @@ interface InstagramApiResponse {
   };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get Instagram access token from environment variables
     const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
               id: "1",
               media_url:
                 "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=400&fit=crop",
-              permalink: "https://instagram.com/el_pueb",
+              permalink: INSTAGRAM_PROFILE_URL,
               caption: "Delicious food at El Pueblito! 🌮",
               media_type: "IMAGE" as const,
               timestamp: new Date().toISOString(),
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
               id: "2",
               media_url:
                 "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop",
-              permalink: "https://instagram.com/el_pueb",
+              permalink: INSTAGRAM_PROFILE_URL,
               caption: "Fresh ingredients, authentic flavors! 🌶️",
               media_type: "IMAGE" as const,
               timestamp: new Date().toISOString(),
@@ -53,7 +55,7 @@ export async function GET(request: NextRequest) {
               id: "3",
               media_url:
                 "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=400&fit=crop",
-              permalink: "https://instagram.com/el_pueb",
+              permalink: INSTAGRAM_PROFILE_URL,
               caption: "Family dinner time! 👨‍👩‍👧‍👦",
               media_type: "IMAGE" as const,
               timestamp: new Date().toISOString(),
@@ -102,7 +104,7 @@ export async function GET(request: NextRequest) {
             id: "1",
             media_url:
               "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=400&fit=crop",
-            permalink: "https://instagram.com/el_pueb",
+            permalink: INSTAGRAM_PROFILE_URL,
             caption: "Delicious food at El Pueblito! 🌮",
             media_type: "IMAGE" as const,
             timestamp: new Date().toISOString(),
@@ -111,7 +113,7 @@ export async function GET(request: NextRequest) {
             id: "2",
             media_url:
               "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=400&fit=crop",
-            permalink: "https://instagram.com/el_pueb",
+            permalink: INSTAGRAM_PROFILE_URL,
             caption: "Fresh ingredients, authentic flavors! 🌶️",
             media_type: "IMAGE" as const,
             timestamp: new Date().toISOString(),
@@ -120,7 +122,7 @@ export async function GET(request: NextRequest) {
             id: "3",
             media_url:
               "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=400&fit=crop",
-            permalink: "https://instagram.com/el_pueb",
+            permalink: INSTAGRAM_PROFILE_URL,
             caption: "Family dinner time! 👨‍👩‍👧‍👦",
             media_type: "IMAGE" as const,
             timestamp: new Date().toISOString(),

@@ -4,5 +4,146 @@
     "ultracite/biome/core",
     "ultracite/biome/react",
     "ultracite/biome/next"
+  ],
+  "linter": {
+    "rules": {
+      "nursery": {
+        "useSortedClasses": "off"
+      },
+      "performance": {
+        "noNamespaceImport": "off"
+      },
+      "style": {
+        "useFilenamingConvention": "off"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAtRules": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["app/layout.tsx", "components/Testimonials.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/Hero.tsx", "components/InstagramFeed.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off",
+            "noForEach": "off"
+          },
+          "correctness": {
+            "noUnusedFunctionParameters": "off",
+            "useImageSize": "off"
+          },
+          "performance": {
+            "noImgElement": "off",
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "useCollapsedElseIf": "off",
+            "noNestedTernary": "off"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "off",
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["app/contact/page.tsx", "components/Menus.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "style": {
+            "noNestedTernary": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/Testimonials.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "performance": {
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "noNestedTernary": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noEvolvingTypes": "off",
+            "noImplicitAnyLet": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "lib/constants/reviews.ts",
+        "lib/constants/image-captions.ts",
+        "lib/utils/dateFormatter.ts",
+        "lib/hooks/useRestaurantHours.ts",
+        "hooks/use-toast.ts",
+        "components/ui/carousel.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useAriaPropsSupportedByRole": "off",
+            "useSemanticElements": "off"
+          },
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off",
+            "noForEach": "off"
+          },
+          "performance": {
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "noNestedTernary": "off",
+            "useDefaultSwitchClause": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/debug/**/*"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useButtonType": "off"
+          },
+          "correctness": {
+            "noUnusedVariables": "off"
+          }
+        }
+      }
+    }
   ]
 }

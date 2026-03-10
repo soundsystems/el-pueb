@@ -1,6 +1,11 @@
 "use client";
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m as motion,
+} from "framer-motion";
 import { Phone } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRestaurantHours } from "@/lib/hooks/useRestaurantHours";
-import { useScreenSize } from "@/lib/hooks/useScreenSize";
 
 const springTransition = {
   type: "spring" as const,
@@ -31,15 +35,15 @@ const bouncySpring = {
 const fadeInUp = {
   initial: {
     opacity: 0,
+    y: -28,
   },
   animate: {
     opacity: 1,
+    y: 0,
   },
   transition: {
-    type: "spring" as const,
-    stiffness: 200,
-    damping: 20,
-    mass: 0.8,
+    duration: 0.45,
+    ease: [0.16, 1, 0.3, 1] as const,
   },
 };
 
@@ -54,32 +58,19 @@ export function updateHoursText(text: string) {
   const headerElements = document.querySelectorAll(".header-hours");
 
   if (headerElements.length > 0) {
-    headerElements.forEach((element) => {
+    for (const element of headerElements) {
       const span = element.querySelector("span");
       if (span) {
         span.textContent = text;
       }
-    });
+    }
   }
 }
 
 export default function Header() {
   const [open, setOpen] = useState(false);
-  const isLargeScreen = useScreenSize();
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState("");
   const { isOpen, hoursToday, closedMessage } = useRestaurantHours();
-
-  useEffect(() => {
-    const currentTab = tabs.find((tab) => tab.href === pathname);
-    if (currentTab) {
-      setActiveTab(currentTab.id);
-    } else if (pathname === "/") {
-      setActiveTab("home");
-    } else {
-      setActiveTab("");
-    }
-  }, [pathname]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development") {
@@ -98,45 +89,49 @@ export default function Header() {
     []
   );
 
-  const tabs = [
-    { id: "menu", label: "Menu", href: "/menu" },
-    { id: "locations", label: "Locations", href: "/locations" },
-    { id: "contact", label: "Contact Us", href: "/contact" },
-    {
-      id: "pick-up",
-      label: (
-        <div className="flex items-center gap-1 font-ultrablack">
-          <span className="md:hidden">Order</span>
-          <span className="hidden whitespace-nowrap md:inline">
-            Order Pick Up
-          </span>
-          <Phone
-            className={`pointer-events-auto h-4 w-4 stroke-0 ${open ? "fill-stone-50 transition-colors transition-duration-400" : "fill-[#CE1226]"} active:fill-stone-50`}
-          />
-        </div>
-      ),
-      href: "#",
-    },
-  ];
+  const tabs = useMemo(
+    () => [
+      { id: "menu", label: "Menu", href: "/menu" },
+      { id: "locations", label: "Locations", href: "/locations" },
+      { id: "contact", label: "Contact Us", href: "/contact" },
+      {
+        id: "pick-up",
+        label: (
+          <div className="flex items-center gap-1 font-ultrablack">
+            <span className="md:hidden">Order</span>
+            <span className="hidden whitespace-nowrap md:inline">
+              Order Pick Up
+            </span>
+            <Phone
+              className={`pointer-events-auto h-4 w-4 stroke-0 ${open ? "fill-stone-50 transition-colors transition-duration-400" : "fill-[#CE1226]"} active:fill-stone-50`}
+            />
+          </div>
+        ),
+        href: "#",
+      },
+    ],
+    [open]
+  );
+
+  const activeTab = useMemo(() => {
+    const currentTab = tabs.find((tab) => tab.href === pathname);
+    if (currentTab) {
+      return currentTab.id;
+    }
+
+    return pathname === "/" ? "home" : "";
+  }, [pathname, tabs]);
 
   return (
-    <motion.header
-      className="top-0 z-50 mt-[.75rem] mb-2 flex w-full flex-col items-center"
-      layout="preserve-aspect"
-      transition={springTransition}
-    >
-      <AnimatePresence initial={false}>
+    <LazyMotion features={domAnimation}>
+      <header className="top-0 z-50 mt-[.75rem] mb-2 flex w-full flex-col items-center">
         <motion.div
-          animate={{ opacity: 1, y: 0 }}
+          animate={{ opacity: 1 }}
           className="relative flex w-full flex-col items-center md:flex-row md:items-center md:justify-between"
-          exit={{ opacity: 0, y: 20 }}
-          initial={{ opacity: 0, y: 20 }}
-          key={isLargeScreen ? "desktop" : "mobile"}
-          layout="position"
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          initial={{ opacity: 0 }}
+          transition={{ duration: 0.2, ease: "linear" }}
         >
           <motion.div
-            layout="position"
             {...fadeInUp}
             className="relative mt-2 shrink-0 md:mt-0 md:ml-8 md:pr-10 lg:mb-2"
             whileHover={{ scale: 1.05 }}
@@ -147,12 +142,11 @@ export default function Header() {
               aria-selected={activeTab === "home"}
               className="relative block"
               href="/"
-              onClick={() => setActiveTab("home")}
               role="tab"
             >
               <Image
                 alt="El Pueblito Logo"
-                className="-inset-y-1 relative z-20 w-[14rem] max-w-[22rem]"
+                className="relative -inset-y-1 z-20 w-[14rem] max-w-[22rem]"
                 height="337"
                 priority
                 src="/logo.png"
@@ -187,28 +181,26 @@ export default function Header() {
             </Link>
           </motion.div>
           <motion.nav
+            animate={{ opacity: 1, y: 0 }}
             className="mt-2 w-full flex-1 md:mt-0 md:flex md:min-w-[400px] md:justify-center"
-            layout="position"
-            transition={springTransition}
+            initial={{ opacity: 0, y: -24 }}
+            transition={{
+              duration: 0.45,
+              delay: 0.08,
+              ease: [0.16, 1, 0.3, 1],
+            }}
           >
             <nav className="flex items-center justify-center space-x-1 font-ultrablack text-lg lg:text-xl">
               {tabs.map((tab, index) => (
                 <motion.div
-                  animate={{ opacity: 1, x: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className="relative"
-                  initial={{ opacity: 0, x: -30 }}
+                  initial={{ opacity: 0, y: -24 }}
                   key={tab.id}
-                  layout
                   transition={{
-                    opacity: {
-                      duration: 0.3,
-                      delay: index * 0.1 + 0.3,
-                    },
-                    x: {
-                      duration: 0.4,
-                      delay: index * 0.1 + 0.6,
-                      ease: "easeOut",
-                    },
+                    duration: 0.42,
+                    delay: index * 0.06 + 0.12,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
                 >
                   {tab.id === "pick-up" ? (
@@ -221,7 +213,7 @@ export default function Header() {
                         }`}
                         suppressHydrationWarning
                       >
-                        <motion.span className="relative z-20" layout>
+                        <motion.span className="relative z-20">
                           {tab.label}
                         </motion.span>
                       </DropdownMenuTrigger>
@@ -275,7 +267,6 @@ export default function Header() {
                           : "text-stone-950 hover:text-stone-50"
                       }`}
                       href={tab.href}
-                      onClick={() => setActiveTab(tab.id)}
                       style={{
                         WebkitTapHighlightColor: "transparent",
                       }}
@@ -295,7 +286,7 @@ export default function Header() {
                           }}
                         />
                       )}
-                      <motion.span className="relative z-20" layout>
+                      <motion.span className="relative z-20">
                         {tab.label}
                       </motion.span>
                     </Link>
@@ -304,18 +295,18 @@ export default function Header() {
               ))}
             </nav>
           </motion.nav>
-          <motion.div
-            className="hidden md:mr-4 md:block md:w-[10rem] lg:hidden"
-            layout="position"
-            transition={springTransition}
-          >
+          <div className="hidden md:mr-4 md:block md:w-[10rem] lg:hidden">
             {/* Spacer div to balance the logo width */}
-          </motion.div>
+          </div>
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="-translate-y-1/2 header-hours absolute top-1/2 right-4 my-2 hidden lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-lg"
-            initial={{ opacity: 0, y: -10 }}
-            transition={springTransition}
+            className="header-hours absolute top-1/2 right-4 my-2 hidden -translate-y-1/2 lg:static lg:mr-16 lg:block lg:translate-y-0 lg:text-lg"
+            initial={{ opacity: 0, y: -20 }}
+            transition={{
+              duration: 0.42,
+              delay: 0.18,
+              ease: [0.16, 1, 0.3, 1],
+            }}
           >
             {isOpen ? (
               <span className="font-bold text-[#006847]">
@@ -326,21 +317,21 @@ export default function Header() {
             )}
           </motion.div>
         </motion.div>
-      </AnimatePresence>
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="md:-mt-6 header-hours py-2 text-center text-base md:text-lg lg:hidden"
-        initial={{ opacity: 0, y: -10 }}
-        transition={springTransition}
-      >
-        {isOpen ? (
-          <span className="font-bold text-[#03502D]">
-            Open Today {hoursToday}
-          </span>
-        ) : (
-          <span className="font-bold text-[#CE1226]">{closedMessage}</span>
-        )}
-      </motion.div>
-    </motion.header>
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="header-hours py-2 text-center text-base md:-mt-6 md:text-lg lg:hidden"
+          initial={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.38, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {isOpen ? (
+            <span className="font-bold text-[#03502D]">
+              Open Today {hoursToday}
+            </span>
+          ) : (
+            <span className="font-bold text-[#CE1226]">{closedMessage}</span>
+          )}
+        </motion.div>
+      </header>
+    </LazyMotion>
   );
 }

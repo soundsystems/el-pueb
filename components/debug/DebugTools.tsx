@@ -118,7 +118,9 @@ const DebugTools = () => {
     updateHoursText(newText);
   }, [debugDay, debugTimeState, isOpen, hoursToday, closedMessage]);
 
-  if (process.env.NODE_ENV !== "development") return null;
+  if (process.env.NODE_ENV !== "development") {
+    return null;
+  }
 
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const timeStates: TimeState[] = ["before", "during", "after"];

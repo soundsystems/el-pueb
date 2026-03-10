@@ -1,7 +1,13 @@
 "use client";
 
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m as motion,
+  useAnimationControls,
+} from "framer-motion";
 import { CircleArrowRight, CircleCheck } from "lucide-react";
-import { AnimatePresence, motion, useAnimationControls } from "motion/react";
 import React, { useActionState } from "react";
 import ReactConfetti from "react-confetti";
 import { subscribe } from "@/app/actions";
@@ -10,13 +16,13 @@ import { LoadingSpinner } from "./ui/loading";
 const PHONE_NUMBER_REGEX = /\D/g;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type SubscribeState = {
+interface SubscribeState {
   message?: string;
   error?: boolean | string;
   success?: boolean;
   step?: "email" | "details";
   email?: string;
-};
+}
 
 const initialState: SubscribeState = {
   message: "",
@@ -54,7 +60,7 @@ function useWindowDimensions() {
     handleResize();
 
     window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleResize);
+    window.addEventListener("scroll", handleResize, { passive: true });
 
     return () => {
       window.removeEventListener("resize", handleResize);
@@ -166,7 +172,7 @@ export default function Subscribe() {
     updateConfettiSource();
 
     // Update on scroll and resize
-    window.addEventListener("scroll", updateConfettiSource);
+    window.addEventListener("scroll", updateConfettiSource, { passive: true });
     window.addEventListener("resize", updateConfettiSource);
 
     return () => {
@@ -257,7 +263,6 @@ export default function Subscribe() {
           aria-label="Email address"
           autoCapitalize="none"
           autoCorrect="off"
-          suppressHydrationWarning
           className="mx-2 min-h-[44px] w-48 select-none appearance-none rounded-lg bg-transparent px-2 text-left font-medium text-base text-stone-50 placeholder-stone-50/80 outline-[#F15670] transition-transform duration-200 placeholder:text-center placeholder:font-light placeholder:text-sm hover:outline hover:outline-1 focus:border-transparent focus:outline-2"
           defaultValue={state.email}
           inputMode="email"
@@ -267,6 +272,7 @@ export default function Subscribe() {
           onFocus={handleFocusAnimation}
           placeholder="your@email.com"
           required
+          suppressHydrationWarning
           type="email"
         />
       </span>
@@ -426,120 +432,122 @@ export default function Subscribe() {
   };
 
   return (
-    <div className="flex justify-center">
-      {process.env.NODE_ENV === "development" && (
-        <button
-          className="fixed right-4 bottom-20 z-[9999] rounded-full bg-stone-950/90 p-3 text-sm text-stone-50 shadow-lg"
-          onClick={() => setShowConfetti(true)}
-          type="button"
-        >
-          Test Confetti 🎉
-        </button>
-      )}
-      <div className="mx-auto my-6">
-        <form action={submitAction} noValidate ref={formRef}>
-          <motion.div
-            className="group relative mx-auto inline-flex w-auto min-w-[300px] flex-col place-content-center place-items-baseline items-center divide-pueb whitespace-nowrap rounded-xl bg-stone-950/90 p-4 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-colors duration-300 ease-linear focus-within:drop-shadow-xl hover:divide-ora"
-            onHoverEnd={stopColorAnimation}
-            onHoverStart={startColorAnimation}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+    <LazyMotion features={domAnimation}>
+      <div className="flex justify-center">
+        {process.env.NODE_ENV === "development" && (
+          <button
+            className="fixed right-4 bottom-20 z-[9999] rounded-full bg-stone-950/90 p-3 text-sm text-stone-50 shadow-lg"
+            onClick={() => setShowConfetti(true)}
+            type="button"
           >
-            <div className="flex w-full items-center justify-between">
-              {state.success &&
-              state.step === "details" &&
-              state.message === "Successfully subscribed!" ? (
-                <motion.div
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="flex w-full flex-col items-center justify-center"
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 15,
-                    duration: 0.2,
-                  }}
-                >
-                  <span className="font-semibold text-sm text-yellow-500 uppercase transition-colors duration-300 ease-linear md:text-base">
-                    THANK YOU FOR SUBSCRIBING!
-                  </span>
-                  <span className="pb-2 text-center text-sm text-stone-50">
-                    Welcome to La Familia Pueblito
-                  </span>
-                </motion.div>
-              ) : (
-                <>
-                  {renderContent()}
-                  <button
-                    aria-label="Subscribe"
-                    className="ml-2 cursor-pointer border-none bg-transparent p-0"
-                    disabled={isPending}
-                    type="submit"
-                  >
-                    {state.step === "details" ? (
-                      <CircleCheck className="-ml-10 mt-4 h-8 w-8 text-stone-50 transition-colors duration-300 ease-linear group-hover:text-green-600 md:stroke-2" />
-                    ) : (
-                      <CircleArrowRight className="-ml-1 mt-4 h-6 w-6 text-stone-50 transition-colors duration-300 ease-linear group-hover:text-[#30C2DC] md:stroke-2" />
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-          </motion.div>
-        </form>
-
-        {/* Separate AnimatePresence for error message */}
-        <AnimatePresence>
-          {state.error && state.message && (
+            Test Confetti 🎉
+          </button>
+        )}
+        <div className="mx-auto my-6">
+          <form action={submitAction} noValidate ref={formRef}>
             <motion.div
-              animate={{ opacity: 1, y: 0 }}
-              className="mx-auto mt-2 flex w-auto flex-wrap items-center justify-center text-center"
-              exit={{ opacity: 0, y: -10 }}
-              initial={{ opacity: 0, y: -10 }}
-              key={state.message}
-              role="alert"
-              transition={{
-                duration: 0.15,
-                ease: "easeOut",
-              }}
+              className="group relative mx-auto inline-flex w-auto min-w-[300px] flex-col place-content-center place-items-baseline items-center divide-pueb whitespace-nowrap rounded-xl bg-stone-950/90 p-4 shadow-lg shadow-stone-950/75 backdrop-blur-sm transition-colors duration-300 ease-linear focus-within:drop-shadow-xl hover:divide-ora"
+              onHoverEnd={stopColorAnimation}
+              onHoverStart={startColorAnimation}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <div className="rounded-lg bg-stone-950/90 px-3 py-1.5 backdrop-blur-sm">
-                <span className="font-light text-red-500/80 text-sm">
-                  {state.message}
-                </span>
+              <div className="flex w-full items-center justify-between">
+                {state.success &&
+                state.step === "details" &&
+                state.message === "Successfully subscribed!" ? (
+                  <motion.div
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex w-full flex-col items-center justify-center"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 15,
+                      duration: 0.2,
+                    }}
+                  >
+                    <span className="font-semibold text-sm text-yellow-500 uppercase transition-colors duration-300 ease-linear md:text-base">
+                      THANK YOU FOR SUBSCRIBING!
+                    </span>
+                    <span className="pb-2 text-center text-sm text-stone-50">
+                      Welcome to La Familia Pueblito
+                    </span>
+                  </motion.div>
+                ) : (
+                  <>
+                    {renderContent()}
+                    <button
+                      aria-label="Subscribe"
+                      className="ml-2 cursor-pointer border-none bg-transparent p-0"
+                      disabled={isPending}
+                      type="submit"
+                    >
+                      {state.step === "details" ? (
+                        <CircleCheck className="mt-4 -ml-10 h-8 w-8 text-stone-50 transition-colors duration-300 ease-linear group-hover:text-green-600 md:stroke-2" />
+                      ) : (
+                        <CircleArrowRight className="mt-4 -ml-1 h-6 w-6 text-stone-50 transition-colors duration-300 ease-linear group-hover:text-[#30C2DC] md:stroke-2" />
+                      )}
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+          </form>
 
-        {/* Separate AnimatePresence for confetti */}
-        <AnimatePresence>
-          {showConfetti && (
-            <motion.div
-              animate={{ opacity: 1 }}
-              className="fixed top-0 right-0 bottom-0 left-0 z-[9999]"
-              exit={{ opacity: 0 }}
-              initial={{ opacity: 0 }}
-              style={{
-                pointerEvents: "none",
-                position: "fixed",
-                overflow: "visible",
-                height: "100vh",
-                width: "100vw",
-              }}
-            >
-              {dimensions.width < 768 ? (
-                <>
-                  <ReactConfetti {...mobileConfettiProps} />
-                  <ReactConfetti {...mobileConfettiProps2} />
-                </>
-              ) : (
-                <ReactConfetti {...confettiProps} />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Separate AnimatePresence for error message */}
+          <AnimatePresence>
+            {state.error && state.message && (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-auto mt-2 flex w-auto flex-wrap items-center justify-center text-center"
+                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -10 }}
+                key={state.message}
+                role="alert"
+                transition={{
+                  duration: 0.15,
+                  ease: "easeOut",
+                }}
+              >
+                <div className="rounded-lg bg-stone-950/90 px-3 py-1.5 backdrop-blur-sm">
+                  <span className="font-light text-red-500/80 text-sm">
+                    {state.message}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Separate AnimatePresence for confetti */}
+          <AnimatePresence>
+            {showConfetti && (
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="fixed top-0 right-0 bottom-0 left-0 z-[9999]"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
+                style={{
+                  pointerEvents: "none",
+                  position: "fixed",
+                  overflow: "visible",
+                  height: "100vh",
+                  width: "100vw",
+                }}
+              >
+                {dimensions.width < 768 ? (
+                  <>
+                    <ReactConfetti {...mobileConfettiProps} />
+                    <ReactConfetti {...mobileConfettiProps2} />
+                  </>
+                ) : (
+                  <ReactConfetti {...confettiProps} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </LazyMotion>
   );
 }

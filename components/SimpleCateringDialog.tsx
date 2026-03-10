@@ -1,35 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type SimpleCateringDialogProps = {
+interface SimpleCateringDialogProps {
   isOpen: boolean;
   onClose: () => void;
-};
+}
 
 export default function SimpleCateringDialog({
   isOpen,
   onClose,
 }: SimpleCateringDialogProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <Dialog onOpenChange={onClose} open={isOpen}>
       <DialogContent className="border-2 border-gray-200 bg-[#E3D6C3] shadow-xl sm:max-w-md">

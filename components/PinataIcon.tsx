@@ -1,8 +1,8 @@
 "use client";
 
-type PinataIconProps = {
+interface PinataIconProps {
   className?: string;
-};
+}
 
 export default function PinataIcon({
   className = "h-16 w-16",

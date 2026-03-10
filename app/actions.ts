@@ -16,11 +16,11 @@ const formSchema = z.object({
   businessName: z.string().optional(),
 });
 
-type ContactFormState = {
+interface ContactFormState {
   success?: boolean;
   error?: string;
   firstName?: string;
-};
+}
 
 interface ContactFormData {
   firstName?: string;
@@ -99,23 +99,23 @@ const emailSchema = z.object({
     .email("Please provide a valid email address"),
 });
 
-type SubscribeFormState = {
+interface SubscribeFormState {
   success?: boolean;
   error?: boolean | string;
   message?: string;
   step?: "email" | "details";
   email?: string;
-};
+}
 
 const subscriberCache = new Set<string>();
 
 // Add this type definition
-type SubscribeFormData = {
+interface SubscribeFormData {
   email: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
-};
+}
 
 // Update helper functions with proper typing
 function validateDetailsStep(formData: SubscribeFormData) {

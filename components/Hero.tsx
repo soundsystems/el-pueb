@@ -1,12 +1,24 @@
 "use client";
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m as motion,
+  useReducedMotion,
+} from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
-import type { CarouselApi } from "@/components/ui/carousel";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { trackImageEngagement, trackLightboxOpen } from "@/lib/analytics";
 import { CONFETTI_COLORS } from "@/lib/constants/colors";
@@ -173,7 +185,7 @@ const createDynamicDrinksCarousel = () => {
   const shuffledAdditionalDrinks = shuffleArray(additionalDrinks);
 
   // Reorder daily specials to start with today
-  const reorderedSpecials = [];
+  const reorderedSpecials: typeof allDrinks = [];
   const todayDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][today];
   const todayIndex = dailySpecials.findIndex((drink) =>
     drink.caption.startsWith(`${todayDay}:`)
@@ -198,7 +210,10 @@ const createDynamicDrinksCarousel = () => {
         i % 2 === 1 &&
         shuffledAdditionalDrinks.length > 0
       ) {
-        reorderedSpecials.push(shuffledAdditionalDrinks.shift()!);
+        const nextDrink = shuffledAdditionalDrinks.shift();
+        if (nextDrink) {
+          reorderedSpecials.push(nextDrink);
+        }
       }
     }
   } else {
@@ -227,18 +242,21 @@ const dailySpecialsImages = [
   menuLink: MENU_LINKS.dailySpecials[index] || "/menu",
 }));
 
-type HeroImage = {
+interface HeroImage {
   src: string;
   alt: string;
   caption: string;
   menuLink?: string; // Optional link to specific menu section
   isDailyDrinkSpecial?: boolean; // Optional flag for daily drink specials
-};
+}
+
+interface AutoplayController {
+  play?: () => void;
+  stop?: () => void;
+}
 
 const HeroCarousel = ({
   images,
-  setApi,
-  currentIndex,
   setCurrentIndex,
   onImageClick,
   isMobile,
@@ -250,8 +268,6 @@ const HeroCarousel = ({
   isDailyDrinks,
 }: {
   images: HeroImage[];
-  setApi: (api: CarouselApi | undefined) => void;
-  currentIndex: number;
   setCurrentIndex: (index: number) => void;
   onImageClick?: (image: HeroImage, carouselIndex: number) => void;
   isMobile: boolean;
@@ -270,23 +286,30 @@ const HeroCarousel = ({
   // Initialize loading states for all images
   useEffect(() => {
     const initialLoadingStates: { [key: string]: boolean } = {};
-    images.forEach((img) => {
+    for (const img of images) {
       initialLoadingStates[img.src] = true;
-    });
+    }
     setImageLoadingStates(initialLoadingStates);
   }, [images]);
 
   // Memoize the plugins array to prevent infinite re-renders
+  let autoplayDelay = 7000;
+  if (isDailySpecials) {
+    autoplayDelay = 11_000;
+  } else if (isDailyDrinks) {
+    autoplayDelay = 9000;
+  }
+
   const plugins = useMemo(
     () => [
       Autoplay({
-        delay: isDailySpecials ? 11_000 : isDailyDrinks ? 9000 : 7000,
+        delay: autoplayDelay,
         stopOnInteraction: false,
         stopOnMouseEnter: false,
         playOnInit: true,
       }),
     ],
-    [isDailySpecials, isDailyDrinks]
+    [autoplayDelay]
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -303,7 +326,8 @@ const HeroCarousel = ({
   );
 
   // Store autoplay plugin reference
-  const [autoplayPlugin, setAutoplayPlugin] = useState<any>(null);
+  const [autoplayPlugin, setAutoplayPlugin] =
+    useState<AutoplayController | null>(null);
 
   // Use useRef to maintain stable reference to the API
   const apiRef = useRef(emblaApi);
@@ -314,10 +338,12 @@ const HeroCarousel = ({
   // console.log('HeroCarousel render - emblaApi:', emblaApi, 'isDailyDrinks:', isDailyDrinks);
 
   // Use onSelect to trigger re-renders when carousel changes, but don't manage state
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [_forceUpdate, setForceUpdate] = useState(0);
 
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi) {
+      return;
+    }
 
     const handleSelect = () => {
       setCurrentIndex(emblaApi.selectedScrollSnap());
@@ -329,7 +355,7 @@ const HeroCarousel = ({
     return () => {
       emblaApi.off("select", handleSelect);
     };
-  }, [emblaApi]);
+  }, [emblaApi, setCurrentIndex]);
 
   // For daily specials, start on today's special then autoplay from there
   useEffect(() => {
@@ -348,25 +374,11 @@ const HeroCarousel = ({
   // Note: Daily drinks are already reordered to start with today's special at index 0
   // No need for additional scrolling logic
 
-  // Update parent API reference
-  useEffect(() => {
-    if (emblaApi) {
-      setApi(emblaApi);
-
-      // Debug: Check if autoplay plugin is working
-      // if (isDailyDrinks) {
-      //   console.log('Drinks carousel API initialized:', emblaApi);
-      //   console.log('Available methods:', Object.getOwnPropertyNames(emblaApi));
-      //   console.log('scrollPrev method:', emblaApi.scrollPrev);
-      //   console.log('scrollNext method:', emblaApi.scrollNext);
-      //   console.log('Autoplay plugin:', emblaApi.plugins().autoplay);
-      // }
-    }
-  }, [emblaApi, setApi]);
-
   // Store autoplay plugin reference when carousel initializes
   useEffect(() => {
-    if (!emblaApi) return;
+    if (!emblaApi) {
+      return;
+    }
 
     // Wait a bit for plugins to be fully initialized
     const timer = setTimeout(() => {
@@ -374,12 +386,12 @@ const HeroCarousel = ({
       // console.log(`Carousel ${carouselIndex}: Available plugins:`, plugins);
 
       // Try to find the autoplay plugin
-      let foundPlugin: any = null;
+      let foundPlugin: AutoplayController | null = null;
 
       if (plugins.autoplay) {
-        foundPlugin = plugins.autoplay;
+        foundPlugin = plugins.autoplay as AutoplayController;
       } else if (plugins["embla-carousel-autoplay"]) {
-        foundPlugin = plugins["embla-carousel-autoplay"];
+        foundPlugin = plugins["embla-carousel-autoplay"] as AutoplayController;
       } else {
         // Look through all plugin properties
         for (const key in plugins) {
@@ -390,7 +402,7 @@ const HeroCarousel = ({
               "stop" in plugins[key] &&
               "play" in plugins[key])
           ) {
-            foundPlugin = plugins[key];
+            foundPlugin = plugins[key] as AutoplayController;
             break;
           }
         }
@@ -405,11 +417,13 @@ const HeroCarousel = ({
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [emblaApi, carouselIndex, isDailySpecials]);
+  }, [emblaApi]);
 
   // Control autoplay based on pauseAutoplay prop
   useEffect(() => {
-    if (!autoplayPlugin) return;
+    if (!autoplayPlugin) {
+      return;
+    }
 
     // console.log(`Carousel ${carouselIndex}: pauseAutoplay changed to:`, pauseAutoplay);
 
@@ -418,13 +432,11 @@ const HeroCarousel = ({
       if (typeof autoplayPlugin.stop === "function") {
         autoplayPlugin.stop();
       }
-    } else {
+    } else if (typeof autoplayPlugin.play === "function") {
       // console.log(`Carousel ${carouselIndex}: Starting autoplay`);
-      if (typeof autoplayPlugin.play === "function") {
-        autoplayPlugin.play();
-      }
+      autoplayPlugin.play();
     }
-  }, [pauseAutoplay, autoplayPlugin, carouselIndex, isDailySpecials]);
+  }, [pauseAutoplay, autoplayPlugin]);
 
   // For mobile: Show today's special when tab changes, then autoplay continues
   useEffect(() => {
@@ -455,7 +467,9 @@ const HeroCarousel = ({
 
   // Keyboard navigation - enabled for all carousels
   useEffect(() => {
-    if (!emblaApi || disableKeyboard) return;
+    if (!emblaApi || disableKeyboard) {
+      return;
+    }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft") {
@@ -475,7 +489,7 @@ const HeroCarousel = ({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [emblaApi, disableKeyboard, isDailySpecials]);
+  }, [emblaApi, disableKeyboard]);
 
   return (
     <div className="relative w-full">
@@ -483,7 +497,7 @@ const HeroCarousel = ({
         <div className="flex">
           {images.map((image, index) => (
             <div
-              className="min-w-0 shrink-0 grow-0 basis-full pl-4"
+              className="min-w-0 shrink-0 grow-0 basis-full px-2"
               key={image.src}
             >
               <motion.div
@@ -559,8 +573,10 @@ const HeroCarousel = ({
                   <div className="absolute inset-0 z-20 hidden items-center justify-center opacity-0 transition-opacity duration-200 hover:opacity-100 lg:flex">
                     <div className="rounded-full bg-black/50 p-2 transition-colors duration-200 hover:bg-yellow-400">
                       <svg
+                        aria-hidden="true"
                         className="h-4 w-4 text-stone-50"
                         fill="none"
+                        focusable="false"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
@@ -668,7 +684,7 @@ const HeroCarousel = ({
 
         {/* Navigation buttons - work for ALL carousels (weekly specials, featured food, drinks) */}
         <button
-          className="-translate-y-1/2 absolute top-1/2 left-6 z-20 h-8 w-8 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400"
+          className="absolute top-1/2 left-4 z-20 h-8 w-8 -translate-y-1/2 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400"
           disabled={!emblaApi?.canScrollPrev()}
           onClick={() => {
             const api = apiRef.current;
@@ -683,10 +699,13 @@ const HeroCarousel = ({
               }
             }
           }}
+          type="button"
         >
           <svg
+            aria-hidden="true"
             className="mx-auto h-4 w-4"
             fill="none"
+            focusable="false"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
@@ -699,7 +718,7 @@ const HeroCarousel = ({
           </svg>
         </button>
         <button
-          className="-translate-y-1/2 absolute top-1/2 right-4 z-20 h-8 w-8 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400"
+          className="absolute top-1/2 right-4 z-20 h-8 w-8 -translate-y-1/2 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400"
           disabled={!emblaApi?.canScrollNext()}
           onClick={() => {
             const api = apiRef.current;
@@ -714,10 +733,13 @@ const HeroCarousel = ({
               }
             }
           }}
+          type="button"
         >
           <svg
+            aria-hidden="true"
             className="mx-auto h-4 w-4"
             fill="none"
+            focusable="false"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
@@ -734,7 +756,7 @@ const HeroCarousel = ({
   );
 };
 
-const CaptionBubble = ({
+const _CaptionBubble = ({
   caption,
   direction,
   menuLink,
@@ -781,8 +803,7 @@ const LightboxModal = ({
   isOpen,
   image,
   onClose,
-  images,
-  currentIndex,
+  images: _images,
   onNavigate,
   direction,
   lightboxKey,
@@ -791,12 +812,13 @@ const LightboxModal = ({
   image: HeroImage | null;
   onClose: () => void;
   images: HeroImage[];
-  currentIndex: number;
   onNavigate?: (direction: "prev" | "next") => void;
   direction: "forward" | "backward";
   lightboxKey: string;
 }) => {
-  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [loadedImageSrc, setLoadedImageSrc] = useState<string | null>(null);
+  const activeImageSrc = image?.src ?? null;
+  const isImageLoading = isOpen && activeImageSrc !== loadedImageSrc;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -813,11 +835,6 @@ const LightboxModal = ({
       document.addEventListener("keydown", handleKeyDown);
       // Prevent body scroll when modal is open
       document.body.style.overflow = "hidden";
-      // Reset loading state when modal opens
-      setIsImageLoading(true);
-    } else {
-      // Reset loading state when modal closes
-      setIsImageLoading(false);
     }
 
     return () => {
@@ -826,14 +843,9 @@ const LightboxModal = ({
     };
   }, [isOpen, onClose, onNavigate]);
 
-  // Reset loading state when image changes
-  useEffect(() => {
-    if (image) {
-      setIsImageLoading(true);
-    }
-  }, [image]);
-
-  if (!(isOpen && image)) return null;
+  if (!(isOpen && image)) {
+    return null;
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -857,8 +869,10 @@ const LightboxModal = ({
           whileTap={{ scale: 0.9 }}
         >
           <svg
+            aria-hidden="true"
             className="h-8 w-8"
             fill="none"
+            focusable="false"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
@@ -882,7 +896,7 @@ const LightboxModal = ({
             {/* Previous Button */}
             <motion.button
               animate={{ opacity: 1, scale: 1 }}
-              className="-translate-y-1/2 absolute top-1/2 left-4 z-20 rounded-full border border-white/20 bg-black/70 p-4 text-stone-50 shadow-lg transition-all duration-200 hover:bg-yellow-400 hover:text-black focus:outline-none"
+              className="absolute top-1/2 left-4 z-20 -translate-y-1/2 rounded-full border border-white/20 bg-black/70 p-4 text-stone-50 shadow-lg transition-all duration-200 hover:bg-yellow-400 hover:text-black focus:outline-none"
               exit={{ opacity: 0, scale: 0.8 }}
               initial={{ opacity: 0, scale: 0.8 }}
               onClick={() => {
@@ -896,8 +910,10 @@ const LightboxModal = ({
               whileTap={{ scale: 0.9 }}
             >
               <svg
+                aria-hidden="true"
                 className="h-6 w-6"
                 fill="none"
+                focusable="false"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -913,7 +929,7 @@ const LightboxModal = ({
             {/* Next Button */}
             <motion.button
               animate={{ opacity: 1, scale: 1 }}
-              className="-translate-y-1/2 absolute top-1/2 right-4 z-20 rounded-full border border-white/20 bg-black/70 p-4 text-stone-50 shadow-lg transition-all duration-200 hover:bg-yellow-400 hover:text-black focus:outline-none"
+              className="absolute top-1/2 right-4 z-20 -translate-y-1/2 rounded-full border border-white/20 bg-black/70 p-4 text-stone-50 shadow-lg transition-all duration-200 hover:bg-yellow-400 hover:text-black focus:outline-none"
               exit={{ opacity: 0, scale: 0.8 }}
               initial={{ opacity: 0, scale: 0.8 }}
               onClick={() => {
@@ -927,8 +943,10 @@ const LightboxModal = ({
               whileTap={{ scale: 0.9 }}
             >
               <svg
+                aria-hidden="true"
                 className="h-6 w-6"
                 fill="none"
+                focusable="false"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
@@ -977,10 +995,10 @@ const LightboxModal = ({
                   className="max-h-[90vh] max-w-full object-contain"
                   height={800}
                   onError={() => {
-                    setIsImageLoading(false);
+                    setLoadedImageSrc(image.src);
                   }}
                   onLoad={() => {
-                    setIsImageLoading(false);
+                    setLoadedImageSrc(image.src);
                   }}
                   priority
                   quality={75}
@@ -1012,12 +1030,122 @@ const LightboxModal = ({
   );
 };
 
+interface HeroState {
+  activeTab: number;
+  currentIndices: number[];
+  debugAutoplayDisabled: boolean;
+  debugDay: number | null;
+  isMobile: boolean | undefined;
+  lightboxCurrentIndex: number;
+  lightboxDirection: "forward" | "backward";
+  lightboxImage: HeroImage | null;
+  lightboxImages: HeroImage[];
+  lightboxKey: string;
+  lightboxOpen: boolean;
+  pauseAutoplay: boolean;
+}
+
+type HeroAction =
+  | { type: "set_active_tab"; tab: number }
+  | { type: "set_debug_autoplay_disabled"; value: boolean }
+  | { type: "set_debug_day"; value: number | null }
+  | { type: "set_is_mobile"; value: boolean }
+  | { type: "set_pause_autoplay"; value: boolean }
+  | { type: "set_slide_index"; carouselIndex: number; index: number }
+  | {
+      type: "open_lightbox";
+      currentIndex: number;
+      image: HeroImage;
+      images: HeroImage[];
+      key: string;
+    }
+  | { type: "close_lightbox" }
+  | {
+      type: "navigate_lightbox";
+      direction: "forward" | "backward";
+      image: HeroImage;
+      index: number;
+      key: string;
+    };
+
+function heroReducer(state: HeroState, action: HeroAction): HeroState {
+  switch (action.type) {
+    case "close_lightbox":
+      return {
+        ...state,
+        lightboxCurrentIndex: 0,
+        lightboxImage: null,
+        lightboxImages: [],
+        lightboxOpen: false,
+      };
+    case "navigate_lightbox":
+      return {
+        ...state,
+        lightboxCurrentIndex: action.index,
+        lightboxDirection: action.direction,
+        lightboxImage: action.image,
+        lightboxKey: action.key,
+      };
+    case "open_lightbox":
+      return {
+        ...state,
+        lightboxCurrentIndex: action.currentIndex,
+        lightboxDirection: "forward",
+        lightboxImage: action.image,
+        lightboxImages: action.images,
+        lightboxKey: action.key,
+        lightboxOpen: true,
+      };
+    case "set_active_tab":
+      return { ...state, activeTab: action.tab };
+    case "set_debug_autoplay_disabled":
+      return { ...state, debugAutoplayDisabled: action.value };
+    case "set_debug_day":
+      return { ...state, debugDay: action.value };
+    case "set_is_mobile":
+      return { ...state, isMobile: action.value };
+    case "set_pause_autoplay":
+      return { ...state, pauseAutoplay: action.value };
+    case "set_slide_index": {
+      const currentIndices = [...state.currentIndices];
+      currentIndices[action.carouselIndex] = action.index;
+      return { ...state, currentIndices };
+    }
+    default:
+      return state;
+  }
+}
+
 const Hero = () => {
   const shouldReduceMotion = useReducedMotion();
-  const [activeTab, setActiveTab] = useState(0);
-  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
-  const [currentIndices, setCurrentIndices] = useState([0, 0, 0]);
-  const [debugDay, setDebugDay] = useState<number | null>(null);
+  const [state, dispatch] = useReducer(heroReducer, {
+    activeTab: 0,
+    currentIndices: [0, 0, 0],
+    debugAutoplayDisabled: false,
+    debugDay: null,
+    isMobile: undefined,
+    lightboxCurrentIndex: 0,
+    lightboxDirection: "forward",
+    lightboxImage: null,
+    lightboxImages: [],
+    lightboxKey: "",
+    lightboxOpen: false,
+    pauseAutoplay: false,
+  });
+  const {
+    activeTab,
+    currentIndices,
+    debugAutoplayDisabled,
+    debugDay,
+    isMobile,
+    lightboxCurrentIndex,
+    lightboxDirection,
+    lightboxImage,
+    lightboxImages,
+    lightboxKey,
+    lightboxOpen,
+    pauseAutoplay,
+  } = state;
 
   // Get dynamic colors for buttons
   const { getMenuButtonColors, getCateringButtonColors } = useColorTesting();
@@ -1029,7 +1157,7 @@ const Hero = () => {
   // Listen for debug day changes
   useEffect(() => {
     const handleDebugDayChange = (event: CustomEvent) => {
-      setDebugDay(event.detail.debugDay);
+      dispatch({ type: "set_debug_day", value: event.detail.debugDay });
     };
 
     window.addEventListener(
@@ -1074,33 +1202,20 @@ const Hero = () => {
         isDailyDrinks: true, // Mark this as daily drinks carousel
       },
     ],
-    [featuredDrinksImages, dailySpecialsImages, featuredFoodImages]
+    [featuredDrinksImages, featuredFoodImages]
   );
 
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState<HeroImage | null>(null);
-  const [lightboxImages, setLightboxImages] = useState<HeroImage[]>([]);
-  const [lightboxCurrentIndex, setLightboxCurrentIndex] = useState(0);
-  const [lightboxDirection, setLightboxDirection] = useState<
+  const [_navigationDirection, setNavigationDirection] = useState<
     "forward" | "backward"
   >("forward");
-  const [navigationDirection, setNavigationDirection] = useState<
-    "forward" | "backward"
-  >("forward");
-  const [pauseAutoplay, setPauseAutoplay] = useState(false);
-  const [isLightboxTransitioning, setIsLightboxTransitioning] = useState(false);
-  const [isLightboxOpening, setIsLightboxOpening] = useState(false);
-  const [keyboardNavigationTimeout, setKeyboardNavigationTimeout] =
-    useState<NodeJS.Timeout | null>(null);
-  const [debugAutoplayDisabled, setDebugAutoplayDisabled] = useState(false);
-  const [lightboxKey, setLightboxKey] = useState<string>("");
-  const [lightboxOpenTime, setLightboxOpenTime] = useState<number>(0);
+  const keyboardNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [_lightboxOpenTime, setLightboxOpenTime] = useState<number>(0);
 
   // Use a more reliable method to detect mobile without layout shift
   useEffect(() => {
     const checkMobile = () => {
       const width = window.innerWidth;
-      setIsMobile(width < 1024);
+      dispatch({ type: "set_is_mobile", value: width < 1024 });
     };
 
     // Set initial value immediately
@@ -1125,46 +1240,34 @@ const Hero = () => {
       location: "hero",
     });
 
-    setActiveTab(index);
+    dispatch({ type: "set_active_tab", tab: index });
   };
 
   const updateCurrentIndex = useCallback(
     (carouselIndex: number, newIndex: number) => {
-      setCurrentIndices((prev) => {
-        const newIndices = [...prev];
-        const currentIndex = newIndices[carouselIndex];
-        const totalImages = carouselCategories[carouselIndex].images.length;
+      const currentIndex = currentIndices[carouselIndex];
+      const totalImages = carouselCategories[carouselIndex].images.length;
 
-        // Determine direction based on index change, handling carousel looping
-        let direction: "forward" | "backward";
+      if (newIndex === currentIndex) {
+        return;
+      }
 
-        if (newIndex === currentIndex) {
-          // Same index, keep current direction
-          return prev;
-        }
+      let direction: "forward" | "backward";
 
-        // Handle looping cases
-        if (currentIndex === totalImages - 1 && newIndex === 0) {
-          // Going from last to first = forward
-          direction = "forward";
-        } else if (currentIndex === 0 && newIndex === totalImages - 1) {
-          // Going from first to last = backward
-          direction = "backward";
-        } else if (newIndex > currentIndex) {
-          // Normal forward navigation
-          direction = "forward";
-        } else {
-          // Normal backward navigation
-          direction = "backward";
-        }
+      if (currentIndex === totalImages - 1 && newIndex === 0) {
+        direction = "forward";
+      } else if (currentIndex === 0 && newIndex === totalImages - 1) {
+        direction = "backward";
+      } else if (newIndex > currentIndex) {
+        direction = "forward";
+      } else {
+        direction = "backward";
+      }
 
-        // Update direction immediately without artificial delay
-        setNavigationDirection(direction);
-        newIndices[carouselIndex] = newIndex;
-        return newIndices;
-      });
+      setNavigationDirection(direction);
+      dispatch({ type: "set_slide_index", carouselIndex, index: newIndex });
     },
-    [carouselCategories]
+    [carouselCategories, currentIndices]
   );
 
   const openLightbox = (image: HeroImage, carouselIndex: number) => {
@@ -1181,20 +1284,18 @@ const Hero = () => {
       index: currentIndices[carouselIndex],
     });
 
-    setLightboxImages(carouselCategories[carouselIndex].images);
-    setLightboxCurrentIndex(currentIndices[carouselIndex]);
-    setLightboxImage(image);
-    setLightboxOpen(true);
-    setLightboxDirection("forward");
-    setLightboxKey(`lightbox-${Date.now()}-${currentIndices[carouselIndex]}`);
+    dispatch({
+      type: "open_lightbox",
+      currentIndex: currentIndices[carouselIndex],
+      image,
+      images: carouselCategories[carouselIndex].images,
+      key: `lightbox-${Date.now()}-${currentIndices[carouselIndex]}`,
+    });
     setLightboxOpenTime(Date.now());
   };
 
   const closeLightbox = () => {
-    setLightboxOpen(false);
-    setLightboxImage(null);
-    setLightboxImages([]);
-    setLightboxCurrentIndex(0);
+    dispatch({ type: "close_lightbox" });
   };
 
   const navigateLightbox = useCallback(
@@ -1217,13 +1318,13 @@ const Hero = () => {
       // console.log('New index will be:', newIndex);
 
       // Update all states in sequence to prevent race conditions
-      setLightboxDirection(direction === "next" ? "forward" : "backward");
-      setLightboxCurrentIndex(newIndex);
-      setLightboxImage(lightboxImages[newIndex]);
-
-      // Force a re-render by updating the key
-      const newKey = `lightbox-${Date.now()}-${newIndex}`;
-      setLightboxKey(newKey);
+      dispatch({
+        type: "navigate_lightbox",
+        direction: direction === "next" ? "forward" : "backward",
+        image: lightboxImages[newIndex],
+        index: newIndex,
+        key: `lightbox-${Date.now()}-${newIndex}`,
+      });
     },
     [lightboxImages, lightboxCurrentIndex]
   );
@@ -1261,18 +1362,21 @@ const Hero = () => {
   // Cleanup timeouts on unmount
   useEffect(
     () => () => {
-      if (keyboardNavigationTimeout) {
-        clearTimeout(keyboardNavigationTimeout);
+      if (keyboardNavigationTimeoutRef.current) {
+        clearTimeout(keyboardNavigationTimeoutRef.current);
       }
     },
-    [keyboardNavigationTimeout]
+    []
   );
 
   // Listen for debug autoplay toggle events
   useEffect(() => {
     const handleAutoplayToggle = (event: CustomEvent) => {
       // console.log('Hero: Received autoplay toggle event:', event.detail);
-      setDebugAutoplayDisabled(!event.detail.enabled);
+      dispatch({
+        type: "set_debug_autoplay_disabled",
+        value: !event.detail.enabled,
+      });
     };
 
     window.addEventListener(
@@ -1294,19 +1398,19 @@ const Hero = () => {
       // Only handle arrow keys when not in lightbox
       if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !lightboxOpen) {
         // Clear any existing timeout
-        if (keyboardNavigationTimeout) {
-          clearTimeout(keyboardNavigationTimeout);
+        if (keyboardNavigationTimeoutRef.current) {
+          clearTimeout(keyboardNavigationTimeoutRef.current);
         }
 
         // Pause autoplay immediately
-        setPauseAutoplay(true);
+        dispatch({ type: "set_pause_autoplay", value: true });
 
         // Set a new timeout to resume autoplay
         const timeout = setTimeout(() => {
-          setPauseAutoplay(false);
+          dispatch({ type: "set_pause_autoplay", value: false });
         }, 2000);
 
-        setKeyboardNavigationTimeout(timeout);
+        keyboardNavigationTimeoutRef.current = timeout;
 
         // Small delay to let carousel animation complete before direction update
         setTimeout(() => {
@@ -1318,11 +1422,11 @@ const Hero = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      if (keyboardNavigationTimeout) {
-        clearTimeout(keyboardNavigationTimeout);
+      if (keyboardNavigationTimeoutRef.current) {
+        clearTimeout(keyboardNavigationTimeoutRef.current);
       }
     };
-  }, [lightboxOpen, keyboardNavigationTimeout]);
+  }, [lightboxOpen]);
 
   // Show loading state until we know the screen size
   if (isMobile === undefined) {
@@ -1346,10 +1450,7 @@ const Hero = () => {
         <div className="px-4 py-2">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {[0, 1, 2].map((placeholder) => (
-              <div
-                className="space-y-4"
-                key={placeholder}
-              >
+              <div className="space-y-4" key={placeholder}>
                 <div className="mx-auto h-8 w-36 animate-pulse rounded-full bg-stone-200/80" />
                 <div className="aspect-video animate-pulse rounded-[1.75rem] bg-stone-200/80 shadow-lg" />
                 <div className="mx-auto h-12 w-48 animate-pulse rounded-full bg-stone-200/70" />
@@ -1362,398 +1463,381 @@ const Hero = () => {
   }
 
   return (
-    <motion.div
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full space-y-6"
-      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
-      transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
-    >
-      <div className="w-full bg-stone-50/40 py-6 backdrop-blur-sm">
-        <div className="container mx-auto text-pretty px-1 text-center font-bold sm:px-2">
-          <h1 className="text-stone-950">
-            <span className="block text-sm leading-relaxed sm:text-base lg:hidden lg:text-lg">
-              For well over a decade, our family has shared our Mexican heritage
-              and old-school hospitality with the people of NWA.
-            </span>
-            <span className="hidden text-lg lg:block">
-              For well over a decade, our family has shared our Mexican heritage
-              and old-school hospitality with the people of Northwest Arkansas.
-            </span>
-          </h1>
+    <LazyMotion features={domAnimation}>
+      <motion.div
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full space-y-6"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+        transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
+      >
+        <div className="w-full bg-stone-50/40 py-6 backdrop-blur-sm">
+          <div className="container mx-auto text-pretty px-1 text-center font-bold sm:px-2">
+            <h1 className="text-stone-950">
+              <span className="block text-sm leading-relaxed sm:text-base lg:hidden lg:text-lg">
+                For well over a decade, our family has shared our Mexican
+                heritage and old-school hospitality with the people of NWA.
+              </span>
+              <span className="hidden text-lg lg:block">
+                For well over a decade, our family has shared our Mexican
+                heritage and old-school hospitality with the people of Northwest
+                Arkansas.
+              </span>
+            </h1>
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Tabs */}
-      {isMobile && (
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          aria-label="Featured categories"
-          className="my-4 grid grid-cols-3 gap-2 px-4"
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
-          layout
-          role="tablist"
-          transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
-        >
-          {carouselCategories.map((category, index) => {
-            const isActive = activeTab === index;
-            const tabId = `hero-tab-${index}`;
-            const panelId = `hero-panel-${index}`;
+        {/* Mobile Tabs */}
+        {isMobile && (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            aria-label="Featured categories"
+            className="my-4 grid grid-cols-3 gap-2 px-4"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+            layout
+            role="tablist"
+            transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
+          >
+            {carouselCategories.map((category, index) => {
+              const isActive = activeTab === index;
+              const tabId = `hero-tab-${index}`;
+              const panelId = `hero-panel-${index}`;
 
-            return (
-              <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className="flex justify-center"
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
-                key={category.name}
-                onClick={() => handleTabClick(index)}
-                transition={{
-                  duration: shouldReduceMotion ? 0 : 0.4,
-                  delay: shouldReduceMotion ? 0 : index * 0.06,
-                  ease: SOFT_EASE,
-                }}
-                whileHover={{ scale: 1.02, y: -1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button
-                  aria-controls={panelId}
-                  aria-selected={isActive}
-                  className={cn(
-                    "whitespace-nowrap px-2 text-center font-semibold text-sm",
-                    isActive ? "scale-105 font-black" : "scale-100",
-                    "transition-transform duration-150 ease-in-out",
-                    "hover:bg-[#03502D]/10",
-                    isActive &&
-                      "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90"
-                  )}
-                  id={tabId}
-                  role="tab"
-                  tabIndex={isActive ? 0 : -1}
-                  type="button"
-                  variant={isActive ? "default" : "ghost"}
+              return (
+                <motion.div
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex justify-center"
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+                  key={category.name}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.4,
+                    delay: shouldReduceMotion ? 0 : index * 0.06,
+                    ease: SOFT_EASE,
+                  }}
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {category.mobileName}
-                </Button>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      )}
-      {/* Desktop: Three separate carousels */}
-      {!isMobile && (
-        <div className="flex w-full justify-center px-0">
-          <div className="w-full max-w-full">
-            <div className="grid grid-cols-3 gap-2">
-              {carouselCategories.map((category, index) => {
-                // console.log('Rendering category:', category.name, 'isDailyDrinks:', category.isDailyDrinks);
-                return (
-                  <motion.div
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-4"
-                    initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
-                    key={category.name}
-                    transition={{
-                      duration: shouldReduceMotion ? 0 : 0.5,
-                      delay: shouldReduceMotion ? 0 : index * 0.08,
-                      ease: SOFT_EASE,
-                    }}
+                  <Button
+                    aria-controls={panelId}
+                    aria-selected={isActive}
+                    className={cn(
+                      "whitespace-nowrap px-2 text-center font-semibold text-sm",
+                      isActive ? "scale-105 font-black" : "scale-100",
+                      "transition-transform duration-150 ease-in-out",
+                      "hover:bg-[#03502D]/10",
+                      isActive &&
+                        "bg-[#03502D] text-stone-50 hover:bg-[#03502D]/90"
+                    )}
+                    id={tabId}
+                    onClick={() => handleTabClick(index)}
+                    role="tab"
+                    tabIndex={isActive ? 0 : -1}
+                    type="button"
+                    variant={isActive ? "default" : "ghost"}
                   >
-                    <h3
-                      className="mx-auto w-fit border-b-4 pb-1 text-center font-bold text-lg text-stone-900"
-                      style={{ borderBottomColor: headingColors[index] }}
+                    {category.mobileName}
+                  </Button>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+        {/* Desktop: Three separate carousels */}
+        {!isMobile && (
+          <div className="flex w-full justify-center px-3 lg:px-4">
+            <div className="mx-auto w-full max-w-[88rem]">
+              <div className="grid grid-cols-3 gap-3 xl:gap-5">
+                {carouselCategories.map((category, index) => {
+                  // console.log('Rendering category:', category.name, 'isDailyDrinks:', category.isDailyDrinks);
+                  return (
+                    <motion.div
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-4"
+                      initial={
+                        shouldReduceMotion ? false : { opacity: 0, y: 14 }
+                      }
+                      key={category.name}
+                      transition={{
+                        duration: shouldReduceMotion ? 0 : 0.5,
+                        delay: shouldReduceMotion ? 0 : index * 0.08,
+                        ease: SOFT_EASE,
+                      }}
                     >
-                      {category.name}
-                    </h3>
-                    <HeroCarousel
-                      carouselIndex={index}
-                      categoryName={category.name}
-                      currentIndex={currentIndices[index]}
-                      disableKeyboard={lightboxOpen}
-                      images={category.images}
-                      isDailyDrinks={category.isDailyDrinks}
-                      isDailySpecials={category.isDailySpecials}
-                      isMobile={isMobile}
-                      onImageClick={openLightbox}
-                      pauseAutoplay={
-                        lightboxOpen || pauseAutoplay || debugAutoplayDisabled
-                      }
-                      setApi={() => {}}
-                      setCurrentIndex={(newIndex) =>
-                        updateCurrentIndex(index, newIndex)
-                      }
-                    />
-                  </motion.div>
-                );
-              })}
+                      <h3
+                        className="mx-auto w-fit border-b-4 pb-1 text-center font-bold text-lg text-stone-900"
+                        style={{ borderBottomColor: headingColors[index] }}
+                      >
+                        {category.name}
+                      </h3>
+                      <HeroCarousel
+                        carouselIndex={index}
+                        categoryName={category.name}
+                        disableKeyboard={lightboxOpen}
+                        images={category.images}
+                        isDailyDrinks={category.isDailyDrinks}
+                        isDailySpecials={category.isDailySpecials}
+                        isMobile={isMobile}
+                        onImageClick={openLightbox}
+                        pauseAutoplay={
+                          lightboxOpen || pauseAutoplay || debugAutoplayDisabled
+                        }
+                        setCurrentIndex={(newIndex) =>
+                          updateCurrentIndex(index, newIndex)
+                        }
+                      />
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: Single carousel with tabs */}
+        {isMobile && (
+          <div className="flex w-full justify-center px-0">
+            <div className="w-full max-w-full">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -18 }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, x: 18 }}
+                  key={activeTab}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.4,
+                    ease: SOFT_EASE,
+                  }}
+                >
+                  <HeroCarousel
+                    carouselIndex={activeTab}
+                    categoryName={carouselCategories[activeTab].name}
+                    disableKeyboard={lightboxOpen}
+                    images={carouselCategories[activeTab].images}
+                    isDailyDrinks={carouselCategories[activeTab].isDailyDrinks}
+                    isDailySpecials={
+                      carouselCategories[activeTab].isDailySpecials
+                    }
+                    isMobile={isMobile}
+                    onImageClick={openLightbox}
+                    pauseAutoplay={
+                      lightboxOpen || pauseAutoplay || debugAutoplayDisabled
+                    }
+                    setCurrentIndex={(newIndex) =>
+                      updateCurrentIndex(activeTab, newIndex)
+                    }
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
+
+        <div className="w-full text-pretty bg-stone-50/40 py-6 text-center font-semibold text-stone-950 backdrop-blur-sm">
+          <div className="container mx-auto px-4">
+            <div className="space-y-4">
+              <p className="font-semibold text-sm leading-relaxed sm:text-base lg:text-lg">
+                <span className="block lg:hidden">
+                  Time-honored family recipes, passed down through generations.
+                  <br />
+                  Made fresh daily.
+                </span>
+                <span className="hidden lg:block">
+                  Time-honored family recipes, passed down through generations.
+                  Made fresh daily.
+                </span>
+              </p>
+
+              <p className="font-semibold text-sm leading-relaxed sm:text-base lg:text-lg">
+                <span className="block lg:hidden">
+                  Savor traditional dishes and handcrafted margaritas
+                  <br />
+                  in a warm, family-friendly atmosphere.
+                </span>
+                <span className="hidden lg:block">
+                  Savor traditional dishes and handcrafted margaritas in a warm,
+                  family-friendly atmosphere.
+                </span>
+              </p>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Mobile: Single carousel with tabs */}
-      {isMobile && (
-        <div className="flex w-full justify-center px-0">
-          <div className="w-full max-w-full">
-            <AnimatePresence mode="wait">
+        {/* View Full Menu and Catering Buttons */}
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center gap-4 pt-6 pb-4 sm:flex-row"
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.5,
+            delay: shouldReduceMotion ? 0 : 0.18,
+            ease: SOFT_EASE,
+          }}
+        >
+          {/* View Full Menu Button */}
+          <motion.div
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Link
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-6 py-3 font-bold text-lg text-white shadow-lg transition-all duration-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2"
+              href="/menu"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = menuColors.hover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = menuColors.bg;
+              }}
+              style={
+                {
+                  backgroundColor: menuColors.bg,
+                  "--hover-bg": menuColors.hover,
+                } as React.CSSProperties & { "--hover-bg": string }
+              }
+            >
+              <motion.span
+                className="relative z-20 flex items-center gap-2"
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                whileHover={{ x: 2 }}
+              >
+                View Full Menu
+                <motion.svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  viewBox="0 0 24 24"
+                  whileHover={{ x: 2 }}
+                >
+                  <path
+                    d="M9 5l7 7-7 7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
+                </motion.svg>
+              </motion.span>
               <motion.div
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -18 }}
-                initial={shouldReduceMotion ? false : { opacity: 0, x: 18 }}
-                key={activeTab}
-                transition={{
-                  duration: shouldReduceMotion ? 0 : 0.4,
-                  ease: SOFT_EASE,
-                }}
-              >
-                <HeroCarousel
-                  carouselIndex={activeTab}
-                  categoryName={carouselCategories[activeTab].name}
-                  currentIndex={currentIndices[activeTab]}
-                  disableKeyboard={lightboxOpen}
-                  images={carouselCategories[activeTab].images}
-                  isDailyDrinks={carouselCategories[activeTab].isDailyDrinks}
-                  isDailySpecials={
-                    carouselCategories[activeTab].isDailySpecials
-                  }
-                  isMobile={isMobile}
-                  onImageClick={openLightbox}
-                  pauseAutoplay={
-                    lightboxOpen || pauseAutoplay || debugAutoplayDisabled
-                  }
-                  setApi={() => {}}
-                  setCurrentIndex={(newIndex) =>
-                    updateCurrentIndex(activeTab, newIndex)
-                  }
-                />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
+                className="absolute inset-0 scale-75 rounded-full bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              />
+            </Link>
+          </motion.div>
 
-      <div className="w-full text-pretty bg-stone-50/40 py-6 text-center font-semibold text-stone-950 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <div className="space-y-4">
-            <p className="font-semibold text-sm leading-relaxed sm:text-base lg:text-lg">
-              <span className="block lg:hidden">
-                Time-honored family recipes, passed down through generations.
-                <br />
-                Made fresh daily.
-              </span>
-              <span className="hidden lg:block">
-                Time-honored family recipes, passed down through generations.
-                Made fresh daily.
-              </span>
-            </p>
-
-            <p className="font-semibold text-sm leading-relaxed sm:text-base lg:text-lg">
-              <span className="block lg:hidden">
-                Savor traditional dishes and handcrafted margaritas
-                <br />
-                in a warm, family-friendly atmosphere.
-              </span>
-              <span className="hidden lg:block">
-                Savor traditional dishes and handcrafted margaritas in a warm,
-                family-friendly atmosphere.
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* View Full Menu and Catering Buttons */}
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center gap-4 pt-6 pb-4 sm:flex-row"
-        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
-        transition={{
-          duration: shouldReduceMotion ? 0 : 0.5,
-          delay: shouldReduceMotion ? 0 : 0.18,
-          ease: SOFT_EASE,
-        }}
-      >
-        {/* View Full Menu Button */}
-        <motion.div
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Link
-            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-6 py-3 font-bold text-lg text-white shadow-lg transition-all duration-300 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2"
-            href="/menu"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = menuColors.hover;
+          {/* Catering Button */}
+          <motion.div
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = menuColors.bg;
-            }}
-            style={
-              {
-                backgroundColor: menuColors.bg,
-                "--hover-bg": menuColors.hover,
-              } as React.CSSProperties & { "--hover-bg": string }
-            }
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <motion.span
-              className="relative z-20 flex items-center gap-2"
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              whileHover={{ x: 2 }}
+            <Link
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-6 py-3 font-bold text-lg text-white shadow-lg transition-all duration-300 hover:shadow-xl focus:outline-none"
+              href="/contact?catering=true"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = cateringColors.hover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = cateringColors.bg;
+              }}
+              style={
+                {
+                  backgroundColor: cateringColors.bg,
+                  "--hover-bg": cateringColors.hover,
+                } as React.CSSProperties & { "--hover-bg": string }
+              }
             >
-              View Full Menu
-              <motion.svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
+              <motion.span
+                className="relative z-20 flex items-center gap-2"
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                viewBox="0 0 24 24"
                 whileHover={{ x: 2 }}
               >
-                <path
-                  d="M9 5l7 7-7 7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                />
-              </motion.svg>
-            </motion.span>
-            <motion.div
-              className="absolute inset-0 scale-75 rounded-full bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            />
-          </Link>
-        </motion.div>
+                Catering
+                <motion.svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  viewBox="0 0 24 24"
+                  whileHover={{ x: 2 }}
+                >
+                  <path
+                    d="M9 5l7 7-7 7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
+                </motion.svg>
+              </motion.span>
+              <motion.div
+                className="absolute inset-0 scale-75 rounded-full bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              />
+            </Link>
+          </motion.div>
 
-        {/* Catering Button */}
-        <motion.div
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Link
-            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-6 py-3 font-bold text-lg text-white shadow-lg transition-all duration-300 hover:shadow-xl focus:outline-none"
-            href="/contact?catering=true"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = cateringColors.hover;
+          {/* Drinks & Margaritas Button */}
+          <motion.div
+            transition={{
+              type: "spring",
+              stiffness: 400,
+              damping: 25,
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = cateringColors.bg;
-            }}
-            style={
-              {
-                backgroundColor: cateringColors.bg,
-                "--hover-bg": cateringColors.hover,
-              } as React.CSSProperties & { "--hover-bg": string }
-            }
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <motion.span
-              className="relative z-20 flex items-center gap-2"
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              whileHover={{ x: 2 }}
+            <Link
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-[#1DB2B2] px-6 py-3 font-bold text-lg text-white shadow-lg transition-all duration-300 hover:bg-[#0B8489] hover:shadow-xl focus:outline-none"
+              href="/menu?tab=7"
             >
-              Catering
-              <motion.svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
+              <motion.span
+                className="relative z-20 flex items-center gap-2"
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                viewBox="0 0 24 24"
                 whileHover={{ x: 2 }}
               >
-                <path
-                  d="M9 5l7 7-7 7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                />
-              </motion.svg>
-            </motion.span>
-            <motion.div
-              className="absolute inset-0 scale-75 rounded-full bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            />
-          </Link>
+                <span className="lg:hidden">Margaritas</span>
+                <span className="hidden lg:inline">Margaritas & More</span>
+                <motion.svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  viewBox="0 0 24 24"
+                  whileHover={{ x: 2 }}
+                >
+                  <path
+                    d="M9 5l7 7-7 7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
+                </motion.svg>
+              </motion.span>
+              <motion.div
+                className="absolute inset-0 scale-75 rounded-full bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              />
+            </Link>
+          </motion.div>
         </motion.div>
 
-        {/* Drinks & Margaritas Button */}
-        <motion.div
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Link
-            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-[#1DB2B2] px-6 py-3 font-bold text-lg text-white shadow-lg transition-all duration-300 hover:bg-[#0B8489] hover:shadow-xl focus:outline-none"
-            href="/menu?tab=7"
-          >
-            <motion.span
-              className="relative z-20 flex items-center gap-2"
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              whileHover={{ x: 2 }}
-            >
-              <span className="lg:hidden">Margaritas</span>
-              <span className="hidden lg:inline">Margaritas & More</span>
-              <motion.svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                viewBox="0 0 24 24"
-                whileHover={{ x: 2 }}
-              >
-                <path
-                  d="M9 5l7 7-7 7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                />
-              </motion.svg>
-            </motion.span>
-            <motion.div
-              className="absolute inset-0 scale-75 rounded-full bg-gradient-to-r from-white/20 to-white/10 opacity-0 transition-all duration-300 group-hover:scale-100 group-hover:opacity-100"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            />
-          </Link>
-        </motion.div>
+        <LightboxModal
+          direction={lightboxDirection}
+          image={lightboxImage}
+          images={lightboxImages}
+          isOpen={lightboxOpen}
+          lightboxKey={lightboxKey}
+          onClose={closeLightbox}
+          onNavigate={navigateLightbox}
+        />
       </motion.div>
-
-      {/* Lightbox Opening Loading Overlay */}
-      {isLightboxOpening && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="text-center">
-            <LoadingSpinner className="mb-4 text-white" size={80} />
-            <p className="font-medium text-lg text-white">Opening image...</p>
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox Transition Loading Overlay */}
-      {isLightboxTransitioning && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <LoadingSpinner className="text-white" size={80} />
-        </div>
-      )}
-
-      <LightboxModal
-        currentIndex={lightboxCurrentIndex}
-        direction={lightboxDirection}
-        image={lightboxImage}
-        images={lightboxImages}
-        isOpen={lightboxOpen}
-        lightboxKey={lightboxKey}
-        onClose={closeLightbox}
-        onNavigate={navigateLightbox}
-      />
-    </motion.div>
+    </LazyMotion>
   );
 };
 

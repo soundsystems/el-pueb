@@ -50,13 +50,13 @@ export const MARKER_COLORS = [
 ] as const;
 
 // Seeded random number generator for consistent randomization
-const seededRandom = (seed: number) => {
+const _seededRandom = (seed: number) => {
   const x = Math.sin(seed) * 10_000;
   return x - Math.floor(x);
 };
 
 // Generate a random seed for this session
-const sessionSeed =
+const _sessionSeed =
   typeof window !== "undefined"
     ? Math.floor(Date.now() / (1000 * 10)) // Changes every 10 seconds
     : 42; // Fallback for SSR

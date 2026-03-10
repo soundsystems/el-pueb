@@ -1,8 +1,13 @@
 "use client";
 
+import {
+  AnimatePresence,
+  domAnimation,
+  LazyMotion,
+  m as motion,
+} from "framer-motion";
 import { Star } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useReducer, useRef } from "react";
 import {
   formatForDesktop,
   highlightMenuItems,
@@ -27,26 +32,182 @@ interface TestimonialCarouselProps {
   debugMode?: boolean;
 }
 
+interface TestimonialsState {
+  current: number;
+  debugMode: boolean;
+  dotColors: string[];
+  isHeightCalculated: boolean;
+  isHolding: boolean;
+  isPaused: boolean;
+  isSmallScreen: boolean;
+  maxHeight: number;
+  testimonials: typeof reviews;
+  touchEnd: number | null;
+  touchStart: number | null;
+}
+
+type TestimonialsAction =
+  | { type: "go_to"; index: number }
+  | { type: "initialize"; dotColors: string[]; testimonials: typeof reviews }
+  | { type: "pause"; value: boolean }
+  | {
+      type: "set_layout";
+      isHeightCalculated: boolean;
+      isSmallScreen: boolean;
+      maxHeight: number;
+    }
+  | { type: "set_holding"; value: boolean }
+  | { type: "set_touch_end"; value: number | null }
+  | { type: "set_touch_start"; value: number | null }
+  | { type: "step"; amount: number }
+  | { type: "sync_debug_mode"; value: boolean };
+
+function wrapIndex(index: number, length: number) {
+  if (length === 0) {
+    return 0;
+  }
+
+  return (index + length) % length;
+}
+
+function testimonialsReducer(
+  state: TestimonialsState,
+  action: TestimonialsAction
+): TestimonialsState {
+  switch (action.type) {
+    case "go_to":
+      return { ...state, current: action.index, isPaused: true };
+    case "initialize":
+      return {
+        ...state,
+        current:
+          state.current >= action.testimonials.length ? 0 : state.current,
+        dotColors: action.dotColors,
+        testimonials: action.testimonials,
+      };
+    case "pause":
+      return { ...state, isPaused: action.value };
+    case "set_holding":
+      return { ...state, isHolding: action.value };
+    case "set_layout":
+      return {
+        ...state,
+        isHeightCalculated: action.isHeightCalculated,
+        isSmallScreen: action.isSmallScreen,
+        maxHeight: action.maxHeight,
+      };
+    case "set_touch_end":
+      return { ...state, touchEnd: action.value };
+    case "set_touch_start":
+      return { ...state, touchStart: action.value };
+    case "step":
+      return {
+        ...state,
+        current: wrapIndex(
+          state.current + action.amount,
+          state.testimonials.length
+        ),
+        isPaused: true,
+      };
+    case "sync_debug_mode":
+      return { ...state, debugMode: action.value };
+    default:
+      return state;
+  }
+}
+
+const STAR_VALUES = [1, 2, 3, 4, 5] as const;
+
+function createTextPartKey(keyPrefix: string, part: string) {
+  return `${keyPrefix}-${part.replaceAll(/\s+/g, "-").slice(0, 80)}`;
+}
+
+function HighlightedReviewText({
+  color,
+  keyPrefix,
+  text,
+}: {
+  color: string;
+  keyPrefix: string;
+  text: string;
+}) {
+  const highlighted = highlightMenuItems(text, color);
+  const parts = highlighted.split(/(<a [^>]+>.*?<\/a>)/g).filter(Boolean);
+
+  return parts.map((part) => {
+    const match = part.match(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/);
+
+    if (!match) {
+      return (
+        <Fragment key={createTextPartKey(keyPrefix, part)}>{part}</Fragment>
+      );
+    }
+
+    const [, href, label] = match;
+    const key = createTextPartKey(keyPrefix, `${href}-${label}`);
+
+    if (href.startsWith("javascript:void")) {
+      return (
+        <button
+          className="font-inherit text-[#D42D40] underline transition-all duration-200 hover:brightness-75"
+          key={key}
+          onClick={() =>
+            (
+              window as unknown as {
+                openEventDialog?: () => void;
+              }
+            ).openEventDialog?.()
+          }
+          type="button"
+        >
+          {label}
+        </button>
+      );
+    }
+
+    return (
+      <a
+        className="text-[#D42D40] underline transition-all duration-200 hover:brightness-75"
+        href={href}
+        key={key}
+      >
+        {label}
+      </a>
+    );
+  });
+}
+
 export default function TestimonialCarousel({
   debugMode: externalDebugMode = false,
 }: TestimonialCarouselProps) {
-  const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [maxHeight, setMaxHeight] = useState(0);
-  const [testimonials, setTestimonials] = useState<typeof reviews>(() =>
-    reviews.slice(0, 8)
-  );
-  const [dotColors, setDotColors] = useState<string[]>([]);
-  const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [isHeightCalculated, setIsHeightCalculated] = useState(false);
-  const [debugMode, setDebugMode] = useState(externalDebugMode);
-  const [forceHeightRecalc, setForceHeightRecalc] = useState(0);
-
-  // Touch/swipe state
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [isHolding, setIsHolding] = useState(false);
+  const [state, dispatch] = useReducer(testimonialsReducer, {
+    current: 0,
+    debugMode: externalDebugMode,
+    dotColors: [],
+    isHeightCalculated: false,
+    isHolding: false,
+    isPaused: false,
+    isSmallScreen: false,
+    maxHeight: 0,
+    testimonials: reviews.slice(0, 8),
+    touchEnd: null,
+    touchStart: null,
+  });
+  const {
+    current,
+    debugMode,
+    dotColors,
+    isHeightCalculated,
+    isHolding,
+    isPaused,
+    isSmallScreen,
+    maxHeight,
+    testimonials,
+    touchEnd,
+    touchStart,
+  } = state;
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pauseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Set up global function for opening event dialog
   useEffect(() => {
@@ -56,8 +217,8 @@ export default function TestimonialCarousel({
       };
 
     return () => {
-      delete (window as unknown as { openEventDialog?: () => void })
-        .openEventDialog;
+      (window as unknown as { openEventDialog?: () => void }).openEventDialog =
+        undefined;
     };
   }, []);
 
@@ -70,19 +231,11 @@ export default function TestimonialCarousel({
       isSmallScreen
     );
 
-    setTestimonials(selectedReviews);
-    setDotColors(selectedColors);
-
-    // Reset current index if out of bounds after re-selection
-    setCurrent((prev) => {
-      if (prev >= selectedReviews.length) {
-        return 0;
-      }
-      return prev;
+    dispatch({
+      type: "initialize",
+      dotColors: selectedColors,
+      testimonials: selectedReviews,
     });
-
-    // Force height recalculation when testimonials change
-    setForceHeightRecalc((prev) => prev + 1);
 
     // Debug logging removed for production
   }, [debugMode, externalDebugMode, isSmallScreen]);
@@ -90,7 +243,7 @@ export default function TestimonialCarousel({
   // Sync internal debugMode with external changes
   useEffect(() => {
     if (externalDebugMode !== debugMode) {
-      setDebugMode(externalDebugMode);
+      dispatch({ type: "sync_debug_mode", value: externalDebugMode });
     }
   }, [externalDebugMode, debugMode]);
 
@@ -98,7 +251,6 @@ export default function TestimonialCarousel({
   useEffect(() => {
     const checkScreenSize = () => {
       const newIsSmallScreen = window.innerWidth < 620;
-      setIsSmallScreen(newIsSmallScreen);
 
       // Find the longest review from all testimonials
       const longestReview = testimonials.reduce(
@@ -212,90 +364,90 @@ export default function TestimonialCarousel({
 
       // Height calculation completed
 
-      setMaxHeight(cappedHeight);
-
-      // Always update height calculated flag
-      setIsHeightCalculated(true);
+      dispatch({
+        type: "set_layout",
+        isHeightCalculated: true,
+        isSmallScreen: newIsSmallScreen,
+        maxHeight: cappedHeight,
+      });
     };
 
     checkScreenSize();
     window.addEventListener("resize", checkScreenSize);
 
     return () => window.removeEventListener("resize", checkScreenSize);
-  }, [testimonials, forceHeightRecalc]); // Only recalculate when testimonials change or forced recalculation
+  }, [testimonials]); // Only recalculate when testimonials change or forced recalculation
 
   // Height recalculation tracking
 
   useEffect(() => {
     if (isPaused) {
-      const resumeTimer = setTimeout(() => {
-        setIsPaused(false);
+      pauseTimerRef.current = setTimeout(() => {
+        dispatch({ type: "pause", value: false });
       }, 6000);
-      return () => clearTimeout(resumeTimer);
+      return () => {
+        if (pauseTimerRef.current) {
+          clearTimeout(pauseTimerRef.current);
+        }
+      };
     }
 
     const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % testimonials.length);
+      dispatch({ type: "step", amount: 1 });
     }, 5000);
 
     return () => clearInterval(timer);
-  }, [isPaused, testimonials.length]);
+  }, [isPaused]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        setCurrent(
-          (prev) => (prev - 1 + testimonials.length) % testimonials.length
-        );
-        setIsPaused(true);
+        dispatch({ type: "step", amount: -1 });
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
-        setCurrent((prev) => (prev + 1) % testimonials.length);
-        setIsPaused(true);
+        dispatch({ type: "step", amount: 1 });
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [testimonials.length]);
+  }, []);
 
   const handleDotClick = (index: number) => {
     // Small delay to ensure smooth transition
     setTimeout(() => {
-      setCurrent(index);
-      setIsPaused(true);
+      dispatch({ type: "go_to", index });
     }, 10);
   };
 
   // Touch event handlers for swipe functionality
   const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    dispatch({ type: "set_touch_end", value: null });
+    dispatch({ type: "set_touch_start", value: e.targetTouches[0].clientX });
 
     // Start hold timer for tap-to-pause functionality
-    setIsHolding(true);
+    dispatch({ type: "set_holding", value: true });
     holdTimerRef.current = setTimeout(() => {
       if (isHolding) {
-        setIsPaused(true);
-        // Auto-resume after 3 seconds
-        setTimeout(() => {
-          setIsPaused(false);
+        dispatch({ type: "pause", value: true });
+        pauseTimerRef.current = setTimeout(() => {
+          dispatch({ type: "pause", value: false });
         }, 3000);
       }
     }, 500); // 500ms hold to trigger pause
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    dispatch({ type: "set_touch_end", value: e.targetTouches[0].clientX });
 
     // Cancel hold timer if user is swiping
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
     }
-    setIsHolding(false);
+    dispatch({ type: "set_holding", value: false });
   };
 
   const handleTouchEnd = () => {
@@ -306,13 +458,12 @@ export default function TestimonialCarousel({
       if (isHolding && holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
         holdTimerRef.current = null;
-        setIsPaused(true);
-        // Auto-resume after 3 seconds
-        setTimeout(() => {
-          setIsPaused(false);
+        dispatch({ type: "pause", value: true });
+        pauseTimerRef.current = setTimeout(() => {
+          dispatch({ type: "pause", value: false });
         }, 3000);
       }
-      setIsHolding(false);
+      dispatch({ type: "set_holding", value: false });
       return;
     }
 
@@ -322,17 +473,13 @@ export default function TestimonialCarousel({
 
     if (isLeftSwipe) {
       // Swipe left - go to next testimonial
-      setCurrent((prev) => (prev + 1) % testimonials.length);
-      setIsPaused(true);
+      dispatch({ type: "step", amount: 1 });
     } else if (isRightSwipe) {
       // Swipe right - go to previous testimonial
-      setCurrent(
-        (prev) => (prev - 1 + testimonials.length) % testimonials.length
-      );
-      setIsPaused(true);
+      dispatch({ type: "step", amount: -1 });
     }
 
-    setIsHolding(false);
+    dispatch({ type: "set_holding", value: false });
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);
       holdTimerRef.current = null;
@@ -344,6 +491,9 @@ export default function TestimonialCarousel({
     () => () => {
       if (holdTimerRef.current) {
         clearTimeout(holdTimerRef.current);
+      }
+      if (pauseTimerRef.current) {
+        clearTimeout(pauseTimerRef.current);
       }
     },
     []
@@ -368,210 +518,217 @@ export default function TestimonialCarousel({
   }
 
   return (
-    <section className="w-full rounded-xl bg-stone-50/40 pt-2 pb-10 shadow-lg backdrop-blur-sm">
-      <div className="mx-auto w-full max-w-screen-lg px-4 md:px-16 lg:px-20">
-        <div className="mb-6 flex items-center justify-center pt-4">
-          <h2 className="text-center font-black text-2xl text-zinc-950 md:text-3xl lg:text-4xl">
-            Our Commitment to Excellence
-          </h2>
-        </div>
+    <LazyMotion features={domAnimation}>
+      <section className="w-full rounded-xl bg-stone-50/40 pt-2 pb-10 shadow-lg backdrop-blur-sm">
+        <div className="mx-auto w-full max-w-screen-lg px-4 md:px-16 lg:px-20">
+          <div className="mb-6 flex items-center justify-center pt-4">
+            <h2 className="text-center font-black text-2xl text-zinc-950 md:text-3xl lg:text-4xl">
+              Our Commitment to Excellence
+            </h2>
+          </div>
 
-        <div className="group relative">
-          {/* Left Arrow - Hidden on mobile */}
-          <button
-            aria-label="Previous testimonial"
-            className="-left-6 -translate-y-1/2 absolute top-1/2 z-20 hidden h-8 w-8 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 opacity-0 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400 group-hover:opacity-100 md:block"
-            onClick={() => {
-              setCurrent(
-                (prev) => (prev - 1 + testimonials.length) % testimonials.length
-              );
-              setIsPaused(true);
-            }}
-            type="button"
-          >
-            <svg
-              className="mx-auto h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <title>Previous testimonial</title>
-              <path
-                d="M15 19l-7-7 7-7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-              />
-            </svg>
-          </button>
-
-          {/* Right Arrow - Hidden on mobile */}
-          <button
-            aria-label="Next testimonial"
-            className="-right-6 -translate-y-1/2 absolute top-1/2 z-20 hidden h-8 w-8 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 opacity-0 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400 group-hover:opacity-100 md:block"
-            onClick={() => {
-              setCurrent((prev) => (prev + 1) % testimonials.length);
-              setIsPaused(true);
-            }}
-            type="button"
-          >
-            <svg
-              className="mx-auto h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <title>Next testimonial</title>
-              <path
-                d="M9 5l7 7-7 7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-              />
-            </svg>
-          </button>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              className="relative touch-pan-y"
-              key={`${current}-${isSmallScreen ? "mobile" : "desktop"}`}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchMove}
-              onTouchStart={handleTouchStart}
-              style={{
-                height: maxHeight || "auto",
-                maxHeight: maxHeight || "auto",
-                overflow: "hidden",
+          <div className="group relative">
+            {/* Left Arrow - Hidden on mobile */}
+            <button
+              aria-label="Previous testimonial"
+              className="absolute top-1/2 -left-6 z-20 hidden h-8 w-8 -translate-y-1/2 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 opacity-0 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400 group-hover:opacity-100 md:block"
+              onClick={() => {
+                dispatch({ type: "step", amount: -1 });
               }}
+              type="button"
             >
+              <svg
+                className="mx-auto h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <title>Previous testimonial</title>
+                <path
+                  d="M15 19l-7-7 7-7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                />
+              </svg>
+            </button>
+
+            {/* Right Arrow - Hidden on mobile */}
+            <button
+              aria-label="Next testimonial"
+              className="absolute top-1/2 -right-6 z-20 hidden h-8 w-8 -translate-y-1/2 rounded-full border border-yellow-400 bg-black/50 text-zinc-50 opacity-0 transition-all duration-200 hover:scale-110 hover:border-yellow-400 hover:bg-yellow-400 group-hover:opacity-100 md:block"
+              onClick={() => {
+                dispatch({ type: "step", amount: 1 });
+              }}
+              type="button"
+            >
+              <svg
+                className="mx-auto h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <title>Next testimonial</title>
+                <path
+                  d="M9 5l7 7-7 7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                />
+              </svg>
+            </button>
+
+            <AnimatePresence mode="wait">
               <motion.div
-                animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col items-center justify-center pt-2 pb-6 md:py-4"
-                initial={{ opacity: 0, x: 40 }}
-                key={`content-${current}`}
-                transition={{
-                  duration: 0.9,
-                  ease: "easeOut",
+                className="relative touch-pan-y"
+                key={`${current}-${isSmallScreen ? "mobile" : "desktop"}`}
+                onTouchEnd={handleTouchEnd}
+                onTouchMove={handleTouchMove}
+                onTouchStart={handleTouchStart}
+                style={{
+                  height: maxHeight || "auto",
+                  maxHeight: maxHeight || "auto",
+                  overflow: "hidden",
                 }}
               >
-                <div
-                  aria-label={`Rating: ${testimonials[current].rating || 5} out of 5 stars`}
-                  className="mb-6 flex justify-center"
-                  role="img"
+                <motion.div
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex flex-col items-center justify-center pt-2 pb-6 md:py-4"
+                  initial={{ opacity: 0, x: 40 }}
+                  key={`content-${current}`}
+                  transition={{
+                    duration: 0.9,
+                    ease: "easeOut",
+                  }}
                 >
-                  {[...new Array(testimonials[current].rating || 5)].map(
-                    (_, i) => (
+                  <div
+                    aria-label={`Rating: ${testimonials[current].rating || 5} out of 5 stars`}
+                    className="mb-6 flex justify-center"
+                    role="img"
+                  >
+                    {STAR_VALUES.slice(
+                      0,
+                      testimonials[current].rating || 5
+                    ).map((starValue) => (
                       <Star
                         className="h-6 w-6 fill-red-600 text-red-600 drop-shadow-sm"
-                        key={i}
+                        key={`rating-star-${testimonials[current].name}-${testimonials[current].date}-${starValue}`}
                         style={{
                           filter:
                             "drop-shadow(0 1px 2px rgba(220, 38, 38, 0.3))",
                         }}
                       />
-                    )
-                  )}
-                </div>
-                <div className="w-full max-w-max px-2 lg:max-w-4xl">
-                  <blockquote className="mb-6 text-pretty text-center font-medium text-sm text-stone-950 md:text-base lg:text-lg">
-                    <span className="block lg:hidden">
-                      {splitIntoSentences(testimonials[current].text).map(
-                        (sentence, i) => (
-                          <p
-                            className="mb-2 last:mb-0"
-                            dangerouslySetInnerHTML={{
-                              __html: highlightMenuItems(
-                                sentence.trim(),
-                                dotColors[current]
-                              ),
-                            }}
-                            key={i}
-                            style={{ textWrap: "balance" }}
-                          />
-                        )
-                      )}
-                    </span>
-                    <span
-                      className="prose prose-stone mx-auto hidden whitespace-pre-line leading-relaxed lg:block"
-                      dangerouslySetInnerHTML={{
-                        __html: `"${highlightMenuItems(formatForDesktop(testimonials[current].text, isSmallScreen), dotColors[current])}"`,
-                      }}
-                      style={{ textWrap: "balance" }}
-                    />
-                  </blockquote>
-                  <cite className="block text-center">
-                    <span
-                      className="block text-lg not-italic md:text-xl"
-                      style={{
-                        color: dotColors[current],
-                        filter: "brightness(60%)",
-                      }}
-                    >
-                      {formatName(testimonials[current].name)}
-                    </span>
-                    <span className="block font-semibold text-sm text-stone-700 md:text-base lg:text-lg">
-                      {testimonials[current].location}
-                    </span>
-                    <div className="mt-2 flex items-center justify-center gap-2 text-sm text-stone-600">
-                      <span className="flex items-center gap-1">
-                        <span>
-                          {getSourceIcon(testimonials[current].source)}
-                        </span>
-                        <span>
-                          {getSourceLabel(testimonials[current].source)}
-                        </span>
+                    ))}
+                  </div>
+                  <div className="w-full max-w-max px-2 lg:max-w-4xl">
+                    <blockquote className="mb-6 text-pretty text-center font-medium text-sm text-stone-950 md:text-base lg:text-lg">
+                      <span className="block lg:hidden">
+                        {splitIntoSentences(testimonials[current].text).map(
+                          (sentence) => (
+                            <p
+                              className="mb-2 last:mb-0"
+                              key={`${testimonials[current].name}-${sentence.trim().replaceAll(/\s+/g, "-").slice(0, 40)}`}
+                              style={{ textWrap: "balance" }}
+                            >
+                              <HighlightedReviewText
+                                color={dotColors[current]}
+                                keyPrefix={`mobile-${testimonials[current].name}-${sentence.trim().replaceAll(/\s+/g, "-").slice(0, 24)}`}
+                                text={sentence.trim()}
+                              />
+                            </p>
+                          )
+                        )}
                       </span>
-                      <span>•</span>
-                      <span>
-                        {formatReviewDate(testimonials[current].date)}
+                      <span
+                        className="prose prose-stone mx-auto hidden whitespace-pre-line leading-relaxed lg:block"
+                        style={{ textWrap: "balance" }}
+                      >
+                        "
+                        <HighlightedReviewText
+                          color={dotColors[current]}
+                          keyPrefix={`desktop-${testimonials[current].name}`}
+                          text={formatForDesktop(
+                            testimonials[current].text,
+                            isSmallScreen
+                          )}
+                        />
+                        "
                       </span>
-                    </div>
-                  </cite>
-                </div>
+                    </blockquote>
+                    <cite className="block text-center">
+                      <span
+                        className="block text-lg not-italic md:text-xl"
+                        style={{
+                          color: dotColors[current],
+                          filter: "brightness(60%)",
+                        }}
+                      >
+                        {formatName(testimonials[current].name)}
+                      </span>
+                      <span className="block font-semibold text-sm text-stone-700 md:text-base lg:text-lg">
+                        {testimonials[current].location}
+                      </span>
+                      <div className="mt-2 flex items-center justify-center gap-2 text-sm text-stone-600">
+                        <span className="flex items-center gap-1">
+                          <span>
+                            {getSourceIcon(testimonials[current].source)}
+                          </span>
+                          <span>
+                            {getSourceLabel(testimonials[current].source)}
+                          </span>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          {formatReviewDate(testimonials[current].date)}
+                        </span>
+                      </div>
+                    </cite>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            </AnimatePresence>
+          </div>
 
-        <div className="mt-8 flex justify-center gap-1.5 md:gap-2">
-          {testimonials.map((_, index) => (
-            <Button
-              aria-label={`Go to testimonial ${index + 1}`}
-              aria-selected={current === index}
-              className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ease-in-out hover:opacity-80 md:h-2 md:w-2 ${
-                current === index ? "w-4 md:w-6" : ""
-              }`}
-              key={index}
-              onClick={() => handleDotClick(index)}
-              style={{
-                backgroundColor: dotColors[index],
-                opacity: current === index ? 1 : 0.5,
-                filter:
-                  current === index ? "brightness(100%)" : "brightness(70%)",
-                transition:
-                  "opacity 0.3s ease-in-out, width 0.3s ease-in-out, background-color 0.3s ease-in-out",
-              }}
-              type="button"
-            />
-          ))}
-        </div>
+          <div className="mt-8 flex justify-center gap-1.5 md:gap-2">
+            {testimonials.map((_, index) => (
+              <Button
+                aria-label={`Go to testimonial ${index + 1}`}
+                aria-selected={current === index}
+                className={`h-1.5 w-1.5 rounded-full transition-all duration-300 ease-in-out hover:opacity-80 md:h-2 md:w-2 ${
+                  current === index ? "w-4 md:w-6" : ""
+                }`}
+                key={`testimonial-dot-${testimonials[index].name}-${testimonials[index].date}`}
+                onClick={() => handleDotClick(index)}
+                style={{
+                  backgroundColor: dotColors[index],
+                  opacity: current === index ? 1 : 0.5,
+                  filter:
+                    current === index ? "brightness(100%)" : "brightness(70%)",
+                  transition:
+                    "opacity 0.3s ease-in-out, width 0.3s ease-in-out, background-color 0.3s ease-in-out",
+                }}
+                type="button"
+              />
+            ))}
+          </div>
 
-        <div className="-mb-4 mt-6 text-center">
-          <p className="text-sm text-stone-800 lg:text-base">
-            These reviews are sourced from Google and Yelp.
-            <a
-              className="ml-1 font-semibold text-[#0f8540] hover:underline"
-              href="https://www.google.com/search?sca_esv=a2d1b3f2df31e648&tbm=lcl&q=el+pueblito+mexican+restaurant+arkansas#"
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              <br />
-              Leave a review
-            </a>{" "}
-            to see your feedback featured here!
-          </p>
+          <div className="mt-6 -mb-4 text-center">
+            <p className="text-sm text-stone-800 lg:text-base">
+              These reviews are sourced from Google and Yelp.
+              <a
+                className="ml-1 font-semibold text-[#0f8540] hover:underline"
+                href="https://www.google.com/search?sca_esv=a2d1b3f2df31e648&tbm=lcl&q=el+pueblito+mexican+restaurant+arkansas#"
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                <br />
+                Leave a review
+              </a>{" "}
+              to see your feedback featured here!
+            </p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </LazyMotion>
   );
 }

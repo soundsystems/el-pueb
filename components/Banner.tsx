@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { domAnimation, LazyMotion, m as motion } from "framer-motion";
 
 // Colors that match your app's theme
 const textColors = [
@@ -39,63 +39,65 @@ export default function FlowingBanner() {
   const translateX = `-${100}%`;
 
   return (
-    <div
-      aria-label="Announcements"
-      className="relative overflow-hidden bg-stone-950/90 py-1.5 pt-safe-top shadow-lg backdrop-blur-sm"
-      role="marquee"
-    >
-      <div className="flex whitespace-nowrap">
-        <motion.div
-          animate={{
-            x: translateX,
-          }}
-          className="flex shrink-0"
-          transition={{
-            duration: 80,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-        >
-          {bannerItems.map((item, index) => (
-            <span
-              className="mx-4 font-medium text-sm tracking-wide"
-              key={index}
-            >
-              <span aria-hidden="true" className="mr-1.5" role="img">
-                {item.emoji}
+    <LazyMotion features={domAnimation}>
+      <div
+        aria-label="Announcements"
+        className="relative overflow-hidden bg-stone-950/90 py-1.5 pt-safe-top shadow-lg backdrop-blur-sm"
+        role="marquee"
+      >
+        <div className="flex whitespace-nowrap">
+          <motion.div
+            animate={{
+              x: translateX,
+            }}
+            className="flex shrink-0"
+            transition={{
+              duration: 80,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+          >
+            {bannerItems.map((item, index) => (
+              <span
+                className="mx-4 font-medium text-sm tracking-wide"
+                key={`${item.text}-${item.emoji}`}
+              >
+                <span aria-hidden="true" className="mr-1.5" role="img">
+                  {item.emoji}
+                </span>
+                <span style={{ color: textColors[index % textColors.length] }}>
+                  {item.text}
+                </span>
               </span>
-              <span style={{ color: textColors[index % textColors.length] }}>
-                {item.text}
+            ))}
+          </motion.div>
+          <motion.div
+            animate={{
+              x: translateX,
+            }}
+            className="flex shrink-0"
+            transition={{
+              duration: 80,
+              repeat: Number.POSITIVE_INFINITY,
+              ease: "linear",
+            }}
+          >
+            {bannerItems.map((item, index) => (
+              <span
+                className="mx-4 font-medium text-sm tracking-wide"
+                key={`dup-${item.text}-${item.emoji}`}
+              >
+                <span aria-hidden="true" className="mr-1.5" role="img">
+                  {item.emoji}
+                </span>
+                <span style={{ color: textColors[index % textColors.length] }}>
+                  {item.text}
+                </span>
               </span>
-            </span>
-          ))}
-        </motion.div>
-        <motion.div
-          animate={{
-            x: translateX,
-          }}
-          className="flex shrink-0"
-          transition={{
-            duration: 80,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-        >
-          {bannerItems.map((item, index) => (
-            <span
-              className="mx-4 font-medium text-sm tracking-wide"
-              key={`dup-${index}`}
-            >
-              <span aria-hidden="true" className="mr-1.5" role="img">
-                {item.emoji}
-              </span>
-              <span style={{ color: textColors[index % textColors.length] }}>
-                {item.text}
-              </span>
-            </span>
-          ))}
-        </motion.div>
+            ))}
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </LazyMotion>
   );
 }

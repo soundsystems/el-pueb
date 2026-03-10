@@ -15,6 +15,7 @@ import DebugToolsWrapper from "@/components/debug/DebugToolsWrapper";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import SelectionColorInitializer from "@/components/SelectionColorInitializer";
+import { SeoJsonLd } from "@/components/SeoJsonLd";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 
@@ -286,11 +287,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, viewport-fit=cover"
           name="viewport"
         />
-        <script
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: This is the recommended approach in Next.js docs for JSON-LD
-          type="application/ld+json"
-        />
+        <SeoJsonLd data={jsonLd} />
       </head>
       <ColorTestingProvider>
         <body

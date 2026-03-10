@@ -50,12 +50,12 @@ export default function PrivacyPolicyPage() {
 
       <section className="relative mx-auto max-w-5xl">
         <div className="rounded-[2rem] border border-stone-900/10 bg-[#F5EBDD]/90 p-5 shadow-[0_20px_80px_rgba(34,30,27,0.10)] backdrop-blur md:p-8">
-          <div className="mb-8 grid gap-6 border-b border-stone-900/10 pb-8 md:grid-cols-[1.15fr_0.85fr] md:items-end">
+          <div className="mb-8 grid gap-6 border-stone-900/10 border-b pb-8 md:grid-cols-[1.15fr_0.85fr] md:items-end">
             <div>
-              <p className="mb-3 inline-flex rounded-full border border-stone-900/10 bg-white/60 px-3 py-1 font-semibold text-[0.7rem] uppercase tracking-[0.24em] text-[#016945]">
+              <p className="mb-3 inline-flex rounded-full border border-stone-900/10 bg-white/60 px-3 py-1 font-semibold text-[#016945] text-[0.7rem] uppercase tracking-[0.24em]">
                 Privacy Policy
               </p>
-              <h1 className="max-w-3xl font-ultrablack text-4xl leading-none text-stone-950 md:text-6xl">
+              <h1 className="max-w-3xl font-ultrablack text-4xl text-stone-950 leading-none md:text-6xl">
                 Short, plain-language privacy terms.
               </h1>
             </div>
@@ -81,17 +81,17 @@ export default function PrivacyPolicyPage() {
                 <p className="font-semibold text-[#CE1226] text-xs uppercase tracking-[0.18em]">
                   {section.eyebrow}
                 </p>
-                <h2 className="mt-2 font-ultrablack text-2xl leading-tight text-stone-950">
+                <h2 className="mt-2 font-ultrablack text-2xl text-stone-950 leading-tight">
                   {section.title}
                 </h2>
-                <p className="mt-3 text-base leading-7 text-stone-700">
+                <p className="mt-3 text-base text-stone-700 leading-7">
                   {section.body}
                 </p>
               </article>
             ))}
           </div>
 
-          <div className="mt-6 rounded-[1.5rem] border border-dashed border-stone-900/15 bg-[#FFF8EF] p-5 text-sm leading-7 text-stone-700">
+          <div className="mt-6 rounded-[1.5rem] border border-stone-900/15 border-dashed bg-[#FFF8EF] p-5 text-sm text-stone-700 leading-7">
             <p>
               We may use Meta Pixel and similar tools to understand how people
               interact with the site and to measure advertising performance.

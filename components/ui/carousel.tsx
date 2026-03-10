@@ -14,14 +14,14 @@ type UseCarouselParameters = Parameters<typeof useEmblaCarousel>;
 type CarouselOptions = UseCarouselParameters[0];
 type CarouselPlugin = UseCarouselParameters[1];
 
-type CarouselProps = {
+interface CarouselProps {
   opts?: CarouselOptions;
   plugins?: CarouselPlugin;
   orientation?: "horizontal" | "vertical";
   setApi?: (api: CarouselApi) => void;
   disableKeyboard?: boolean;
   pauseAutoplay?: boolean;
-};
+}
 
 type CarouselContextProps = {
   carouselRef: ReturnType<typeof useEmblaCarousel>[0];
@@ -102,7 +102,9 @@ const Carousel = React.forwardRef<
 
     const handleKeyDown = React.useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (disableKeyboard) return;
+        if (disableKeyboard) {
+          return;
+        }
         if (event.key === "ArrowLeft") {
           event.preventDefault();
           scrollPrev();
@@ -141,7 +143,9 @@ const Carousel = React.forwardRef<
     }, [api, onSelect, updateSlidesInView]);
 
     React.useEffect(() => {
-      if (disableKeyboard) return;
+      if (disableKeyboard) {
+        return;
+      }
 
       const handleKeyboardModifiers = (e: KeyboardEvent) => {
         if (e.key === "ArrowLeft") {
@@ -291,8 +295,8 @@ const CarouselPrevious = React.forwardRef<
       className={cn(
         "absolute h-8 w-8 rounded-full",
         orientation === "horizontal"
-          ? "-left-12 -translate-y-1/2 top-1/2"
-          : "-top-12 -translate-x-1/2 left-1/2 rotate-90",
+          ? "top-1/2 -left-12 -translate-y-1/2"
+          : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
       disabled={!canScrollPrev}
@@ -320,8 +324,8 @@ const CarouselNext = React.forwardRef<
       className={cn(
         "absolute h-8 w-8 rounded-full",
         orientation === "horizontal"
-          ? "-right-12 -translate-y-1/2 top-1/2"
-          : "-bottom-12 -translate-x-1/2 left-1/2 rotate-90",
+          ? "top-1/2 -right-12 -translate-y-1/2"
+          : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
         className
       )}
       disabled={!canScrollNext}

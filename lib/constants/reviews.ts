@@ -3,14 +3,14 @@ import { pageToMobileTab } from "./image-captions";
 // Import menu items mapping and page conversion functions
 import { getPageNumberForMenuItem, MENU_ITEMS } from "./menu-items";
 
-export type Review = {
+export interface Review {
   name: string;
   text: string;
   rating?: number;
   location: string;
   source: "Google" | "Yelp";
   date: string;
-};
+}
 
 export const SENTENCE_SPLITTER = /(?<=[.!?])\s+/;
 
@@ -22,7 +22,7 @@ const TINY_1_MAX_LENGTH = 25; // 30% - "Great!", "Food was great."
 const TINY_2_MAX_LENGTH = 50; // 17.5% - "Great food and awesome service."
 const SHORT_MAX_LENGTH = 120; // 22.5% - 2-3 sentence reviews
 const MEDIUM_MAX_LENGTH = 250; // 12.5% - Multi-point reviews
-const LONG_MAX_LENGTH = 400; // 10% - Detailed experiences
+const _LONG_MAX_LENGTH = 400; // 10% - Detailed experiences
 
 export interface ReviewWithTier extends Review {
   tier: ReviewTier;
@@ -5341,9 +5341,6 @@ export const DRINK_ITEMS = [
 export const isDrinkItem = (item: string): boolean =>
   DRINK_ITEMS.some((drink) => drink.toLowerCase() === item.toLowerCase());
 
-// Import CONFETTI_COLORS for highlighting
-import { CONFETTI_COLORS } from "./colors";
-
 // Function to check if a color is too light or too dark for text visibility
 const isLowContrastColor = (color: string): boolean => {
   const lightColors = ["#FDEAAF", "#FFFFFF", "#FDF2D2"];
@@ -5539,15 +5536,26 @@ export const formatForDesktop = (text: string, isSmallScreen: boolean) => {
 
   const isShortSentence = (sentence: string) => {
     const words = sentence.trim().split(/\s+/);
-    return words.length <= 4 || /^\d+\/\d+$/.test(words[words.length - 1]);
+    const lastWord = words.at(-1);
+    return (
+      words.length <= 4 || (lastWord ? /^\d+\/\d+$/.test(lastWord) : false)
+    );
   };
 
   const shouldBreakLine = (sentence: string) => {
     const words = sentence.trim().split(/\s+/);
-    if (currentLineWords >= MaxWordsPerLine) return true;
-    if (currentLineWords > 0 && words.length <= 2) return true;
-    if (currentLineWords + words.length < 3) return false;
-    if (currentLineWords >= 3 && words.length >= 3) return true;
+    if (currentLineWords >= MaxWordsPerLine) {
+      return true;
+    }
+    if (currentLineWords > 0 && words.length <= 2) {
+      return true;
+    }
+    if (currentLineWords + words.length < 3) {
+      return false;
+    }
+    if (currentLineWords >= 3 && words.length >= 3) {
+      return true;
+    }
     return false;
   };
 
@@ -5562,30 +5570,30 @@ export const formatForDesktop = (text: string, isSmallScreen: boolean) => {
     if (isShortSentence(sentence)) {
       const nextSentence = sentences[i + 1]?.trim();
       if (nextSentence && isShortSentence(nextSentence)) {
-        currentLine += sentence + " ";
+        currentLine += `${sentence} `;
         currentLineWords += sentenceWordCount;
         continue;
       }
       if (currentLineWords > 0) {
-        result += currentLine.trim() + "\n\n";
+        result += `${currentLine.trim()}\n\n`;
         currentLine = "";
         currentLineWords = 0;
       }
-      result += sentence + " ";
+      result += `${sentence} `;
       continue;
     }
 
     if (shouldBreakLine(sentence) && currentLineWords > 0) {
-      result += currentLine.trim() + "\n\n";
+      result += `${currentLine.trim()}\n\n`;
       currentLine = "";
       currentLineWords = 0;
     }
 
-    currentLine += sentence + " ";
+    currentLine += `${sentence} `;
     currentLineWords += sentenceWordCount;
 
     if (currentLineWords >= MaxWordsPerLine) {
-      result += currentLine.trim() + "\n\n";
+      result += `${currentLine.trim()}\n\n`;
       currentLine = "";
       currentLineWords = 0;
     }

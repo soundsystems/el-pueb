@@ -14,6 +14,7 @@ const nextConfig = {
 
   // Turbopack configuration (moved from experimental.turbo)
   turbopack: {
+    root: __dirname,
     rules: {
       "*.svg": {
         loaders: ["@svgr/webpack"],
@@ -54,7 +55,7 @@ const nextConfig = {
             value: `
               default-src 'self';
               connect-src 'self' https://app.posthog.com https://t.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com https://vitals.vercel-insights.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.vercel-scripts.com https://*.vis.gl;
-              img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com https://*.googleapis.com https://*.gstatic.com https://maps.googleapis.com;
+              img-src 'self' data: blob: https://*.google-analytics.com https://*.googletagmanager.com https://*.googleapis.com https://*.gstatic.com https://maps.googleapis.com https://images.unsplash.com https://*.cdninstagram.com https://*.fbcdn.net;
               script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.posthog.com https://us-assets.i.posthog.com https://maps.googleapis.com https://*.googleapis.com https://*.gstatic.com https://*.vercel-scripts.com https://*.googletagmanager.com https://*.vis.gl;
               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.googleapis.com https://*.vis.gl;
               font-src 'self' https://fonts.gstatic.com;

@@ -10,7 +10,9 @@ const hexToRGBA = (hex: string, alpha = 0.3): string => {
 };
 
 export const initializeSelectionColor = () => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
 
   let lastColor = "";
   let isSelecting = false;

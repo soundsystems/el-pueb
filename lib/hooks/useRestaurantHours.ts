@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type DaySchedule = {
+interface DaySchedule {
   open: string;
   close: string;
-};
+}
 
 const HOURS: { [key: number]: DaySchedule } = {
   0: { open: "11:00 AM", close: "9:00 PM" }, // Sunday
@@ -16,10 +16,10 @@ const HOURS: { [key: number]: DaySchedule } = {
   6: { open: "11:00 AM", close: "10:00 PM" }, // Saturday
 };
 
-type DebugOptions = {
+interface DebugOptions {
   debugDate?: Date;
   debugTime?: string;
-};
+}
 
 export const useRestaurantHours = (debugOptions?: DebugOptions) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +32,9 @@ export const useRestaurantHours = (debugOptions?: DebugOptions) => {
   }, []);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient) {
+      return;
+    }
 
     const getClosedMessage = (now: Date, schedule: DaySchedule) => {
       const currentTime = now.getHours() * 100 + now.getMinutes();
@@ -98,7 +100,7 @@ export const useRestaurantHours = (debugOptions?: DebugOptions) => {
       const openTime = openHour * 100 + openMinute;
       const closeTime = closeHour * 100 + closeMinute;
 
-      const formattedOpen = new Date(now).setHours(openHour, openMinute);
+      const _formattedOpen = new Date(now).setHours(openHour, openMinute);
       const formattedClose = new Date(now).setHours(closeHour, closeMinute);
 
       setHoursToday(`until ${formatTime(formattedClose)}`);

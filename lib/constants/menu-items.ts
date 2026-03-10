@@ -1,10 +1,10 @@
 // Menu item type with page number and category
-export type MenuItem = {
+export interface MenuItem {
   name: string;
   pageNumber: number;
   category: string;
   variations?: string[]; // Alternative names for the same item
-};
+}
 
 // Complete menu items mapping with page numbers and categories
 export const MENU_ITEMS_MAPPING: MenuItem[] = [
@@ -264,11 +264,11 @@ export const MENU_ITEMS_MAPPING: MenuItem[] = [
     category: "Chicken",
     variations: ["Chicken Tapatio", "CHICKEN TAPATIO"],
   },
-  { 
-    name: "Pollo El Pueblito", 
-    pageNumber: 4, 
+  {
+    name: "Pollo El Pueblito",
+    pageNumber: 4,
     category: "Chicken",
-    variations: ["Pollo Pueblito", "Pueblito Chicken, El Pueblito Chicken"]
+    variations: ["Pollo Pueblito", "Pueblito Chicken, El Pueblito Chicken"],
   },
   {
     name: "Steven Special",

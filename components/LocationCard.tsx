@@ -1,9 +1,9 @@
+import { m as motion } from "framer-motion";
 import { MapPin } from "lucide-react";
-import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 
-type Location = {
+interface Location {
   name: string;
   address: string;
   phone: string;
@@ -12,7 +12,7 @@ type Location = {
     weekdays: string;
     weekend: string;
   };
-};
+}
 
 const springTransition = {
   type: "spring" as const,

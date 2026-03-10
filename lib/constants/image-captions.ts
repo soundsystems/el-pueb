@@ -20,21 +20,41 @@
 
 // Helper: converts page number to mobile tab index
 export function pageToMobileTab(pageNumber: number): number {
-  if (pageNumber === 1) return 1; // Starters & Sides -> Tab 1
-  if (pageNumber === 2) return 2; // Especialdades -> Tab 2
-  if (pageNumber === 3) return 3; // Tacos/Fajitas -> Tab 3
-  if (pageNumber === 4) return 4; // A La Parilla -> Tab 4
-  if (pageNumber === 5 || pageNumber === 6) return 5; // Lunch (both pages) -> Tab 5
-  if (pageNumber === 7) return 6; // Deserts & Drinks -> Tab 6
+  if (pageNumber === 1) {
+    return 1; // Starters & Sides -> Tab 1
+  }
+  if (pageNumber === 2) {
+    return 2; // Especialdades -> Tab 2
+  }
+  if (pageNumber === 3) {
+    return 3; // Tacos/Fajitas -> Tab 3
+  }
+  if (pageNumber === 4) {
+    return 4; // A La Parilla -> Tab 4
+  }
+  if (pageNumber === 5 || pageNumber === 6) {
+    return 5; // Lunch (both pages) -> Tab 5
+  }
+  if (pageNumber === 7) {
+    return 6; // Deserts & Drinks -> Tab 6
+  }
   return 1; // Default to starters
 }
 
 // Helper: converts page number to desktop tab index
 export function pageToDesktopTab(pageNumber: number): number {
-  if (pageNumber === 1 || pageNumber === 2) return 1; // Starters & Especialdades -> Tab 1
-  if (pageNumber === 3 || pageNumber === 4) return 2; // Tacos/Fajitas & A La Parilla -> Tab 2
-  if (pageNumber === 5 || pageNumber === 6) return 3; // Lunch (both pages) -> Tab 3
-  if (pageNumber === 7) return 4; // Deserts & Drinks -> Tab 4
+  if (pageNumber === 1 || pageNumber === 2) {
+    return 1; // Starters & Especialdades -> Tab 1
+  }
+  if (pageNumber === 3 || pageNumber === 4) {
+    return 2; // Tacos/Fajitas & A La Parilla -> Tab 2
+  }
+  if (pageNumber === 5 || pageNumber === 6) {
+    return 3; // Lunch (both pages) -> Tab 3
+  }
+  if (pageNumber === 7) {
+    return 4; // Deserts & Drinks -> Tab 4
+  }
   return 1; // Default to starters
 }
 
@@ -196,7 +216,7 @@ export function getDynamicCaption(
   caption: string,
   category: "dailySpecials" | "featuredDrinks" | "featuredFood",
   index: number,
-  isMobile = false
+  _isMobile = false
 ): string {
   const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
   const currentIndex = today === 0 ? 6 : today - 1; // Map to our array index

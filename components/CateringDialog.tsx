@@ -1,37 +1,25 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 
-type CateringDialogProps = {
+interface CateringDialogProps {
   isOpen: boolean;
   onClose: () => void;
-};
+}
 
 export default function CateringDialog({
   isOpen,
   onClose,
 }: CateringDialogProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <Dialog
       onOpenChange={(open) => {
@@ -67,7 +55,8 @@ export default function CateringDialog({
               selected for you in the contact form.
             </p>
             <p className="mt-2 text-sm text-zinc-50">
-              Ready to place your catering order? Fill out the contact form         below below and we'll get back to you soon!
+              Ready to place your catering order? Fill out the contact form
+              below below and we'll get back to you soon!
             </p>
           </div>
 

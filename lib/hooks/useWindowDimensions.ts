@@ -10,7 +10,9 @@ export const useWindowDimensions = () => {
 
   useEffect(() => {
     // Only run on client side
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      return;
+    }
 
     const handleResize = () => {
       setDimensions({
