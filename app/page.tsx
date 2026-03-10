@@ -1,5 +1,5 @@
 "use client";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { useState } from "react";
 import ChevronBorder from "@/components/ChevronBorder";
 import Hero from "@/components/Hero";
@@ -11,9 +11,13 @@ import Testimonials from "@/components/Testimonials";
 // });
 
 const sectionVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
+};
+
+const sectionTransition = {
+  duration: 0.55,
+  ease: [0.16, 1, 0.3, 1] as const,
 };
 
 export default function HomePage() {
@@ -22,57 +26,29 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <main className="flex flex-col space-y-6">
-        <AnimatePresence>
-          <motion.section
-            animate="visible"
-            className="flex w-full flex-col items-center"
-            exit="exit"
-            id="hero"
-            initial="hidden"
-            key="hero-section"
-            variants={sectionVariants}
-          >
-            <Hero />
-          </motion.section>
+        <motion.section
+          animate="visible"
+          className="flex w-full flex-col items-center"
+          id="hero"
+          initial="hidden"
+          transition={sectionTransition}
+          variants={sectionVariants}
+        >
+          <Hero />
+        </motion.section>
 
-          {/* <motion.section
-            key="instagram-section"
-            id="instagram"
-            className="flex w-full flex-col items-center"
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={sectionVariants}
-          >
-            <InstagramFeed maxPosts={3} />
-          </motion.section> */}
+        <ChevronBorder />
 
-          <ChevronBorder />
-
-          <motion.section
-            animate="visible"
-            className="flex w-full flex-col items-center"
-            exit="exit"
-            id="testimonials"
-            initial="hidden"
-            key="testimonials-section"
-            variants={sectionVariants}
-          >
-            <Testimonials debugMode={testimonialsDebugMode} />
-          </motion.section>
-
-          {/* <motion.section
-            key="specials-section"
-            id="specials"
-            className="flex w-full flex-col items-center"
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            variants={sectionVariants}
-          >
-             <Specials /> 
-          </motion.section> */}
-        </AnimatePresence>
+        <motion.section
+          animate="visible"
+          className="flex w-full flex-col items-center"
+          id="testimonials"
+          initial="hidden"
+          transition={{ ...sectionTransition, delay: 0.08 }}
+          variants={sectionVariants}
+        >
+          <Testimonials debugMode={testimonialsDebugMode} />
+        </motion.section>
       </main>
 
       {/* Debug buttons - only in development */}

@@ -2,6 +2,7 @@
 
 import { Facebook, Instagram, Mail } from "lucide-react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CONFETTI_COLORS } from "@/lib/constants/colors";
 import PinataIcon from "./PinataIcon";
@@ -132,9 +133,19 @@ const Footer = () => {
           </motion.div>
         </div>
 
-        <p className="pt-4 text-center text-sm">
-          © {new Date().getFullYear()} El Pueblito Mexican Restaurant
-        </p>
+        <div className="pt-4 text-center">
+          <p className="text-sm">
+            © {new Date().getFullYear()} El Pueblito Mexican Restaurant
+          </p>
+          <div className="mt-2 flex items-center justify-center gap-3 text-xs uppercase tracking-[0.18em] text-stone-600">
+            <Link
+              className="transition-colors hover:text-[#016945]"
+              href="/privacy"
+            >
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
       </footer>
     </>
   );

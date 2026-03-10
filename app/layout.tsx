@@ -17,7 +17,6 @@ import Header from "@/components/Header";
 import SelectionColorInitializer from "@/components/SelectionColorInitializer";
 import { LoadingSpinner } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
-import { CSPostHogProvider } from "./providers";
 
 // Register the Bronto font
 const brontoFont = localFont({
@@ -293,41 +292,39 @@ export default function RootLayout({
           type="application/ld+json"
         />
       </head>
-      <CSPostHogProvider>
-        <ColorTestingProvider>
-          <body
-            className={cn(
-              "min-h-screen w-full bg-[#E4D5C3] pr-safe-right pl-safe-left font-bronto antialiased",
-              brontoFont.variable,
-              GeistSans.variable
-            )}
-          >
-            <SelectionColorInitializer />
-            <Banner />
-            <Header />
-            <DiamondBorder />
-            <main>
-              <Suspense
-                fallback={
-                  <div className="flex min-h-[500px] w-full items-center justify-center md:min-h-[690px]">
-                    <LoadingSpinner size={80} />
-                  </div>
-                }
-              >
-                <NuqsAdapter>{children}</NuqsAdapter>
-              </Suspense>
-            </main>
-            <Footer />
-            <SpeedInsights />
-            <Suspense>
-              <QRTracker />
+      <ColorTestingProvider>
+        <body
+          className={cn(
+            "min-h-screen w-full bg-[#E4D5C3] pr-safe-right pl-safe-left font-bronto antialiased",
+            brontoFont.variable,
+            GeistSans.variable
+          )}
+        >
+          <SelectionColorInitializer />
+          <Banner />
+          <Header />
+          <DiamondBorder />
+          <main>
+            <Suspense
+              fallback={
+                <div className="flex min-h-[500px] w-full items-center justify-center md:min-h-[690px]">
+                  <LoadingSpinner size={80} />
+                </div>
+              }
+            >
+              <NuqsAdapter>{children}</NuqsAdapter>
             </Suspense>
-            <GoogleAnalytics gaId="G-JKSWQ70B8Z" />
-            <GoogleTagManager gtmId="GTM-WB8P228N" />
-            <DebugToolsWrapper />
-          </body>
-        </ColorTestingProvider>
-      </CSPostHogProvider>
+          </main>
+          <Footer />
+          <SpeedInsights />
+          <Suspense>
+            <QRTracker />
+          </Suspense>
+          <GoogleAnalytics gaId="G-JKSWQ70B8Z" />
+          <GoogleTagManager gtmId="GTM-WB8P228N" />
+          <DebugToolsWrapper />
+        </body>
+      </ColorTestingProvider>
     </html>
   );
 }

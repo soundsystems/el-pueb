@@ -1,7 +1,7 @@
 "use client";
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,6 +19,12 @@ import {
 } from "@/lib/constants/image-captions";
 import { cn } from "@/lib/utils";
 import { useColorTesting } from "./debug/ColorTestingContext";
+
+const SOFT_EASE = [0.16, 1, 0.3, 1] as const;
+const SOFT_ENTER = {
+  duration: 0.55,
+  ease: SOFT_EASE,
+};
 
 // Shuffle function for arrays
 const shuffleArray = <T,>(array: T[]): T[] => {
@@ -256,6 +262,7 @@ const HeroCarousel = ({
   isDailySpecials?: boolean;
   isDailyDrinks?: boolean;
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const [imageLoadingStates, setImageLoadingStates] = useState<{
     [key: string]: boolean;
   }>({});
@@ -313,6 +320,7 @@ const HeroCarousel = ({
     if (!emblaApi) return;
 
     const handleSelect = () => {
+      setCurrentIndex(emblaApi.selectedScrollSnap());
       // Force a re-render so the caption updates
       setForceUpdate((prev) => prev + 1);
     };
@@ -476,16 +484,17 @@ const HeroCarousel = ({
           {images.map((image, index) => (
             <div
               className="min-w-0 shrink-0 grow-0 basis-full pl-4"
-              key={index}
+              key={image.src}
             >
               <motion.div
                 animate={{ opacity: 1 }}
                 className="relative w-full"
-                exit={{ opacity: 0 }}
-                initial={{ opacity: 0 }}
+                initial={false}
+                transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
               >
-                <div
-                  className="relative aspect-video w-full cursor-pointer overflow-hidden shadow-lg transition-transform duration-200 hover:scale-[1.02]"
+                <button
+                  aria-label={`${categoryName}: ${image.caption}`}
+                  className="relative block aspect-video w-full cursor-pointer appearance-none overflow-hidden rounded-[1.75rem] border-0 bg-stone-950/5 p-0 text-left shadow-lg transition-transform duration-300 hover:scale-[1.01]"
                   onClick={() => {
                     // Track image engagement
                     trackImageEngagement({
@@ -508,19 +517,26 @@ const HeroCarousel = ({
                       onImageClick(image, carouselIndex);
                     }
                   }}
+                  type="button"
                 >
                   <div className="absolute inset-0 z-10 bg-black/10" />
-
-                  {/* Loading Spinner for Carousel Images */}
-                  {imageLoadingStates[image.src] && (
-                    <div className="absolute inset-0 z-15 flex items-center justify-center">
-                      <LoadingSpinner className="text-white" size={40} />
-                    </div>
-                  )}
+                  <div
+                    className={cn(
+                      "absolute inset-0 z-[15] bg-gradient-to-br from-stone-200/80 via-stone-100/60 to-stone-300/80 transition-opacity duration-500",
+                      imageLoadingStates[image.src]
+                        ? "animate-pulse opacity-100"
+                        : "pointer-events-none opacity-0"
+                    )}
+                  />
 
                   <Image
                     alt={image.alt}
-                    className="object-cover"
+                    className={cn(
+                      "object-cover transition-[opacity,transform,filter] duration-700",
+                      imageLoadingStates[image.src]
+                        ? "scale-[1.015] opacity-0 blur-[6px]"
+                        : "scale-100 opacity-100 blur-0"
+                    )}
                     fill
                     loading={index === 0 ? "eager" : "lazy"}
                     onError={() => {
@@ -557,7 +573,7 @@ const HeroCarousel = ({
                       </svg>
                     </div>
                   </div>
-                </div>
+                </button>
               </motion.div>
             </div>
           ))}
@@ -593,15 +609,19 @@ const HeroCarousel = ({
             if (currentImage?.menuLink) {
               return (
                 <motion.div
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className="flex justify-center"
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  initial={{ opacity: 0, y: 8 }}
                   key={`${currentSlideIndex}-${dynamicCaption}`}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.35, ease: SOFT_EASE }
+                  }
                 >
                   <Link
-                    className="cursor-pointer rounded-full bg-[#221E1B] px-6 py-3 shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:bg-yellow-400/90"
+                    className="cursor-pointer rounded-full bg-[#221E1B] px-6 py-3 shadow-lg backdrop-blur-sm transition-colors duration-200 hover:bg-yellow-400/90"
                     href={currentImage.menuLink}
                     onClick={() => {
                       // Track caption click engagement
@@ -625,12 +645,16 @@ const HeroCarousel = ({
             }
             return (
               <motion.div
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="flex justify-center"
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                exit={{ opacity: 0, y: -6 }}
+                initial={{ opacity: 0, y: 8 }}
                 key={`${currentSlideIndex}-${dynamicCaption}`}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.35, ease: SOFT_EASE }
+                }
               >
                 <div className="rounded-full bg-[#221E1B] px-6 py-3 shadow-lg backdrop-blur-sm">
                   <p className="text-center font-bold tablet:text-sm text-white text-xs">
@@ -989,6 +1013,7 @@ const LightboxModal = ({
 };
 
 const Hero = () => {
+  const shouldReduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState(0);
   const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
   const [currentIndices, setCurrentIndices] = useState([0, 0, 0]);
@@ -1318,15 +1343,31 @@ const Hero = () => {
             </h1>
           </div>
         </div>
-        <div className="flex justify-center py-8">
-          <LoadingSpinner className="text-stone-600" size={60} />
+        <div className="px-4 py-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            {[0, 1, 2].map((placeholder) => (
+              <div
+                className="space-y-4"
+                key={placeholder}
+              >
+                <div className="mx-auto h-8 w-36 animate-pulse rounded-full bg-stone-200/80" />
+                <div className="aspect-video animate-pulse rounded-[1.75rem] bg-stone-200/80 shadow-lg" />
+                <div className="mx-auto h-12 w-48 animate-pulse rounded-full bg-stone-200/70" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <motion.div className="w-full space-y-6">
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      className="w-full space-y-6"
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+      transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
+    >
       <div className="w-full bg-stone-50/40 py-6 backdrop-blur-sm">
         <div className="container mx-auto text-pretty px-1 text-center font-bold sm:px-2">
           <h1 className="text-stone-950">
@@ -1345,19 +1386,13 @@ const Hero = () => {
       {/* Mobile Tabs */}
       {isMobile && (
         <motion.div
-          animate={{ opacity: 1, y: 0, scale: 1 }}
+          animate={{ opacity: 1, y: 0 }}
           aria-label="Featured categories"
           className="my-4 grid grid-cols-3 gap-2 px-4"
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
           layout
           role="tablist"
-          transition={{
-            duration: 0.6,
-            ease: "easeOut",
-            type: "spring",
-            stiffness: 100,
-            damping: 15,
-          }}
+          transition={shouldReduceMotion ? { duration: 0 } : SOFT_ENTER}
         >
           {carouselCategories.map((category, index) => {
             const isActive = activeTab === index;
@@ -1366,20 +1401,17 @@ const Hero = () => {
 
             return (
               <motion.div
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="flex justify-center"
-                initial={{ opacity: 0, y: -15, scale: 0.9 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
                 key={category.name}
                 onClick={() => handleTabClick(index)}
                 transition={{
-                  duration: 0.5,
-                  delay: index * 0.15,
-                  ease: "easeOut",
-                  type: "spring",
-                  stiffness: 120,
-                  damping: 12,
+                  duration: shouldReduceMotion ? 0 : 0.4,
+                  delay: shouldReduceMotion ? 0 : index * 0.06,
+                  ease: SOFT_EASE,
                 }}
-                whileHover={{ scale: 1.05, y: -2 }}
+                whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
@@ -1415,17 +1447,14 @@ const Hero = () => {
                 // console.log('Rendering category:', category.name, 'isDailyDrinks:', category.isDailyDrinks);
                 return (
                   <motion.div
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    animate={{ opacity: 1, y: 0 }}
                     className="space-y-4"
-                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
                     key={category.name}
                     transition={{
-                      duration: 0.7,
-                      delay: index * 0.2,
-                      ease: "easeOut",
-                      type: "spring",
-                      stiffness: 80,
-                      damping: 15,
+                      duration: shouldReduceMotion ? 0 : 0.5,
+                      delay: shouldReduceMotion ? 0 : index * 0.08,
+                      ease: SOFT_EASE,
                     }}
                   >
                     <h3
@@ -1466,16 +1495,13 @@ const Hero = () => {
           <div className="w-full max-w-full">
             <AnimatePresence mode="wait">
               <motion.div
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -30, scale: 0.95 }}
-                initial={{ opacity: 0, x: 30, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -18 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, x: 18 }}
                 key={activeTab}
                 transition={{
-                  duration: 0.5,
-                  ease: "easeInOut",
-                  type: "spring",
-                  stiffness: 150,
-                  damping: 20,
+                  duration: shouldReduceMotion ? 0 : 0.4,
+                  ease: SOFT_EASE,
                 }}
               >
                 <HeroCarousel
@@ -1536,15 +1562,13 @@ const Hero = () => {
 
       {/* View Full Menu and Catering Buttons */}
       <motion.div
-        animate={{ opacity: 1, y: 0, scale: 1 }}
+        animate={{ opacity: 1, y: 0 }}
         className="flex flex-col items-center justify-center gap-4 pt-6 pb-4 sm:flex-row"
-        initial={{ opacity: 0, y: 30, scale: 0.9 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
         transition={{
-          duration: 0.8,
-          delay: 0.5,
-          type: "spring",
-          stiffness: 120,
-          damping: 15,
+          duration: shouldReduceMotion ? 0 : 0.5,
+          delay: shouldReduceMotion ? 0 : 0.18,
+          ease: SOFT_EASE,
         }}
       >
         {/* View Full Menu Button */}

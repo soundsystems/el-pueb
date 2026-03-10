@@ -1,20 +1,17 @@
 "use client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Image from "next/image";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Loading from "@/app/loading";
 import { Button } from "@/components/ui/button";
 import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useRestaurantHours } from "@/lib/hooks/useRestaurantHours";
 import { cn } from "@/lib/utils";
-import {} from "./ui/card";
 import {
   Carousel,
   type CarouselApi,
@@ -31,7 +28,7 @@ type MenuItem = {
   mobileOnly?: boolean;
 };
 
-const DOTM_CURRENT_IMAGE = "/images/menu/dotm-dec.png";
+const DOTM_CURRENT_IMAGE = "/images/menu/DOTM-Feb.png";
 const DOTM_SPECIALS_IMAGE = "/images/menu/drink-specials.png";
 
 const menuItems: MenuItem[] = [
@@ -103,7 +100,6 @@ const MenuCarouselItem = ({
   groupIndex: number;
   imageIndex: number;
   absoluteIndex: number;
-  currentPage: number;
   isMobile: boolean;
   forceLunch: boolean;
   targetPage?: number;
@@ -111,6 +107,7 @@ const MenuCarouselItem = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
   const isFirstImage = groupIndex === 0 && imageIndex === 0;
   const isLunchSection = item.name === "Lunch, Combos & Kids";
   const shouldPrioritize =
@@ -142,20 +139,20 @@ const MenuCarouselItem = ({
       <motion.div
         animate={{
           opacity: 1,
-          scale: shouldHighlight && !isMobile ? 1.02 : 1,
+          scale: shouldReduceMotion ? 1 : shouldHighlight && !isMobile ? 1.02 : 1,
           boxShadow:
             shouldHighlight && !isMobile
               ? "0 0 20px rgba(251, 191, 36, 0.5)"
               : "none",
         }}
         className={cn(
-          "relative h-[75vh] w-full transition-all duration-500 md:h-[85vh]",
+          "relative h-[75vh] w-full transition-[box-shadow,transform] duration-500 md:h-[85vh]",
           shouldHighlight && !isMobile && "overflow-hidden rounded-lg"
         )}
-        exit={{ opacity: 0, scale: 0.95 }}
-        initial={{ opacity: 0, scale: 0.95 }}
+        exit={shouldReduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+        initial={shouldReduceMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
         layout
-        transition={{ duration: 0.3 }}
+        transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3 }}
       >
         <div className="absolute inset-0">
           {isClient && isLoading && (
@@ -197,7 +194,19 @@ export default function Component({
   const [isMobile, setIsMobile] = useState(true);
   const [hasNavigatedToLunch, setHasNavigatedToLunch] = useState(false);
   const [highlightTarget, setHighlightTarget] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
   const { isOpen } = useRestaurantHours();
+  const allImages = useMemo(() => {
+    return menuItems.flatMap((item) => item.images);
+  }, []);
+  const imageStartOffsets = useMemo(() => {
+    let currentOffset = 0;
+    return menuItems.map((item) => {
+      const startOffset = currentOffset;
+      currentOffset += item.images.length;
+      return startOffset;
+    });
+  }, []);
   const getNearestDesktopDotIndex = useCallback((page: number): number => {
     for (let i = DESKTOP_DOT_POSITIONS.length - 1; i >= 0; i--) {
       if (page >= DESKTOP_DOT_POSITIONS[i]) {
@@ -231,11 +240,7 @@ export default function Component({
   // Handle initial tab navigation from URL parameter
   useEffect(() => {
     if (initialTab !== null && initialTab !== undefined && api) {
-      // Calculate the image index for the specified tab
-      let targetImageIndex = 0;
-      for (let i = 0; i < initialTab; i++) {
-        targetImageIndex += menuItems[i].images.length;
-      }
+      const targetImageIndex = imageStartOffsets[initialTab] ?? 0;
 
       if (api.selectedScrollSnap() === targetImageIndex) {
         return;
@@ -250,7 +255,7 @@ export default function Component({
 
       return () => clearTimeout(timer);
     }
-  }, [initialTab, api]);
+  }, [initialTab, api, imageStartOffsets]);
 
   // Handle target page highlighting
   useEffect(() => {
@@ -271,10 +276,7 @@ export default function Component({
       const lunchIndex = menuItems.findIndex(
         (item) => item.name === "Lunch, Combos & Kids"
       );
-      let imageIndex = 0;
-      for (let i = 0; i < lunchIndex; i++) {
-        imageIndex += menuItems[i].images.length;
-      }
+      const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
       // Only scroll if we're not already at the correct position
       if (api.selectedScrollSnap() !== imageIndex) {
         api.scrollTo(imageIndex);
@@ -282,10 +284,12 @@ export default function Component({
       }
       setHasNavigatedToLunch(true);
     }
-  }, [api, forceLunch, hasNavigatedToLunch, initialTab]);
+  }, [api, forceLunch, hasNavigatedToLunch, initialTab, imageStartOffsets]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!isClient) {
+      return;
+    }
 
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
@@ -320,7 +324,7 @@ export default function Component({
     }
 
     if (isMobile) {
-      const maxPage = menuItems.flatMap((item) => item.images).length - 1;
+      const maxPage = allImages.length - 1;
       const newPage = currentPage - 1;
       // Loop to end if going backwards from first page
       api.scrollTo(newPage < 0 ? maxPage : newPage);
@@ -333,7 +337,7 @@ export default function Component({
       api.scrollTo(DESKTOP_DOT_POSITIONS[prevDesktopDotIndex]);
     }
     setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
-  }, [api, isMobile, currentPage, getNearestDesktopDotIndex]);
+  }, [api, isMobile, currentPage, getNearestDesktopDotIndex, allImages.length]);
 
   const handleNextClick = useCallback(() => {
     if (!api) {
@@ -341,7 +345,7 @@ export default function Component({
     }
 
     if (isMobile) {
-      const maxPage = menuItems.flatMap((item) => item.images).length - 1;
+      const maxPage = allImages.length - 1;
       const newPage = currentPage + 1;
       // Loop to beginning if going forward from last page
       api.scrollTo(newPage > maxPage ? 0 : newPage);
@@ -354,7 +358,7 @@ export default function Component({
       api.scrollTo(DESKTOP_DOT_POSITIONS[nextDesktopDotIndex]);
     }
     setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
-  }, [api, isMobile, currentPage, getNearestDesktopDotIndex]);
+  }, [api, isMobile, currentPage, getNearestDesktopDotIndex, allImages.length]);
 
   // Desktop navigation helpers
   const handleDesktopArrowNav = useCallback(
@@ -383,7 +387,7 @@ export default function Component({
       if (!api) {
         return;
       }
-      const maxPage = menuItems.flatMap((item) => item.images).length - 1;
+      const maxPage = allImages.length - 1;
       let newPage: number;
       if (direction === "left") {
         // Loop to last page if going backwards from first page
@@ -395,7 +399,7 @@ export default function Component({
       api.scrollTo(newPage);
       setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
     },
-    [api, currentPage]
+    [api, currentPage, allImages.length]
   );
 
   useEffect(() => {
@@ -422,11 +426,7 @@ export default function Component({
     }
 
     if (isMobile) {
-      // On mobile, count all items up to the index
-      let imageIndex = 0;
-      for (let i = 0; i < index; i++) {
-        imageIndex += menuItems[i].images.length;
-      }
+      const imageIndex = imageStartOffsets[index] ?? 0;
       api.scrollTo(imageIndex);
     } else {
       api.scrollTo(DESKTOP_NAV_POSITIONS[index] ?? DESKTOP_NAV_POSITIONS[0]);
@@ -446,23 +446,47 @@ export default function Component({
     setHasNavigatedToLunch(true); // Mark that we've navigated to a specific section
   };
 
+  const handleMenuButtonInteraction = (index: number, elementId: string) => {
+    if (getActiveNavIndex(currentPage) === index) {
+      if (shouldReduceMotion) {
+        return;
+      }
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.animate(
+          [
+            { transform: "translateX(-2px)" },
+            { transform: "translateX(2px)" },
+            { transform: "translateX(-2px)" },
+            { transform: "translateX(0)" },
+          ],
+          {
+            duration: 200,
+            easing: "ease-in-out",
+          }
+        );
+      }
+      return;
+    }
+
+    handleNavClick(index);
+  };
+
   // Calculate which nav item should be active
   const getMobileActiveNavIndex = (currentPage: number) => {
-    const totalImages = menuItems.flatMap((item) => item.images);
     // Check if the last image is visible
-    if (currentPage === totalImages.length - 1) {
+    if (currentPage === allImages.length - 1) {
       return menuItems.length - 1;
     }
 
-    let imageCount = 0;
     for (let i = 0; i < menuItems.length; i++) {
+      const imageCount = imageStartOffsets[i] ?? 0;
       if (
         currentPage >= imageCount &&
         currentPage < imageCount + menuItems[i].images.length
       ) {
         return i;
       }
-      imageCount += menuItems[i].images.length;
     }
     return 0;
   };
@@ -510,25 +534,23 @@ export default function Component({
 
   // Function to preload images
   const preloadImages = useCallback((indices: number[]) => {
-    const allImages = menuItems.flatMap((item) => item.images);
     for (const index of indices) {
       if (index >= 0 && index < allImages.length) {
         const img = document.createElement("img");
         img.src = allImages[index];
       }
     }
-  }, []);
+  }, [allImages]);
 
   // Only preload the next image
   useEffect(() => {
-    const allImages = menuItems.flatMap((item) => item.images);
     const nextIndex = currentPage + 1;
 
     if (nextIndex < allImages.length) {
       const img = new window.Image();
       img.src = allImages[nextIndex];
     }
-  }, [currentPage, menuItems]);
+  }, [currentPage, allImages]);
 
   // Preload lunch images when in lunch mode
   useEffect(() => {
@@ -537,15 +559,12 @@ export default function Component({
         (item) => item.name === "Lunch, Combos & Kids"
       );
       if (lunchIndex !== -1) {
-        let imageIndex = 0;
-        for (let i = 0; i < lunchIndex; i++) {
-          imageIndex += menuItems[i].images.length;
-        }
+        const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
         const lunchImages = menuItems[lunchIndex].images;
         preloadImages(lunchImages.map((_, i) => imageIndex + i));
       }
     }
-  }, [forceLunch, preloadImages]);
+  }, [forceLunch, preloadImages, imageStartOffsets]);
 
   const getButtonVariant = (isLunchTab: boolean, isActive: boolean) => {
     if (isLunchTab) {
@@ -573,36 +592,24 @@ export default function Component({
                 transition={{ duration: 0.5 }}
               >
                 {(() => {
-                  // Check if currently on lunch section
-                  const lunchIndex = menuItems.findIndex(
-                    (item) => item.name === "Lunch, Combos & Kids"
-                  );
-                  let lunchImageIndex = 0;
-                  for (let i = 0; i < lunchIndex; i++) {
-                    lunchImageIndex += menuItems[i].images.length;
-                  }
-                  const isLunchSection =
-                    currentPage >= lunchImageIndex &&
-                    currentPage <
-                      lunchImageIndex + menuItems[lunchIndex]?.images.length;
-
                   return (
                     <motion.button
-                      animate={{
-                        color: [
-                          "#03502D",
-                          "#FFD700",
-                          "#03502D",
-                          "#FFD700",
-                          "#03502D",
-                        ],
-                      }}
+                      animate={
+                        shouldReduceMotion
+                          ? { color: "#03502D" }
+                          : {
+                              color: [
+                                "#03502D",
+                                "#FFD700",
+                                "#03502D",
+                                "#FFD700",
+                                "#03502D",
+                              ],
+                            }
+                      }
                       aria-label="Go to lunch menu section"
                       className={cn(
-                        "cursor-pointer rounded-lg px-2 py-1 italic transition-all duration-200 hover:scale-105",
-                        // Only show hover ring if not currently on lunch section
-                        !isLunchSection &&
-                          "hover:ring-2 hover:ring-yellow-400 hover:ring-offset-2"
+                        "rounded-lg px-2 py-1 italic transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03502D] focus-visible:ring-offset-2"
                       )}
                       initial={{ color: "#03502D" }}
                       onClick={() => {
@@ -611,20 +618,22 @@ export default function Component({
                           (item) => item.name === "Lunch, Combos & Kids"
                         );
                         if (lunchIndex !== -1 && api) {
-                          let imageIndex = 0;
-                          for (let i = 0; i < lunchIndex; i++) {
-                            imageIndex += menuItems[i].images.length;
-                          }
+                          const imageIndex = imageStartOffsets[lunchIndex] ?? 0;
                           api.scrollTo(imageIndex);
                           setCurrentPage(imageIndex);
                           setHasNavigatedToLunch(true); // Mark that we've navigated to lunch
                         }
                       }}
-                      transition={{
-                        duration: 1.3,
-                        ease: "easeInOut",
-                        times: [0, 0.25, 0.5, 0.75, 1],
-                      }}
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : {
+                              duration: 1.3,
+                              ease: "easeInOut",
+                              times: [0, 0.25, 0.5, 0.75, 1],
+                            }
+                      }
+                      type="button"
                     >
                       🌯 ¡Echar Lonche! 🌮
                     </motion.button>
@@ -683,33 +692,9 @@ export default function Component({
                         className="flex justify-center lg:inline-block"
                         initial={{ opacity: 0, y: -10 }}
                         key={item.name}
-                        onClick={() => {
-                          if (getActiveNavIndex(currentPage) === index) {
-                            // Shake animation if already selected
-                            const element = document.getElementById(
-                              `menu-btn-${index}`
-                            );
-                            if (element) {
-                              element.animate(
-                                [
-                                  { transform: "translateX(-2px)" },
-                                  { transform: "translateX(2px)" },
-                                  { transform: "translateX(-2px)" },
-                                  { transform: "translateX(0)" },
-                                ],
-                                {
-                                  duration: 200,
-                                  easing: "ease-in-out",
-                                }
-                              );
-                            }
-                          } else {
-                            handleNavClick(index);
-                          }
-                        }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                        whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
                       >
                         <Button
                           className={cn(
@@ -720,6 +705,10 @@ export default function Component({
                             !isMobile && "lg:last:hidden"
                           )}
                           id={`menu-btn-${index}`}
+                          onClick={() =>
+                            handleMenuButtonInteraction(index, `menu-btn-${index}`)
+                          }
+                          type="button"
                           variant={getButtonVariant(isLunchTab, isActive)}
                         >
                           {item.mobileName || item.name}
@@ -765,33 +754,9 @@ export default function Component({
                           animate={{ opacity: 1, y: 0 }}
                           initial={{ opacity: 0, y: -10 }}
                           key={item.name}
-                          onClick={() => {
-                            if (getActiveNavIndex(currentPage) === index) {
-                              // Shake animation if already selected
-                              const element = document.getElementById(
-                                `menu-btn-desktop-${index}`
-                              );
-                              if (element) {
-                                element.animate(
-                                  [
-                                    { transform: "translateX(-2px)" },
-                                    { transform: "translateX(2px)" },
-                                    { transform: "translateX(-2px)" },
-                                    { transform: "translateX(0)" },
-                                  ],
-                                  {
-                                    duration: 200,
-                                    easing: "ease-in-out",
-                                  }
-                                );
-                              }
-                            } else {
-                              handleNavClick(index);
-                            }
-                          }}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.95 }}
+                          whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                          whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
                         >
                           <Button
                             className={cn(
@@ -801,6 +766,13 @@ export default function Component({
                               buttonStyle
                             )}
                             id={`menu-btn-desktop-${index}`}
+                            onClick={() =>
+                              handleMenuButtonInteraction(
+                                index,
+                                `menu-btn-desktop-${index}`
+                              )
+                            }
+                            type="button"
                             variant={getButtonVariant(isLunchTab, isActive)}
                           >
                             {item.name}
@@ -841,15 +813,11 @@ export default function Component({
                   {menuItems.flatMap((item, groupIndex) =>
                     item.images.map((image, imageIndex) => {
                       const absoluteIndex =
-                        menuItems
-                          .slice(0, groupIndex)
-                          .reduce((acc, curr) => acc + curr.images.length, 0) +
-                        imageIndex;
+                        (imageStartOffsets[groupIndex] ?? 0) + imageIndex;
 
                       return (
                         <MenuCarouselItem
                           absoluteIndex={absoluteIndex}
-                          currentPage={currentPage}
                           forceLunch={forceLunch}
                           groupIndex={groupIndex}
                           highlightTarget={highlightTarget}
@@ -878,22 +846,25 @@ export default function Component({
                 <PaginationContent className="gap-1">
                   <PaginationItem>
                     <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={shouldReduceMotion ? undefined : { scale: 1.1 }}
+                      whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
                     >
-                      <PaginationPrevious
+                      <Button
                         aria-label="Previous page"
-                        className="h-8 w-8 cursor-pointer p-0 hover:bg-[#03502D]/10 hover:text-[#03502D]"
+                        className="h-8 w-8 p-0 text-[#03502D] hover:bg-[#03502D]/10 hover:text-[#03502D]"
                         onClick={handlePrevClick}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                      </PaginationPrevious>
+                      </Button>
                     </motion.div>
                   </PaginationItem>
 
                   {Array.from({
                     length: isMobile
-                      ? menuItems.flatMap((item) => item.images).length
+                      ? allImages.length
                       : DESKTOP_DOT_POSITIONS.length,
                   }).map((_, i) => {
                     const isLunchPage =
@@ -904,7 +875,7 @@ export default function Component({
                         <button
                           aria-label={`Go to page ${i + 1}`}
                           className={cn(
-                            "h-2 w-2 rounded-full transition-all hover:opacity-80",
+                            "h-2 w-2 rounded-full transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#03502D] focus-visible:ring-offset-2",
                             {
                               "bg-[#03502D]":
                                 getActiveDotIndex(currentPage) === i &&
@@ -927,16 +898,19 @@ export default function Component({
 
                   <PaginationItem>
                     <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                      whileHover={shouldReduceMotion ? undefined : { scale: 1.1 }}
+                      whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
                     >
-                      <PaginationNext
+                      <Button
                         aria-label="Next page"
-                        className="h-8 w-8 cursor-pointer p-0 hover:bg-[#03502D]/10 hover:text-[#03502D]"
+                        className="h-8 w-8 p-0 text-[#03502D] hover:bg-[#03502D]/10 hover:text-[#03502D]"
                         onClick={handleNextClick}
+                        size="icon"
+                        type="button"
+                        variant="ghost"
                       >
                         <ChevronRight className="h-4 w-4" />
-                      </PaginationNext>
+                      </Button>
                     </motion.div>
                   </PaginationItem>
                 </PaginationContent>
