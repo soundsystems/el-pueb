@@ -7,6 +7,7 @@ import {
   m as motion,
 } from "framer-motion";
 import { Star } from "lucide-react";
+import Link from "next/link";
 import { Fragment, useEffect, useReducer, useRef } from "react";
 import {
   formatForDesktop,
@@ -134,17 +135,19 @@ function HighlightedReviewText({
   const highlighted = highlightMenuItems(text, color);
   const parts = highlighted.split(/(<a [^>]+>.*?<\/a>)/g).filter(Boolean);
 
-  return parts.map((part) => {
+  return parts.map((part, index) => {
     const match = part.match(/<a href="([^"]+)"[^>]*>(.*?)<\/a>/);
 
     if (!match) {
       return (
-        <Fragment key={createTextPartKey(keyPrefix, part)}>{part}</Fragment>
+        <Fragment key={createTextPartKey(keyPrefix, `${index}-${part}`)}>
+          {part}
+        </Fragment>
       );
     }
 
     const [, href, label] = match;
-    const key = createTextPartKey(keyPrefix, `${href}-${label}`);
+    const key = createTextPartKey(keyPrefix, `${index}-${href}-${label}`);
 
     if (href.startsWith("javascript:void")) {
       return (
@@ -165,11 +168,25 @@ function HighlightedReviewText({
       );
     }
 
+    const isInternal = href.startsWith("/");
+    const className =
+      "text-[#D42D40] underline transition-all duration-200 hover:brightness-75";
+
+    if (isInternal) {
+      return (
+        <Link className={className} href={href} key={key}>
+          {label}
+        </Link>
+      );
+    }
+
     return (
       <a
-        className="text-[#D42D40] underline transition-all duration-200 hover:brightness-75"
+        className={className}
         href={href}
         key={key}
+        rel="noopener noreferrer"
+        target="_blank"
       >
         {label}
       </a>

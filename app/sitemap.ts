@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://elpueblitonwa.com";
 
-  // Define all static routes
-  const staticRoutes = ["", "/menu", "/about", "/contact", "/locations"].map(
+  // Define all static routes (match app routes: page, menu, locations, privacy, contact)
+  const staticRoutes = ["", "/menu", "/locations", "/privacy", "/contact"].map(
     (route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date(),
@@ -17,13 +17,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const locations = ["bella-vista", "highfill", "rogers", "centerton"];
   const qrRoutes = locations.flatMap((location) => [
     {
-      url: `${baseUrl}/?source=table&amp;location=${location}`,
+      url: `${baseUrl}/?source=table&location=${location}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     {
-      url: `${baseUrl}/menu?source=bar&amp;location=${location}`,
+      url: `${baseUrl}/menu?source=bar&location=${location}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.8,
