@@ -98,7 +98,7 @@ type MultiLocationOrganization = Organization & {
 const jsonLd: WithContext<MultiLocationOrganization> = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "El Pueblito | Mexican Restaurant",
+  name: "El Pueblito | Mexican Restaurant | NWA",
   description:
     "Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas",
   url: "https://elpueblitonwa.com",
@@ -225,7 +225,7 @@ const jsonLd: WithContext<MultiLocationOrganization> = {
 
 export const metadata: Metadata = {
   title: {
-    default: "El Pueblito | Mexican Restaurant",
+    default: "El Pueblito | Mexican Restaurant | NWA",
     template: "%s | El Pueblito",
   },
   description:
@@ -235,7 +235,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://elpueblitonwa.com",
-    title: "El Pueblito",
+    title: "El Pueblito | Mexican Restaurant | NWA",
     description:
       "Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas",
     siteName: "El Pueblito",
@@ -250,7 +250,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "El Pueblito",
+    title: "El Pueblito | Mexican Restaurant | NWA",
     description:
       "Authentic Mexican Cuisine made fresh in the heart of Northwest Arkansas",
     images: ["/images/hero/resized/DSC00811.jpg"],
